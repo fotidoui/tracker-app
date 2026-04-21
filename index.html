@@ -10,37 +10,46 @@
     table {
       margin:20px auto;
       border-collapse: collapse;
-      width: 100%;
+      width:100%;
     }
 
     td, th {
       border:1px solid #ccc;
       padding:5px;
       min-width:80px;
+      vertical-align: top;
     }
 
     textarea { width:100%; height:40px; }
 
-    button { margin:8px; padding:12px; }
+    button { margin:8px; padding:10px; }
 
+    .weekBlock {
+      border:1px solid #aaa;
+      margin:20px;
+      padding:10px;
+    }
   </style>
 </head>
 <body>
 
 <h2>Tracker App</h2>
 
+<!-- HOME -->
 <div id="home" class="screen">
   <button onclick="goWeekly()">Weekly</button>
   <button onclick="goRoutes()">Routes</button>
   <button onclick="goDB()">Database</button>
 </div>
 
+<!-- WEEKLY -->
 <div id="weekly" class="screen">
   <button onclick="goHome()">⬅</button><br>
   <input id="weekInput" type="number" placeholder="Week">
   <table id="grid"></table>
 </div>
 
+<!-- ROUTES -->
 <div id="routes" class="screen">
   <button onclick="goHome()">⬅</button><br>
   <button onclick="startRoute()">Start</button>
@@ -48,6 +57,7 @@
   <p id="gpsStatus"></p>
 </div>
 
+<!-- DATABASE -->
 <div id="db" class="screen">
   <button onclick="goHome()">⬅</button>
   <div id="dbContent"></div>
@@ -110,7 +120,7 @@ function getMonday(week,year){
   return new Date(d.setDate(diff));
 }
 
-// ===== RENDER =====
+// ===== RENDER WEEK =====
 function render(){
 
   if(!currentWeek) return;
@@ -136,7 +146,7 @@ function render(){
 
   let w=weekData[currentWeek];
 
-  // ROUTES ROW (placed earlier for visibility)
+  // ROUTES ROW
   let routeRow=document.createElement("tr");
   routeRow.style.background="#eef";
 
@@ -218,62 +228,52 @@ function startRoute(){
     return;
   }
 
-  if(!navigator.geolocation){
-    alert("GPS not supported");
-    return;
-  }
-
   routePoints=[];
   tracking=true;
 
-  document.getElementById("gpsStatus").innerText="Starting GPS...";
+  document.getElementById("gpsStatus").innerText="Tracking...";
 
-  watchId = navigator.geolocation.watchPosition(
-    pos=>{
-      if(!tracking) return;
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    if(!tracking) return;
 
-      routePoints.push({
-        lat:pos.coords.latitude,
-        lng:pos.coords.longitude
-      });
+    routePoints.push({
+      lat:pos.coords.latitude,
+      lng:pos.coords.longitude
+    });
 
-      document.getElementById("gpsStatus").innerText=
-        "Tracking... points: "+routePoints.length;
+    document.getElementById("gpsStatus").innerText=
+      "Points: "+routePoints.length;
 
-    },
-    err=>{
-      document.getElementById("gpsStatus").innerText=
-        "GPS ERROR: "+err.message;
-    },
-    { enableHighAccuracy:true }
-  );
+  },err=>{
+    document.getElementById("gpsStatus").innerText=err.message;
+  },
+  {enableHighAccuracy:true});
 }
 
+// ===== STOP ROUTE =====
 async function stopRoute(){
 
   tracking=false;
-
-  if(watchId!==null){
-    navigator.geolocation.clearWatch(watchId);
-  }
+  navigator.geolocation.clearWatch(watchId);
 
   if(routePoints.length<2){
-    alert("No data collected");
+    alert("No data");
     return;
   }
 
   let km=calc(routePoints);
   let day=(new Date().getDay()+6)%7;
 
+  let startAddr=await addr(routePoints[0]);
+  let endAddr=await addr(routePoints[routePoints.length-1]);
+
   weekData[currentWeek].routes[day].push({
     km:km.toFixed(2),
-    start:"saved",
-    end:"saved"
+    start:startAddr,
+    end:endAddr
   });
 
   save();
-  render();
-
   alert("Route saved!");
 }
 
@@ -296,7 +296,18 @@ function dist(a,b){
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
-// ===== DATABASE =====
+// ===== ADDRESS RESTORED =====
+async function addr(c){
+  try{
+    let r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
+    let d=await r.json();
+    return d.display_name || "Unknown";
+  }catch{
+    return "Unknown";
+  }
+}
+
+// ===== DATABASE FIXED =====
 function renderDB(){
 
   let div=document.getElementById("dbContent");
@@ -308,9 +319,36 @@ function renderDB(){
   }
 
   for(let w in weekData){
-    let el=document.createElement("div");
-    el.innerHTML="<h3>Week "+w+"</h3>";
-    div.appendChild(el);
+
+    let block=document.createElement("div");
+    block.className="weekBlock";
+    block.innerHTML="<h3>Week "+w+"</h3>";
+
+    let data=weekData[w];
+
+    // HABITS + CHECKS SUMMARY
+    block.innerHTML+="<b>Habits stored ✔</b><br><br>";
+
+    // NOTES
+    block.innerHTML+="<b>Notes:</b><br>";
+    data.notes.forEach(n=>{
+      block.innerHTML+=n+"<br>";
+    });
+
+    block.innerHTML+="<br><b>Routes:</b><br>";
+
+    data.routes.forEach((day,i)=>{
+      block.innerHTML+="<u>"+days[i]+"</u><br>";
+
+      day.forEach(r=>{
+        block.innerHTML+=
+          r.km+" km | "+r.start+" → "+r.end+"<br>";
+      });
+
+      block.innerHTML+="<br>";
+    });
+
+    div.appendChild(block);
   }
 }
 
