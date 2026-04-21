@@ -2,109 +2,104 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tracker App</title>
+<title>FieldLog App</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet/dist/leaflet.css"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-body {
+body{
   margin:0;
-  font-family: system-ui, Arial;
+  font-family:system-ui;
   background:#eef2f6;
 }
 
 /* ===== WEEK SELECT ===== */
-#weekSelect {
-  padding:20px;
+#weekSelect{
   display:grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns:repeat(6,1fr);
   gap:10px;
+  padding:20px;
 }
 
-.weekBox {
+.weekBox{
   background:white;
   padding:10px;
   border-radius:10px;
   text-align:center;
   cursor:pointer;
-  box-shadow:0 2px 6px rgba(0,0,0,0.08);
-}
-
-.weekBox:hover {
-  background:#e0ecff;
 }
 
 /* ===== APP ===== */
-#app {
-  display:none;
-}
+#app{display:none;}
 
-/* TOP NAV */
-#tabs {
+/* HEADER */
+#header{
   display:flex;
   background:#111827;
+  color:white;
 }
 
-#tabs button {
+#tabs{
+  display:flex;
   flex:1;
-  padding:14px;
+}
+
+#tabs button{
+  flex:1;
+  padding:12px;
   border:none;
   background:none;
   color:#cbd5e1;
   cursor:pointer;
 }
 
-#tabs button.active {
+#tabs button.active{
   background:#1f2937;
   color:white;
 }
 
+#backBtn{
+  padding:10px;
+  background:#374151;
+  border:none;
+  color:white;
+  cursor:pointer;
+}
+
 /* CONTENT */
-#content {
-  padding:15px;
-}
+#content{padding:12px;}
 
-/* CARD */
-.card {
+.card{
   background:white;
-  padding:15px;
-  border-radius:12px;
-  margin-bottom:15px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+  padding:12px;
+  border-radius:10px;
+  margin-bottom:12px;
 }
 
-/* TABLE */
-table {
+/* GRID */
+table{
   width:100%;
-  border-collapse: collapse;
+  border-collapse:collapse;
+  table-layout:fixed;
 }
 
-td, th {
+td,th{
   border:1px solid #e5e7eb;
-  padding:6px;
+  font-size:11px;
+  text-align:center;
+  padding:3px;
 }
 
-th {
-  background:#f1f5f9;
-}
-
-/* INPUTS */
-input, textarea {
+textarea{
   width:100%;
-  padding:6px;
-  border-radius:6px;
-  border:1px solid #d1d5db;
-}
-
-textarea {
-  min-height:60px;
+  font-size:11px;
 }
 
 /* MAP */
-#map {
+#map{
   height:400px;
-  border-radius:12px;
+  border-radius:10px;
 }
 </style>
 </head>
@@ -117,94 +112,101 @@ textarea {
 <!-- ===== APP ===== -->
 <div id="app">
 
-<!-- TABS -->
-<div id="tabs">
-  <button onclick="showTab('weekly')" id="t-weekly">Weekly</button>
-  <button onclick="showTab('routes')" id="t-routes">Routes</button>
-  <button onclick="showTab('map')" id="t-map">Map</button>
+<div id="header">
+  <div id="tabs">
+    <button onclick="setTab('weekly')" id="t-weekly">Weekly</button>
+    <button onclick="setTab('routes')" id="t-routes">Routes</button>
+    <button onclick="setTab('map')" id="t-map">Map</button>
+    <button onclick="setTab('db')" id="t-db">DB</button>
+  </div>
+  <button id="backBtn" onclick="back()">Weeks</button>
 </div>
 
 <div id="content">
 
-<!-- WEEKLY -->
 <div id="weekly"></div>
 
-<!-- ROUTES -->
 <div id="routes" style="display:none">
   <div class="card">
     <h3>Routes</h3>
-    <button onclick="startRoute()">Start</button>
-    <button onclick="pauseRoute()">Pause</button>
-    <button onclick="resumeRoute()">Resume</button>
-    <button onclick="stopRoute()">Stop</button>
-    <p id="gpsStatus"></p>
+    <button onclick="start()">Start</button>
+    <button onclick="pause()">Pause</button>
+    <button onclick="resume()">Resume</button>
+    <button onclick="stop()">Stop</button>
+    <p id="gps"></p>
   </div>
 </div>
 
-<!-- MAP -->
-<div id="mapTab" style="display:none">
+<div id="map" style="display:none">
   <div class="card">
-    <h3>Map</h3>
-    <div id="map"></div>
+    <div id="mapBox" style="height:400px;"></div>
   </div>
 </div>
+
+<div id="db" style="display:none"></div>
 
 </div>
 </div>
 
 <script>
 
-// ================= STATE =================
-let weekData = JSON.parse(localStorage.getItem("weekData")||"{}");
-let habits = JSON.parse(localStorage.getItem("habits")||"[]");
+/* ================= STATE ================= */
+const APP = {
+  state:{
+    week:null,
+    tab:"weekly",
+    data:JSON.parse(localStorage.getItem("data")||"{}")
+  }
+};
 
-// FORCE 8 HABITS ALWAYS
-habits = Array.from({length:8}, (_,i)=>habits[i]||"Habit "+(i+1));
+let habits = Array.from({length:8},(_,i)=>"Habit "+(i+1));
 
-let selectedWeek = null;
-let currentTab = "weekly";
+let watch=null;
+let session=null;
+let map;
 
-const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-// ================= INIT =================
-renderWeekSelector();
-
-// ================= WEEK SELECT =================
-function renderWeekSelector(){
-
-  let container = document.getElementById("weekSelect");
-  container.innerHTML = "<h2 style='grid-column:1/-1'>Select Week</h2>";
+/* ================= WEEK SELECT ================= */
+function initWeeks(){
+  const c=document.getElementById("weekSelect");
+  c.innerHTML="<h2 style='grid-column:1/-1'>Select Week</h2>";
 
   for(let i=1;i<=52;i++){
+    let d=new Date(2026,0,1+(i-1)*7);
+    let m=d.toLocaleString('default',{month:'short'});
 
-    let date = new Date(2026,0,1+(i-1)*7);
-    let month = date.toLocaleString('default',{month:'short'});
+    let el=document.createElement("div");
+    el.className="weekBox";
+    el.innerHTML=`Week ${i}<br>${m}`;
 
-    let div = document.createElement("div");
-    div.className="weekBox";
-    div.innerHTML=`<b>Week ${i}</b><br>${month}`;
-
-    div.onclick=()=>{
-      selectedWeek=i;
-      ensureWeek();
-      openApp();
+    el.onclick=()=>{
+      APP.state.week=i;
+      ensure();
+      open();
     };
 
-    container.appendChild(div);
+    c.appendChild(el);
   }
 }
 
-// ================= OPEN APP =================
-function openApp(){
+initWeeks();
+
+/* ================= OPEN ================= */
+function open(){
   document.getElementById("weekSelect").style.display="none";
   document.getElementById("app").style.display="block";
-  renderWeekly();
+  setTab("weekly");
 }
 
-// ================= WEEK INIT =================
-function ensureWeek(){
-  if(!weekData[selectedWeek]){
-    weekData[selectedWeek]={
+/* ================= BACK ================= */
+function back(){
+  document.getElementById("app").style.display="none";
+  document.getElementById("weekSelect").style.display="grid";
+}
+
+/* ================= DATA ================= */
+function ensure(){
+  if(!APP.state.data[APP.state.week]){
+    APP.state.data[APP.state.week]={
       checks:Array(8).fill().map(()=>Array(7).fill(false)),
       notes:Array(7).fill(""),
       routes:Array(7).fill().map(()=>[])
@@ -212,135 +214,160 @@ function ensureWeek(){
   }
 }
 
-// ================= NAV =================
-function showTab(tab){
+/* ================= TABS ================= */
+function setTab(t){
 
-  currentTab=tab;
+  APP.state.tab=t;
 
-  ["weekly","routes","mapTab"].forEach(id=>{
-    document.getElementById(id).style.display="none";
+  ["weekly","routes","map","db"].forEach(x=>{
+    document.getElementById(x).style.display="none";
   });
 
-  document.getElementById(tab==="map"?"mapTab":tab).style.display="block";
+  document.getElementById(t).style.display="block";
 
   document.querySelectorAll("#tabs button").forEach(b=>b.classList.remove("active"));
-  document.getElementById("t-"+tab).classList.add("active");
+  document.getElementById("t-"+t).classList.add("active");
 
-  if(tab==="weekly") renderWeekly();
-  if(tab==="map") initMap();
+  if(t==="weekly") renderWeekly();
+  if(t==="db") renderDB();
+  if(t==="map") initMap();
 }
 
-// ================= WEEKLY =================
+/* ================= WEEKLY ================= */
 function renderWeekly(){
 
-  let w = weekData[selectedWeek];
+  let w=APP.state.data[APP.state.week];
 
-  let html = `<div class="card"><h3>Week ${selectedWeek}</h3></div>`;
+  let html="<div class='card'><b>Week "+APP.state.week+"</b></div>";
 
-  // HABITS
-  html += `<div class="card"><h3>Habits</h3>`;
+  /* GRID */
+  html+="<div class='card'><table><tr><th></th>";
+
+  ["M","T","W","T","F","S","S"].forEach(d=>{
+    html+="<th>"+d+"</th>";
+  });
+
+  html+="</tr>";
 
   habits.forEach((h,i)=>{
-    html += `<b>${h}</b><br>`;
+    html+="<tr><td>"+h+"</td>";
+
     for(let j=0;j<7;j++){
-      html += `
-        <label>
-          <input type="checkbox"
-          ${w.checks[i][j]?"checked":""}
-          onchange="toggle(${i},${j})">
-          ${days[j]}
-        </label>
-      `;
+      html+=`
+      <td>
+        <input type="checkbox"
+        ${w.checks[i][j]?"checked":""}
+        onchange="toggle(${i},${j})">
+      </td>`;
     }
-    html += "<br><br>";
+
+    html+="</tr>";
   });
 
-  html += `</div>`;
+  html+="</table></div>";
 
-  // NOTES (FIXED)
-  html += `<div class="card"><h3>Notes per day</h3>`;
+  /* ROUTE SUMMARY */
+  html+="<div class='card'><b>Routes</b><br>";
+
+  w.routes.forEach((d,i)=>{
+    let km=d.reduce((s,r)=>s+(r.km||0),0);
+    html+=`Day ${i+1}: ${km.toFixed(1)} km<br>`;
+  });
+
+  html+="</div>";
+
+  /* NOTES */
+  html+="<div class='card'><b>Notes</b>";
 
   w.notes.forEach((n,i)=>{
-    html += `
-      <b>${days[i]}</b>
-      <textarea onchange="setNote(${i},this.value)">${n}</textarea>
-    `;
+    html+=`<textarea onchange="note(${i},this.value)">${n}</textarea>`;
   });
 
-  html += `</div>`;
+  html+="</div>";
 
-  document.getElementById("weekly").innerHTML = html;
+  document.getElementById("weekly").innerHTML=html;
 }
 
-// ================= NOTES =================
-function setNote(i,val){
-  weekData[selectedWeek].notes[i]=val;
-  save();
-}
-
-// ================= HABITS =================
+/* ================= CHECKS ================= */
 function toggle(i,j){
-  let w=weekData[selectedWeek];
+  let w=APP.state.data[APP.state.week];
   w.checks[i][j]=!w.checks[i][j];
   save();
 }
 
-// ================= ROUTES =================
-let session=null;
-
-function startRoute(){
-  session={segments:[[]],paused:false};
-  navigator.geolocation.watchPosition(p=>{
-    if(session.paused) return;
-    session.segments.at(-1).push({lat:p.coords.latitude,lng:p.coords.longitude});
-  });
-}
-
-function pauseRoute(){
-  session.paused=true;
-  session.segments.push([]);
-}
-
-function resumeRoute(){
-  session.paused=false;
-}
-
-function stopRoute(){
-  navigator.geolocation.clearWatch();
-
-  let day=(new Date().getDay()+6)%7;
-
-  let route={segments:[],totalKm:0};
-
-  session.segments.forEach(s=>{
-    if(s.length<2) return;
-    let km=calc(s);
-    route.segments.push({km,coords:s});
-    route.totalKm+=km;
-  });
-
-  weekData[selectedWeek].routes[day].push(route);
+/* ================= NOTES ================= */
+function note(i,v){
+  APP.state.data[APP.state.week].notes[i]=v;
   save();
 }
 
-// ================= MAP =================
-let map,layer;
+/* ================= ROUTES ================= */
+function start(){
+  session={seg:[[]],run:true};
+  watch=navigator.geolocation.watchPosition(p=>{
+    if(!session.run) return;
+    session.seg.at(-1).push({
+      lat:p.coords.latitude,
+      lng:p.coords.longitude
+    });
+  });
+}
 
+function pause(){
+  session.seg.push([]);
+}
+
+function resume(){
+  session.run=true;
+}
+
+function stop(){
+  navigator.geolocation.clearWatch(watch);
+
+  let w=APP.state.data[APP.state.week];
+  let day=(new Date().getDay()+6)%7;
+
+  let route={seg:[],total:0};
+
+  session.seg.forEach(s=>{
+    if(s.length<2) return;
+    let km=dist(s);
+    route.seg.push({km});
+    route.total+=km;
+  });
+
+  w.routes[day].push(route);
+  save();
+}
+
+/* ================= MAP ================= */
 function initMap(){
   if(map) return;
 
-  map=L.map('map').setView([52.1,5.3],7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  map=L.map("mapBox").setView([52.1,5.3],7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 }
 
-// ================= SAVE =================
+/* ================= DB ================= */
+function renderDB(){
+  let html="<div class='card'><b>Database</b><br>";
+
+  for(let w in APP.state.data){
+    html+="Week "+w+"<br>";
+  }
+
+  html+="</div>";
+
+  document.getElementById("db").innerHTML=html;
+}
+
+/* ================= SAVE ================= */
 function save(){
-  localStorage.setItem("weekData",JSON.stringify(weekData));
-  localStorage.setItem("habits",JSON.stringify(habits));
+  localStorage.setItem("data",JSON.stringify(APP.state.data));
 }
 
-// ================= DIST =================
-function calc(r){
+/* ================= DIST ================= */
+function dist(r){
   let t=0;
   for(let i=1;i<r.length;i++){
     let a=r[i-1],b=r[i];
@@ -350,6 +377,5 @@ function calc(r){
 }
 
 </script>
-
 </body>
 </html>
