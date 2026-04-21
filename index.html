@@ -22,7 +22,7 @@
 
     textarea { width:100%; height:40px; }
 
-    button { margin:8px; padding:10px; }
+    button { margin:6px; padding:10px; }
   </style>
 </head>
 <body>
@@ -46,8 +46,12 @@
 <!-- ROUTES -->
 <div id="routes" class="screen">
   <button onclick="goHome()">⬅</button><br>
+
   <button onclick="startRoute()">Start</button>
+  <button onclick="pauseRoute()">Pause</button>
+  <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
+
   <p id="gpsStatus"></p>
 </div>
 
@@ -62,9 +66,15 @@
 let currentWeek=null;
 let weekData={};
 let habits=[];
-let tracking=false;
 let watchId=null;
-let routePoints=[];
+
+// SESSION SYSTEM (NEW)
+let session={
+  active:false,
+  paused:false,
+  points:[],
+  segments:[]
+};
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -95,12 +105,9 @@ window.onload=()=>{
 document.getElementById("weekInput").addEventListener("change",function(){
   currentWeek=Number(this.value);
 
-  if(!currentWeek){
-    alert("Enter valid week");
-    return;
+  if(!weekData[currentWeek]){
+    weekData[currentWeek]=createWeek();
   }
-
-  if(!weekData[currentWeek]) weekData[currentWeek]=createWeek();
 
   render();
 });
@@ -113,169 +120,112 @@ function createWeek(){
   };
 }
 
-// ===== DATE =====
-function getMonday(week,year){
-  let d=new Date(year,0,1+(week-1)*7);
-  let day=d.getDay();
-  let diff=d.getDate()-day+(day===0?-6:1);
-  return new Date(d.setDate(diff));
-}
-
-// ===== RENDER WEEK =====
-function render(){
-
-  if(!currentWeek) return;
-
-  let table=document.getElementById("grid");
-  table.innerHTML="";
-
-  let year=new Date().getFullYear();
-  let monday=getMonday(currentWeek,year);
-
-  let tr=document.createElement("tr");
-  tr.appendChild(document.createElement("th"));
-
-  for(let i=0;i<7;i++){
-    let d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-
-    let th=document.createElement("th");
-    th.innerText=days[i]+" "+d.getDate();
-    tr.appendChild(th);
-  }
-  table.appendChild(tr);
-
-  let w=weekData[currentWeek];
-
-  // ROUTES
-  let routeRow=document.createElement("tr");
-  routeRow.style.background="#eef";
-
-  let rlabel=document.createElement("td");
-  rlabel.innerText="Routes";
-  routeRow.appendChild(rlabel);
-
-  for(let j=0;j<7;j++){
-    let routes=w.routes[j];
-    let total=routes.reduce((s,r)=>s+Number(r.km),0);
-
-    let td=document.createElement("td");
-    td.innerHTML=routes.length+"<br>"+total.toFixed(1)+" km";
-    routeRow.appendChild(td);
-  }
-
-  table.appendChild(routeRow);
-
-  // HABITS
-  for(let i=0;i<10;i++){
-    let row=document.createElement("tr");
-
-    let name=document.createElement("td");
-    let input=document.createElement("input");
-    input.value=habits[i];
-
-    input.onchange=()=>{
-      habits[i]=input.value;
-      localStorage.setItem("habits",JSON.stringify(habits));
-    };
-
-    name.appendChild(input);
-    row.appendChild(name);
-
-    for(let j=0;j<7;j++){
-      let td=document.createElement("td");
-      let cb=document.createElement("input");
-      cb.type="checkbox";
-      cb.checked=w.checks[i][j];
-
-      cb.onchange=()=>{
-        w.checks[i][j]=cb.checked;
-        save();
-      };
-
-      td.appendChild(cb);
-      row.appendChild(td);
-    }
-
-    table.appendChild(row);
-  }
-
-  // NOTES
-  let notesRow=document.createElement("tr");
-  let label=document.createElement("td");
-  label.innerText="Notes";
-  notesRow.appendChild(label);
-
-  for(let j=0;j<7;j++){
-    let td=document.createElement("td");
-    let txt=document.createElement("textarea");
-    txt.value=w.notes[j];
-
-    txt.onchange=()=>{
-      w.notes[j]=txt.value;
-      save();
-    };
-
-    td.appendChild(txt);
-    notesRow.appendChild(td);
-  }
-
-  table.appendChild(notesRow);
-}
-
-// ===== SAVE =====
-function save(){
-  localStorage.setItem("weekData",JSON.stringify(weekData));
-}
-
-// ===== ROUTES =====
+// ===== START =====
 function startRoute(){
 
   if(!currentWeek){
-    alert("⚠ Select a week first");
+    alert("Select week first");
     return;
   }
 
-  routePoints=[];
-  tracking=true;
+  session.active=true;
+  session.paused=false;
 
-  document.getElementById("gpsStatus").innerText="Tracking...";
+  // new segment start
+  session.points=[];
+  session.segments.push([]);
+
+  document.getElementById("gpsStatus").innerText="Tracking started";
 
   watchId=navigator.geolocation.watchPosition(pos=>{
-    if(!tracking) return;
+    if(!session.active || session.paused) return;
 
-    routePoints.push({
+    let point={
       lat:pos.coords.latitude,
       lng:pos.coords.longitude
-    });
+    };
+
+    session.points.push(point);
+
+    // add to current segment
+    session.segments[session.segments.length-1].push(point);
 
     document.getElementById("gpsStatus").innerText=
-      "GPS points: "+routePoints.length;
-  });
+      "Points: "+session.points.length;
+
+  },
+  err=>{
+    document.getElementById("gpsStatus").innerText=err.message;
+  },
+  {enableHighAccuracy:true});
+}
+
+// ===== PAUSE (CLOSE SEGMENT) =====
+function pauseRoute(){
+
+  if(!session.active) return;
+
+  session.paused=true;
+
+  document.getElementById("gpsStatus").innerText="Paused (segment closed)";
+
+  // start new empty segment for next resume
+  session.segments.push([]);
+}
+
+// ===== RESUME =====
+function resumeRoute(){
+  if(!session.active) return;
+
+  session.paused=false;
+
+  document.getElementById("gpsStatus").innerText="Resumed";
 }
 
 // ===== STOP =====
 async function stopRoute(){
 
-  tracking=false;
+  session.active=false;
   navigator.geolocation.clearWatch(watchId);
 
-  if(routePoints.length<2){
-    alert("No GPS data collected");
+  let allSegments=session.segments.filter(s=>s.length>1);
+
+  if(allSegments.length===0){
+    alert("No valid route data");
     return;
   }
 
-  let km=calc(routePoints);
   let day=(new Date().getDay()+6)%7;
 
-  weekData[currentWeek].routes[day].push({
-    km:km.toFixed(2),
-    start:"start captured",
-    end:"end captured"
-  });
+  let finalRoute={
+    segments:[],
+    totalKm:0
+  };
+
+  for(let seg of allSegments){
+
+    let km=calc(seg);
+
+    if(km < 0.02) continue; // ignore noise
+
+    let startAddr=await getAddr(seg[0]);
+    let endAddr=await getAddr(seg[seg.length-1]);
+
+    finalRoute.segments.push({
+      km:km.toFixed(2),
+      start:startAddr,
+      end:endAddr
+    });
+
+    finalRoute.totalKm+=km;
+  }
+
+  weekData[currentWeek].routes[day].push(finalRoute);
 
   save();
   render();
+
+  alert("Route saved (multi-segment)");
 }
 
 // ===== DISTANCE =====
@@ -297,6 +247,64 @@ function dist(a,b){
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
+// ===== ADDRESS =====
+async function getAddr(c){
+  try{
+    let r=await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
+    );
+    let d=await r.json();
+    return d.display_name || "Unknown";
+  }catch{
+    return "Unknown";
+  }
+}
+
+// ===== SAVE =====
+function save(){
+  localStorage.setItem("weekData",JSON.stringify(weekData));
+}
+
+// ===== WEEK VIEW =====
+function render(){
+
+  if(!currentWeek) return;
+
+  let table=document.getElementById("grid");
+  table.innerHTML="";
+
+  let w=weekData[currentWeek];
+
+  let header=document.createElement("tr");
+  header.appendChild(document.createElement("th"));
+
+  for(let i=0;i<7;i++){
+    let th=document.createElement("th");
+    th.innerText=days[i];
+    header.appendChild(th);
+  }
+
+  table.appendChild(header);
+
+  // ROUTES
+  let rrow=document.createElement("tr");
+  rrow.style.background="#eef";
+  rrow.appendChild(Object.assign(document.createElement("td"),{innerText:"Routes"}));
+
+  for(let j=0;j<7;j++){
+    let routes=w.routes[j];
+
+    let total=routes.reduce((s,r)=>s+(r.totalKm||0),0);
+
+    let td=document.createElement("td");
+    td.innerHTML=routes.length+"<br>"+total.toFixed(1)+" km";
+
+    rrow.appendChild(td);
+  }
+
+  table.appendChild(rrow);
+}
+
 // ===== DATABASE =====
 function renderDB(){
 
@@ -306,28 +314,31 @@ function renderDB(){
   for(let w in weekData){
 
     let block=document.createElement("div");
+    block.style.border="1px solid #aaa";
+    block.style.margin="10px";
+    block.style.padding="10px";
+
     block.innerHTML="<h3>Week "+w+"</h3>";
 
     let data=weekData[w];
 
-    block.innerHTML+="<b>Habits:</b><br>";
-
-    data.checks.forEach((row,i)=>{
-      block.innerHTML+=habits[i]+": ";
-      row.forEach(c=>{
-        block.innerHTML+=c?"✔ ":"✖ ";
-      });
-      block.innerHTML+="<br>";
-    });
-
-    block.innerHTML+="<br><b>Routes:</b><br>";
-
     data.routes.forEach((day,i)=>{
+
       block.innerHTML+="<u>"+days[i]+"</u><br>";
-      day.forEach(r=>{
-        block.innerHTML+=r.km+" km<br>";
+
+      day.forEach(route=>{
+
+        block.innerHTML+="Total: "+(route.totalKm||0).toFixed(2)+" km<br>";
+
+        if(route.segments){
+          route.segments.forEach(s=>{
+            block.innerHTML+="→ "+s.km+" km<br>";
+            block.innerHTML+=s.start+" → "+s.end+"<br>";
+          });
+        }
+
+        block.innerHTML+="<br>";
       });
-      block.innerHTML+="<br>";
     });
 
     div.appendChild(block);
