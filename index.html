@@ -4,11 +4,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tracker App</title>
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <style>
 body { margin:0; font-family: Arial; display:flex; }
 
 #menu {
-  width:120px;
+  width:130px;
   background:#222;
   color:white;
   min-height:100vh;
@@ -32,10 +35,11 @@ body { margin:0; font-family: Arial; display:flex; }
 .screen { display:none; }
 
 table { width:100%; border-collapse: collapse; }
-
 td, th { border:1px solid #ccc; padding:5px; }
 
 textarea { width:100%; height:50px; }
+
+#mapContainer { height:500px; }
 
 </style>
 </head>
@@ -44,6 +48,7 @@ textarea { width:100%; height:50px; }
 <div id="menu">
   <button onclick="show('weekly')">Weekly</button>
   <button onclick="show('routes')">Routes</button>
+  <button onclick="show('map');initMap()">Map</button>
   <button onclick="show('db')">Database</button>
 </div>
 
@@ -62,6 +67,11 @@ textarea { width:100%; height:50px; }
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
   <p id="gpsStatus"></p>
+</div>
+
+<div id="map" class="screen">
+  <h3>Map</h3>
+  <div id="mapContainer"></div>
 </div>
 
 <div id="db" class="screen">
@@ -87,7 +97,7 @@ let watchId = null;
 
 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-// ===== DATE HELPERS =====
+// ===== DATE =====
 function getMonday(week, year){
   let d = new Date(year, 0, 1 + (week-1)*7);
   let day = d.getDay();
@@ -98,9 +108,7 @@ function getMonday(week, year){
 function getWeekInfo(){
   let year = new Date().getFullYear();
   let monday = getMonday(currentWeek, year);
-
   let month = monday.toLocaleString('default', { month: 'long' });
-
   return { monday, month, year };
 }
 
@@ -135,7 +143,7 @@ function ensureWeek(){
   }
 }
 
-// ===== RENDER WEEK =====
+// ===== RENDER =====
 function render(){
 
   let { monday, month, year } = getWeekInfo();
@@ -148,7 +156,6 @@ function render(){
 
   let w = weekData[currentWeek];
 
-  // HEADER
   let tr = document.createElement("tr");
   tr.appendChild(document.createElement("th"));
 
@@ -160,10 +167,8 @@ function render(){
     th.innerText = days[i]+" "+d.getDate();
     tr.appendChild(th);
   }
-
   table.appendChild(tr);
 
-  // KM ROW
   let rrow=document.createElement("tr");
   rrow.appendChild(Object.assign(document.createElement("td"),{innerText:"KM"}));
 
@@ -175,33 +180,24 @@ function render(){
   }
   table.appendChild(rrow);
 
-  // HABITS
   habits.forEach((h,i)=>{
     let row=document.createElement("tr");
 
-    let name=document.createElement("td");
     let input=document.createElement("input");
     input.value=h;
+    input.onchange=()=>{ habits[i]=input.value; saveAll(); };
 
-    input.onchange=()=>{
-      habits[i]=input.value;
-      saveAll();
-    };
-
+    let name=document.createElement("td");
     name.appendChild(input);
     row.appendChild(name);
 
     for(let j=0;j<7;j++){
-      let td=document.createElement("td");
       let cb=document.createElement("input");
       cb.type="checkbox";
       cb.checked=w.checks[i][j];
+      cb.onchange=()=>{ w.checks[i][j]=cb.checked; saveAll(); };
 
-      cb.onchange=()=>{
-        w.checks[i][j]=cb.checked;
-        saveAll();
-      };
-
+      let td=document.createElement("td");
       td.appendChild(cb);
       row.appendChild(td);
     }
@@ -209,20 +205,15 @@ function render(){
     table.appendChild(row);
   });
 
-  // NOTES
   let nrow=document.createElement("tr");
   nrow.appendChild(Object.assign(document.createElement("td"),{innerText:"Notes"}));
 
   for(let j=0;j<7;j++){
-    let td=document.createElement("td");
     let t=document.createElement("textarea");
     t.value=w.notes[j];
+    t.onchange=()=>{ w.notes[j]=t.value; saveAll(); };
 
-    t.onchange=()=>{
-      w.notes[j]=t.value;
-      saveAll();
-    };
-
+    let td=document.createElement("td");
     td.appendChild(t);
     nrow.appendChild(td);
   }
@@ -232,7 +223,6 @@ function render(){
 
 // ===== ROUTES =====
 function startRoute(){
-
   session = { active:true, paused:false, segments:[[]] };
 
   watchId = navigator.geolocation.watchPosition(pos=>{
@@ -241,7 +231,7 @@ function startRoute(){
     let p={lat:pos.coords.latitude,lng:pos.coords.longitude};
     session.segments[session.segments.length-1].push(p);
 
-    document.getElementById("gpsStatus").innerText=
+    document.getElementById("gpsStatus").innerText =
       "Tracking: "+session.segments.flat().length;
 
   }, err=>{
@@ -271,7 +261,7 @@ async function stopRoute(){
     let start = await getAddr(seg[0]);
     let end = await getAddr(seg[seg.length-1]);
 
-    route.segments.push({km,start,end});
+    route.segments.push({km,start,end,coords:seg});
     route.totalKm+=km;
   }
 
@@ -283,36 +273,56 @@ async function stopRoute(){
   render();
 }
 
-// ===== DISTANCE =====
-function calc(r){
-  let t=0;
-  for(let i=1;i<r.length;i++) t+=dist(r[i-1],r[i]);
-  return t;
+// ===== MAP =====
+let map, userMarker;
+
+function initMap(){
+
+  if(map) return;
+
+  map = L.map('mapContainer').setView([52.1, 5.3], 7);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    .addTo(map);
+
+  drawRoutes();
+  trackUser();
 }
 
-function dist(a,b){
-  let R=6371;
-  let dLat=(b.lat-a.lat)*Math.PI/180;
-  let dLon=(b.lng-a.lng)*Math.PI/180;
-
-  let x=Math.sin(dLat/2)**2+
-    Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
-    Math.sin(dLon/2)**2;
-
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-
-// ===== ADDRESS =====
-async function getAddr(c){
-  try{
-    let r=await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
-    );
-    let d=await r.json();
-    return d.display_name || "Unknown";
-  }catch{
-    return "Unknown";
+function drawRoutes(){
+  for(let w in weekData){
+    weekData[w].routes.forEach(day=>{
+      day.forEach(route=>{
+        route.segments.forEach(seg=>{
+          if(!seg.coords) return;
+          let latlngs = seg.coords.map(p=>[p.lat,p.lng]);
+          L.polyline(latlngs,{color:'blue'}).addTo(map);
+        });
+      });
+    });
   }
+}
+
+function trackUser(){
+  navigator.geolocation.watchPosition(pos=>{
+    let lat=pos.coords.latitude;
+    let lng=pos.coords.longitude;
+
+    if(!userMarker){
+      userMarker = L.circleMarker([lat,lng],{radius:8,color:'red'}).addTo(map);
+    } else {
+      userMarker.setLatLng([lat,lng]);
+    }
+  });
+}
+
+// ===== DELETE =====
+function deleteRoute(week,day,index){
+  if(!confirm("Delete route?")) return;
+  weekData[week].routes[day].splice(index,1);
+  saveAll();
+  renderDB();
+  render();
 }
 
 // ===== DATABASE =====
@@ -332,26 +342,17 @@ function renderDB(){
 
     block.innerHTML="<h3>Week "+w+"</h3>";
 
-    block.innerHTML+="<b>Habits:</b><br>";
-    data.checks.forEach((row,i)=>{
-      block.innerHTML+=habits[i]+": ";
-      row.forEach(c=>block.innerHTML+=c?"✔ ":"✖ ");
-      block.innerHTML+="<br>";
-    });
-
-    block.innerHTML+="<br><b>Notes:</b><br>";
-    data.notes.forEach((n,i)=>{
-      if(n) block.innerHTML+=days[i]+": "+n+"<br>";
-    });
-
-    block.innerHTML+="<br><b>Routes:</b><br>";
     data.routes.forEach((day,i)=>{
       if(day.length===0) return;
 
-      block.innerHTML+="<u>"+days[i]+"</u><br>";
+      block.innerHTML+="<b>"+days[i]+"</b><br>";
 
-      day.forEach(r=>{
-        block.innerHTML+="Total "+r.totalKm.toFixed(2)+" km<br>";
+      day.forEach((r,idx)=>{
+
+        block.innerHTML+=`
+          Total ${r.totalKm.toFixed(2)} km
+          <button onclick="deleteRoute(${w},${i},${idx})">❌</button><br>
+        `;
 
         r.segments.forEach(s=>{
           block.innerHTML+=s.start+" → "+s.end+
@@ -366,18 +367,45 @@ function renderDB(){
   }
 }
 
-// ===== SAVE =====
+// ===== HELPERS =====
+function calc(r){
+  let t=0;
+  for(let i=1;i<r.length;i++) t+=dist(r[i-1],r[i]);
+  return t;
+}
+
+function dist(a,b){
+  let R=6371;
+  let dLat=(b.lat-a.lat)*Math.PI/180;
+  let dLon=(b.lng-a.lng)*Math.PI/180;
+
+  let x=Math.sin(dLat/2)**2+
+    Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
+    Math.sin(dLon/2)**2;
+
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+async function getAddr(c){
+  try{
+    let r=await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
+    );
+    let d=await r.json();
+    return d.display_name || "Unknown";
+  }catch{
+    return "Unknown";
+  }
+}
+
+// ===== SAVE / EXPORT =====
 function saveAll(){
   localStorage.setItem("weekData",JSON.stringify(weekData));
   localStorage.setItem("habits",JSON.stringify(habits));
 }
 
-// ===== EXPORT / IMPORT =====
 function exportData(){
-  let blob=new Blob(
-    [JSON.stringify({weekData,habits})],
-    {type:"application/json"}
-  );
+  let blob=new Blob([JSON.stringify({weekData,habits})],{type:"application/json"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="tracker_backup.json";
@@ -394,7 +422,7 @@ function importData(e){
     habits=data.habits||habits;
     saveAll();
     render();
-    alert("Data imported");
+    alert("Imported");
   };
 
   reader.readAsText(file);
