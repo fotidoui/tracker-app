@@ -5,14 +5,46 @@
 <title>Tracker App</title>
 
 <style>
-body { font-family: Arial; text-align:center; }
+body {
+  margin:0;
+  font-family: Arial;
+  display:flex;
+}
+
+/* LEFT MENU */
+#menu {
+  width:120px;
+  background:#222;
+  color:white;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+#menu button {
+  background:none;
+  color:white;
+  border:none;
+  padding:15px;
+  text-align:left;
+  cursor:pointer;
+}
+
+#menu button:hover {
+  background:#444;
+}
+
+/* CONTENT */
+#content {
+  flex:1;
+  padding:10px;
+}
 
 .screen { display:none; }
 
 table {
-  margin:10px auto;
-  border-collapse: collapse;
   width:100%;
+  border-collapse: collapse;
 }
 
 td, th {
@@ -21,41 +53,46 @@ td, th {
 }
 
 textarea { width:100%; height:50px; }
-button { margin:5px; padding:10px; }
 
 </style>
 </head>
 <body>
 
-<h2>Tracker App</h2>
-
-<!-- NAV -->
-<div>
-<button onclick="show('weekly')">Weekly</button>
-<button onclick="show('routes')">Routes</button>
-<button onclick="show('db')">Database</button>
+<!-- MENU -->
+<div id="menu">
+  <button onclick="show('weekly')">Weekly</button>
+  <button onclick="show('routes')">Routes</button>
+  <button onclick="show('db')">Database</button>
 </div>
+
+<!-- CONTENT -->
+<div id="content">
 
 <!-- WEEKLY -->
 <div id="weekly" class="screen">
-<input id="weekInput" type="number" placeholder="Week" value="1">
-<table id="grid"></table>
+  <h3>Weekly</h3>
+  <input id="weekInput" type="number" value="1">
+  <table id="grid"></table>
 </div>
 
 <!-- ROUTES -->
 <div id="routes" class="screen">
-<button onclick="startRoute()">Start</button>
-<button onclick="pauseRoute()">Pause</button>
-<button onclick="resumeRoute()">Resume</button>
-<button onclick="stopRoute()">Stop</button>
-<p id="gpsStatus"></p>
+  <h3>Route Recorder</h3>
+  <button onclick="startRoute()">Start</button>
+  <button onclick="pauseRoute()">Pause</button>
+  <button onclick="resumeRoute()">Resume</button>
+  <button onclick="stopRoute()">Stop</button>
+  <p id="gpsStatus"></p>
 </div>
 
 <!-- DATABASE -->
 <div id="db" class="screen">
-<button onclick="exportData()">Export</button>
-<input type="file" onchange="importData(event)">
-<div id="dbContent"></div>
+  <h3>Database</h3>
+  <button onclick="exportData()">Export</button>
+  <input type="file" onchange="importData(event)">
+  <div id="dbContent"></div>
+</div>
+
 </div>
 
 <script>
@@ -67,7 +104,6 @@ let habits = JSON.parse(localStorage.getItem("habits")||"null")
 
 let currentWeek = 1;
 
-// ROUTE SESSION
 let session = null;
 let watchId = null;
 
@@ -75,7 +111,6 @@ const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 // ===== INIT =====
 window.onload = () => {
-  document.getElementById("weekInput").value = currentWeek;
   ensureWeek();
   render();
   show("weekly");
@@ -124,12 +159,12 @@ function render(){
   });
   table.appendChild(tr);
 
-  // ROUTES ROW
+  // ROUTES
   let rrow=document.createElement("tr");
   rrow.appendChild(Object.assign(document.createElement("td"),{innerText:"KM"}));
 
   for(let j=0;j<7;j++){
-    let total = w.routes[j].reduce((s,r)=>s+r.totalKm,0);
+    let total = w.routes[j].reduce((s,r)=>s+(r.totalKm||0),0);
     let td=document.createElement("td");
     td.innerText=total.toFixed(1);
     rrow.appendChild(td);
@@ -251,7 +286,9 @@ async function stopRoute(){
     route.totalKm+=km;
   }
 
-  weekData[currentWeek].routes[day].push(route);
+  if(route.segments.length>0){
+    weekData[currentWeek].routes[day].push(route);
+  }
 
   saveAll();
   render();
@@ -291,7 +328,7 @@ async function getAddr(c){
   }
 }
 
-// ===== DATABASE =====
+// ===== DATABASE (FIXED) =====
 function renderDB(){
 
   let div=document.getElementById("dbContent");
@@ -299,17 +336,44 @@ function renderDB(){
 
   for(let w in weekData){
 
+    let data = weekData[w];
+
     let block=document.createElement("div");
+    block.style.border="1px solid #aaa";
+    block.style.margin="10px";
+    block.style.padding="10px";
+
     block.innerHTML="<h3>Week "+w+"</h3>";
 
-    weekData[w].routes.forEach((day,i)=>{
-      block.innerHTML+="<b>"+days[i]+"</b><br>";
+    // HABITS
+    block.innerHTML+="<b>Habits:</b><br>";
+    data.checks.forEach((row,i)=>{
+      block.innerHTML+=habits[i]+": ";
+      row.forEach(c=>block.innerHTML+=c?"✔ ":"✖ ");
+      block.innerHTML+="<br>";
+    });
+
+    // NOTES
+    block.innerHTML+="<br><b>Notes:</b><br>";
+    data.notes.forEach((n,i)=>{
+      if(n) block.innerHTML+=days[i]+": "+n+"<br>";
+    });
+
+    // ROUTES
+    block.innerHTML+="<br><b>Routes:</b><br>";
+    data.routes.forEach((day,i)=>{
+      if(day.length===0) return;
+
+      block.innerHTML+="<u>"+days[i]+"</u><br>";
 
       day.forEach(r=>{
         block.innerHTML+="Total "+r.totalKm.toFixed(2)+" km<br>";
+
         r.segments.forEach(s=>{
-          block.innerHTML+=s.start+" → "+s.end+" ("+s.km.toFixed(2)+" km)<br>";
+          block.innerHTML+=s.start+" → "+s.end+
+          " ("+s.km.toFixed(2)+" km)<br>";
         });
+
         block.innerHTML+="<br>";
       });
     });
@@ -326,8 +390,10 @@ function saveAll(){
 
 // ===== EXPORT =====
 function exportData(){
-  let data=JSON.stringify(weekData);
-  let blob=new Blob([data],{type:"application/json"});
+  let blob=new Blob(
+    [JSON.stringify({weekData,habits})],
+    {type:"application/json"}
+  );
   let a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
   a.download="tracker_backup.json";
@@ -340,9 +406,12 @@ function importData(e){
   let reader=new FileReader();
 
   reader.onload=()=>{
-    weekData=JSON.parse(reader.result);
+    let data=JSON.parse(reader.result);
+    weekData=data.weekData||{};
+    habits=data.habits||habits;
     saveAll();
     render();
+    alert("Data imported");
   };
 
   reader.readAsText(file);
