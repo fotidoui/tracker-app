@@ -8,39 +8,96 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-body { margin:0; font-family: Arial; display:flex; background:#f5f5f5; }
+body {
+  margin:0;
+  font-family: system-ui, Arial;
+  display:flex;
+  background:#f4f6f8;
+}
 
 #menu {
-  width:120px;
-  background:#1e1e1e;
+  width:130px;
+  background:#1f2933;
   color:white;
   display:flex;
   flex-direction:column;
+  padding-top:10px;
 }
 
 #menu button {
   background:none;
-  color:white;
+  color:#cbd5e1;
   border:none;
-  padding:12px;
+  padding:14px;
   text-align:left;
+  cursor:pointer;
 }
 
-#menu button:hover { background:#333; }
+#menu button:hover {
+  background:#323f4b;
+  color:white;
+}
 
-#content { flex:1; padding:15px; }
+#content {
+  flex:1;
+  padding:20px;
+}
 
-table { width:100%; border-collapse: collapse; background:white; }
-td, th { border:1px solid #ddd; padding:6px; }
+.screen {
+  display:none;
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
 
-textarea { width:100%; height:50px; }
+table {
+  width:100%;
+  border-collapse: collapse;
+  margin-top:10px;
+}
 
-.screen { display:none; }
+th {
+  background:#eef2f7;
+}
 
-#mapContainer { height:400px; margin-top:10px; }
+td, th {
+  border:1px solid #e5e7eb;
+  padding:8px;
+  text-align:center;
+}
 
+textarea, input {
+  width:100%;
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+button {
+  background:#3b82f6;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:8px;
+  margin:3px;
+}
+
+button:hover { background:#2563eb; }
+
+.small {
+  background:#ef4444;
+  padding:4px 6px;
+}
+
+#mapContainer {
+  height:400px;
+  margin-top:10px;
+  border-radius:10px;
+}
 </style>
 </head>
+
 <body>
 
 <div id="menu">
@@ -67,30 +124,22 @@ textarea { width:100%; height:50px; }
 </div>
 
 <div id="map" class="screen">
-<h3>Route Map</h3>
-
+<h3>Map</h3>
 Week <input id="mapWeek" type="number" value="1">
-Day 
-<select id="mapDay">
-<option value="0">Mon</option>
-<option value="1">Tue</option>
-<option value="2">Wed</option>
-<option value="3">Thu</option>
-<option value="4">Fri</option>
-<option value="5">Sat</option>
+Day <select id="mapDay">
+<option value="0">Mon</option><option value="1">Tue</option>
+<option value="2">Wed</option><option value="3">Thu</option>
+<option value="4">Fri</option><option value="5">Sat</option>
 <option value="6">Sun</option>
 </select>
-
 Route <input id="mapRoute" type="number" value="0">
-
-<button onclick="drawSelectedRoute()">Show Route</button>
-
+<button onclick="drawRoute()">Show</button>
 <div id="mapContainer"></div>
 </div>
 
 <div id="db" class="screen">
 <h3>Database</h3>
-<button onclick="exportCSV()">Export CSV</button>
+<button onclick="exportCSV()">CSV</button>
 <button onclick="exportJSON()">Backup</button>
 <input type="file" onchange="importData(event)">
 <div id="dbContent"></div>
@@ -100,21 +149,28 @@ Route <input id="mapRoute" type="number" value="0">
 
 <script>
 
+// ===== STATE =====
 let weekData = JSON.parse(localStorage.getItem("weekData")||"{}");
-let habits = JSON.parse(localStorage.getItem("habits")||"null") 
-  || Array(8).fill("").map((_,i)=>"Habit "+(i+1));
+let habits = JSON.parse(localStorage.getItem("habits")||"[]");
 
-let currentWeek = 1;
+// 🔥 FORCE 8 HABITS
+while(habits.length < 8){
+  habits.push("Habit " + (habits.length+1));
+}
+
+let currentWeek=1;
 let session=null, watchId=null;
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
+// ===== INIT =====
 window.onload=()=>{
   ensureWeek();
   render();
   show("weekly");
 };
 
+// ===== NAV =====
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
@@ -130,7 +186,7 @@ document.getElementById("weekInput").onchange=function(){
 function ensureWeek(){
   if(!weekData[currentWeek]){
     weekData[currentWeek]={
-      checks:Array(habits.length).fill().map(()=>Array(7).fill(false)),
+      checks:Array(8).fill().map(()=>Array(7).fill(false)),
       notes:Array(7).fill(""),
       routes:Array(7).fill().map(()=>[])
     };
@@ -142,7 +198,6 @@ function render(){
 
   let table=document.getElementById("grid");
   table.innerHTML="";
-
   let w=weekData[currentWeek];
 
   let tr=document.createElement("tr");
@@ -213,8 +268,7 @@ function startRoute(){
   session={active:true,paused:false,segments:[[]]};
   watchId=navigator.geolocation.watchPosition(pos=>{
     if(!session.active||session.paused)return;
-    let p={lat:pos.coords.latitude,lng:pos.coords.longitude};
-    session.segments[session.segments.length-1].push(p);
+    session.segments.at(-1).push({lat:pos.coords.latitude,lng:pos.coords.longitude});
   });
 }
 
@@ -222,24 +276,20 @@ function pauseRoute(){ if(session){session.paused=true;session.segments.push([])
 function resumeRoute(){ if(session){session.paused=false;} }
 
 async function stopRoute(){
-
   if(!session)return;
 
   session.active=false;
   navigator.geolocation.clearWatch(watchId);
 
   let day=(new Date().getDay()+6)%7;
-
   let route={segments:[],totalKm:0};
 
   for(let seg of session.segments){
+    if(seg.length<2)continue;
 
-    if(seg.length<2) continue;
-
-    let km = calc(seg);
-
-    let start = await getAddr(seg[0]);
-    let end = await getAddr(seg[seg.length-1]);
+    let km=calc(seg);
+    let start=await getAddr(seg[0]);
+    let end=await getAddr(seg.at(-1));
 
     route.segments.push({km,start,end,coords:seg});
     route.totalKm+=km;
@@ -255,13 +305,10 @@ async function stopRoute(){
 // ===== ADDRESS =====
 async function getAddr(c){
   try{
-    if(!navigator.onLine){
+    if(!navigator.onLine)
       return `Lat:${c.lat.toFixed(4)},Lng:${c.lng.toFixed(4)}`;
-    }
 
-    let r=await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
-    );
+    let r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
     let d=await r.json();
     return d.display_name || "Unknown";
   }catch{
@@ -277,80 +324,54 @@ function initMap(){
   map=L.map('mapContainer').setView([52.1,5.3],7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-  // LIVE POSITION
   navigator.geolocation.watchPosition(pos=>{
-    let lat=pos.coords.latitude;
-    let lng=pos.coords.longitude;
-
+    let lat=pos.coords.latitude, lng=pos.coords.longitude;
     if(!userMarker){
-      userMarker=L.circleMarker([lat,lng],{
-        radius:8,color:'red'
-      }).addTo(map);
-    }else{
-      userMarker.setLatLng([lat,lng]);
-    }
+      userMarker=L.circleMarker([lat,lng],{radius:8,color:'red'}).addTo(map);
+    } else userMarker.setLatLng([lat,lng]);
   });
 }
 
-function drawSelectedRoute(){
-
+function drawRoute(){
   if(routeLayer) routeLayer.remove();
 
-  let w=document.getElementById("mapWeek").value;
-  let d=document.getElementById("mapDay").value;
-  let r=document.getElementById("mapRoute").value;
-
+  let w=mapWeek.value, d=mapDay.value, r=mapRoute.value;
   let route=weekData[w]?.routes[d]?.[r];
   if(!route) return alert("No route");
 
   let coords=[];
   route.segments.forEach(s=>coords.push(...s.coords));
 
-  let latlngs=coords.map(p=>[p.lat,p.lng]);
-
-  routeLayer=L.polyline(latlngs,{color:'blue'}).addTo(map);
+  routeLayer=L.polyline(coords.map(p=>[p.lat,p.lng]),{color:'blue'}).addTo(map);
   map.fitBounds(routeLayer.getBounds());
 }
 
 // ===== DATABASE =====
 function renderDB(){
-
-  let div=document.getElementById("dbContent");
-  div.innerHTML="";
+  let div=dbContent; div.innerHTML="";
 
   for(let w in weekData){
-
     let data=weekData[w];
-
     let block=document.createElement("div");
-    block.style.background="white";
-    block.style.padding="10px";
-    block.style.margin="10px";
 
     block.innerHTML="<h3>Week "+w+"</h3>";
 
     block.innerHTML+="<b>Habits:</b><br>";
-    data.checks.forEach((row,i)=>{
-      block.innerHTML+=habits[i]+": "+row.map(c=>c?"✔":"✖").join(" ")+"<br>";
+    data.checks.forEach((r,i)=>{
+      block.innerHTML+=habits[i]+": "+r.map(c=>c?"✔":"✖").join(" ")+"<br>";
     });
 
     block.innerHTML+="<br><b>Notes:</b><br>";
-    data.notes.forEach((n,i)=>{
-      if(n) block.innerHTML+=days[i]+": "+n+"<br>";
-    });
+    data.notes.forEach((n,i)=>{ if(n) block.innerHTML+=days[i]+": "+n+"<br>"; });
 
     block.innerHTML+="<br><b>Routes:</b><br>";
     data.routes.forEach((day,i)=>{
       if(day.length===0)return;
-
       block.innerHTML+="<u>"+days[i]+"</u><br>";
 
-      day.forEach(r=>{
-        block.innerHTML+=`${r.totalKm.toFixed(2)} km<br>`;
-        r.segments.forEach(s=>{
-          block.innerHTML+=s.start+" → "+s.end+"<br>";
-        });
-        block.innerHTML+="<br>";
+      day.forEach((r,idx)=>{
+        block.innerHTML+=`${r.totalKm.toFixed(2)} km 
+        <button class="small" onclick="deleteRoute(${w},${i},${idx})">✕</button><br>`;
       });
     });
 
@@ -358,11 +379,15 @@ function renderDB(){
   }
 }
 
-// ===== CSV =====
+function deleteRoute(w,d,i){
+  if(!confirm("Delete?"))return;
+  weekData[w].routes[d].splice(i,1);
+  saveAll(); renderDB(); render();
+}
+
+// ===== EXPORT =====
 function exportCSV(){
-
   let rows=[["Week","Day","KM","Start","End"]];
-
   for(let w in weekData){
     weekData[w].routes.forEach((day,i)=>{
       day.forEach(r=>{
@@ -372,33 +397,36 @@ function exportCSV(){
       });
     });
   }
-
   let csv=rows.map(r=>r.join(",")).join("\n");
-
-  let blob=new Blob([csv],{type:"text/csv"});
   let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
+  a.href=URL.createObjectURL(new Blob([csv]));
   a.download="routes.csv";
   a.click();
+}
+
+function exportJSON(){
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({weekData,habits})]));
+  a.download="backup.json";
+  a.click();
+}
+
+function importData(e){
+  let f=e.target.files[0];
+  let r=new FileReader();
+  r.onload=()=>{
+    let d=JSON.parse(r.result);
+    weekData=d.weekData||{};
+    habits=d.habits||habits;
+    saveAll(); render();
+  };
+  r.readAsText(f);
 }
 
 // ===== SAVE =====
 function saveAll(){
   localStorage.setItem("weekData",JSON.stringify(weekData));
   localStorage.setItem("habits",JSON.stringify(habits));
-}
-
-// ===== IMPORT =====
-function importData(e){
-  let file=e.target.files[0];
-  let reader=new FileReader();
-  reader.onload=()=>{
-    let data=JSON.parse(reader.result);
-    weekData=data.weekData||{};
-    habits=data.habits||habits;
-    saveAll(); render();
-  };
-  reader.readAsText(file);
 }
 
 // ===== DIST =====
