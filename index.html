@@ -2,19 +2,18 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tracker App</title>
+<title>Tracker</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-body { margin:0; font-family: Arial; display:flex; }
+body { margin:0; font-family: Arial; display:flex; background:#f5f5f5; }
 
 #menu {
-  width:130px;
-  background:#222;
+  width:120px;
+  background:#1e1e1e;
   color:white;
-  min-height:100vh;
   display:flex;
   flex-direction:column;
 }
@@ -23,23 +22,22 @@ body { margin:0; font-family: Arial; display:flex; }
   background:none;
   color:white;
   border:none;
-  padding:15px;
+  padding:12px;
   text-align:left;
-  cursor:pointer;
 }
 
-#menu button:hover { background:#444; }
+#menu button:hover { background:#333; }
 
-#content { flex:1; padding:10px; }
+#content { flex:1; padding:15px; }
 
-.screen { display:none; }
-
-table { width:100%; border-collapse: collapse; }
-td, th { border:1px solid #ccc; padding:5px; }
+table { width:100%; border-collapse: collapse; background:white; }
+td, th { border:1px solid #ddd; padding:6px; }
 
 textarea { width:100%; height:50px; }
 
-#mapContainer { height:500px; }
+.screen { display:none; }
+
+#mapContainer { height:400px; margin-top:10px; }
 
 </style>
 </head>
@@ -55,71 +53,68 @@ textarea { width:100%; height:50px; }
 <div id="content">
 
 <div id="weekly" class="screen">
-  <h3 id="weekTitle"></h3>
-  <input id="weekInput" type="number" value="1">
-  <table id="grid"></table>
+<h3>Week <input id="weekInput" type="number" value="1"></h3>
+<table id="grid"></table>
 </div>
 
 <div id="routes" class="screen">
-  <h3>Route Recorder</h3>
-  <button onclick="startRoute()">Start</button>
-  <button onclick="pauseRoute()">Pause</button>
-  <button onclick="resumeRoute()">Resume</button>
-  <button onclick="stopRoute()">Stop</button>
-  <p id="gpsStatus"></p>
+<h3>Route Recorder</h3>
+<button onclick="startRoute()">Start</button>
+<button onclick="pauseRoute()">Pause</button>
+<button onclick="resumeRoute()">Resume</button>
+<button onclick="stopRoute()">Stop</button>
+<p id="gpsStatus"></p>
 </div>
 
 <div id="map" class="screen">
-  <h3>Map</h3>
-  <div id="mapContainer"></div>
+<h3>Route Map</h3>
+
+Week <input id="mapWeek" type="number" value="1">
+Day 
+<select id="mapDay">
+<option value="0">Mon</option>
+<option value="1">Tue</option>
+<option value="2">Wed</option>
+<option value="3">Thu</option>
+<option value="4">Fri</option>
+<option value="5">Sat</option>
+<option value="6">Sun</option>
+</select>
+
+Route <input id="mapRoute" type="number" value="0">
+
+<button onclick="drawSelectedRoute()">Show Route</button>
+
+<div id="mapContainer"></div>
 </div>
 
 <div id="db" class="screen">
-  <h3>Database</h3>
-  <button onclick="exportData()">Export</button>
-  <input type="file" onchange="importData(event)">
-  <div id="dbContent"></div>
+<h3>Database</h3>
+<button onclick="exportCSV()">Export CSV</button>
+<button onclick="exportJSON()">Backup</button>
+<input type="file" onchange="importData(event)">
+<div id="dbContent"></div>
 </div>
 
 </div>
 
 <script>
 
-// ===== STATE =====
 let weekData = JSON.parse(localStorage.getItem("weekData")||"{}");
 let habits = JSON.parse(localStorage.getItem("habits")||"null") 
-  || Array(5).fill("").map((_,i)=>"Habit "+(i+1));
+  || Array(8).fill("").map((_,i)=>"Habit "+(i+1));
 
 let currentWeek = 1;
+let session=null, watchId=null;
 
-let session = null;
-let watchId = null;
+const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-// ===== DATE =====
-function getMonday(week, year){
-  let d = new Date(year, 0, 1 + (week-1)*7);
-  let day = d.getDay();
-  let diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
-}
-
-function getWeekInfo(){
-  let year = new Date().getFullYear();
-  let monday = getMonday(currentWeek, year);
-  let month = monday.toLocaleString('default', { month: 'long' });
-  return { monday, month, year };
-}
-
-// ===== INIT =====
-window.onload = () => {
+window.onload=()=>{
   ensureWeek();
   render();
   show("weekly");
 };
 
-// ===== NAV =====
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
@@ -127,15 +122,14 @@ function show(id){
 }
 
 // ===== WEEK =====
-document.getElementById("weekInput").onchange = function(){
-  currentWeek = Number(this.value)||1;
-  ensureWeek();
-  render();
+document.getElementById("weekInput").onchange=function(){
+  currentWeek=Number(this.value)||1;
+  ensureWeek(); render();
 };
 
 function ensureWeek(){
   if(!weekData[currentWeek]){
-    weekData[currentWeek] = {
+    weekData[currentWeek]={
       checks:Array(habits.length).fill().map(()=>Array(7).fill(false)),
       notes:Array(7).fill(""),
       routes:Array(7).fill().map(()=>[])
@@ -146,34 +140,27 @@ function ensureWeek(){
 // ===== RENDER =====
 function render(){
 
-  let { monday, month, year } = getWeekInfo();
+  let table=document.getElementById("grid");
+  table.innerHTML="";
 
-  document.getElementById("weekTitle").innerText =
-    "Week " + currentWeek + " (" + month + " " + year + ")";
+  let w=weekData[currentWeek];
 
-  let table = document.getElementById("grid");
-  table.innerHTML = "";
-
-  let w = weekData[currentWeek];
-
-  let tr = document.createElement("tr");
+  let tr=document.createElement("tr");
   tr.appendChild(document.createElement("th"));
 
-  for(let i=0;i<7;i++){
-    let d=new Date(monday);
-    d.setDate(monday.getDate()+i);
-
+  days.forEach(d=>{
     let th=document.createElement("th");
-    th.innerText = days[i]+" "+d.getDate();
+    th.innerText=d;
     tr.appendChild(th);
-  }
+  });
+
   table.appendChild(tr);
 
   let rrow=document.createElement("tr");
   rrow.appendChild(Object.assign(document.createElement("td"),{innerText:"KM"}));
 
   for(let j=0;j<7;j++){
-    let total = w.routes[j].reduce((s,r)=>s+(r.totalKm||0),0);
+    let total=w.routes[j].reduce((s,r)=>s+(r.totalKm||0),0);
     let td=document.createElement("td");
     td.innerText=total.toFixed(1);
     rrow.appendChild(td);
@@ -183,19 +170,19 @@ function render(){
   habits.forEach((h,i)=>{
     let row=document.createElement("tr");
 
-    let input=document.createElement("input");
-    input.value=h;
-    input.onchange=()=>{ habits[i]=input.value; saveAll(); };
+    let inp=document.createElement("input");
+    inp.value=h;
+    inp.onchange=()=>{habits[i]=inp.value;saveAll();};
 
     let name=document.createElement("td");
-    name.appendChild(input);
+    name.appendChild(inp);
     row.appendChild(name);
 
     for(let j=0;j<7;j++){
       let cb=document.createElement("input");
       cb.type="checkbox";
       cb.checked=w.checks[i][j];
-      cb.onchange=()=>{ w.checks[i][j]=cb.checked; saveAll(); };
+      cb.onchange=()=>{w.checks[i][j]=cb.checked;saveAll();};
 
       let td=document.createElement("td");
       td.appendChild(cb);
@@ -211,7 +198,7 @@ function render(){
   for(let j=0;j<7;j++){
     let t=document.createElement("textarea");
     t.value=w.notes[j];
-    t.onchange=()=>{ w.notes[j]=t.value; saveAll(); };
+    t.onchange=()=>{w.notes[j]=t.value;saveAll();};
 
     let td=document.createElement("td");
     td.appendChild(t);
@@ -223,41 +210,34 @@ function render(){
 
 // ===== ROUTES =====
 function startRoute(){
-  session = { active:true, paused:false, segments:[[]] };
-
-  watchId = navigator.geolocation.watchPosition(pos=>{
-    if(!session.active || session.paused) return;
-
+  session={active:true,paused:false,segments:[[]]};
+  watchId=navigator.geolocation.watchPosition(pos=>{
+    if(!session.active||session.paused)return;
     let p={lat:pos.coords.latitude,lng:pos.coords.longitude};
     session.segments[session.segments.length-1].push(p);
-
-    document.getElementById("gpsStatus").innerText =
-      "Tracking: "+session.segments.flat().length;
-
-  }, err=>{
-    document.getElementById("gpsStatus").innerText=err.message;
-  }, {enableHighAccuracy:true});
+  });
 }
 
-function pauseRoute(){ if(session){ session.paused=true; session.segments.push([]); } }
-function resumeRoute(){ if(session){ session.paused=false; } }
+function pauseRoute(){ if(session){session.paused=true;session.segments.push([]);} }
+function resumeRoute(){ if(session){session.paused=false;} }
 
 async function stopRoute(){
 
-  if(!session) return;
+  if(!session)return;
 
   session.active=false;
   navigator.geolocation.clearWatch(watchId);
 
   let day=(new Date().getDay()+6)%7;
 
-  let route={segments:[], totalKm:0};
+  let route={segments:[],totalKm:0};
 
   for(let seg of session.segments){
 
     if(seg.length<2) continue;
 
     let km = calc(seg);
+
     let start = await getAddr(seg[0]);
     let end = await getAddr(seg[seg.length-1]);
 
@@ -269,60 +249,67 @@ async function stopRoute(){
     weekData[currentWeek].routes[day].push(route);
   }
 
-  saveAll();
-  render();
+  saveAll(); render();
 }
 
-// ===== MAP =====
-let map, userMarker;
+// ===== ADDRESS =====
+async function getAddr(c){
+  try{
+    if(!navigator.onLine){
+      return `Lat:${c.lat.toFixed(4)},Lng:${c.lng.toFixed(4)}`;
+    }
 
-function initMap(){
-
-  if(map) return;
-
-  map = L.map('mapContainer').setView([52.1, 5.3], 7);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-    .addTo(map);
-
-  drawRoutes();
-  trackUser();
-}
-
-function drawRoutes(){
-  for(let w in weekData){
-    weekData[w].routes.forEach(day=>{
-      day.forEach(route=>{
-        route.segments.forEach(seg=>{
-          if(!seg.coords) return;
-          let latlngs = seg.coords.map(p=>[p.lat,p.lng]);
-          L.polyline(latlngs,{color:'blue'}).addTo(map);
-        });
-      });
-    });
+    let r=await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
+    );
+    let d=await r.json();
+    return d.display_name || "Unknown";
+  }catch{
+    return `Lat:${c.lat.toFixed(4)},Lng:${c.lng.toFixed(4)}`;
   }
 }
 
-function trackUser(){
+// ===== MAP =====
+let map, routeLayer, userMarker;
+
+function initMap(){
+  if(map)return;
+  map=L.map('mapContainer').setView([52.1,5.3],7);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+  // LIVE POSITION
   navigator.geolocation.watchPosition(pos=>{
     let lat=pos.coords.latitude;
     let lng=pos.coords.longitude;
 
     if(!userMarker){
-      userMarker = L.circleMarker([lat,lng],{radius:8,color:'red'}).addTo(map);
-    } else {
+      userMarker=L.circleMarker([lat,lng],{
+        radius:8,color:'red'
+      }).addTo(map);
+    }else{
       userMarker.setLatLng([lat,lng]);
     }
   });
 }
 
-// ===== DELETE =====
-function deleteRoute(week,day,index){
-  if(!confirm("Delete route?")) return;
-  weekData[week].routes[day].splice(index,1);
-  saveAll();
-  renderDB();
-  render();
+function drawSelectedRoute(){
+
+  if(routeLayer) routeLayer.remove();
+
+  let w=document.getElementById("mapWeek").value;
+  let d=document.getElementById("mapDay").value;
+  let r=document.getElementById("mapRoute").value;
+
+  let route=weekData[w]?.routes[d]?.[r];
+  if(!route) return alert("No route");
+
+  let coords=[];
+  route.segments.forEach(s=>coords.push(...s.coords));
+
+  let latlngs=coords.map(p=>[p.lat,p.lng]);
+
+  routeLayer=L.polyline(latlngs,{color:'blue'}).addTo(map);
+  map.fitBounds(routeLayer.getBounds());
 }
 
 // ===== DATABASE =====
@@ -333,32 +320,36 @@ function renderDB(){
 
   for(let w in weekData){
 
-    let data = weekData[w];
+    let data=weekData[w];
 
     let block=document.createElement("div");
-    block.style.border="1px solid #aaa";
-    block.style.margin="10px";
+    block.style.background="white";
     block.style.padding="10px";
+    block.style.margin="10px";
 
     block.innerHTML="<h3>Week "+w+"</h3>";
 
+    block.innerHTML+="<b>Habits:</b><br>";
+    data.checks.forEach((row,i)=>{
+      block.innerHTML+=habits[i]+": "+row.map(c=>c?"✔":"✖").join(" ")+"<br>";
+    });
+
+    block.innerHTML+="<br><b>Notes:</b><br>";
+    data.notes.forEach((n,i)=>{
+      if(n) block.innerHTML+=days[i]+": "+n+"<br>";
+    });
+
+    block.innerHTML+="<br><b>Routes:</b><br>";
     data.routes.forEach((day,i)=>{
-      if(day.length===0) return;
+      if(day.length===0)return;
 
-      block.innerHTML+="<b>"+days[i]+"</b><br>";
+      block.innerHTML+="<u>"+days[i]+"</u><br>";
 
-      day.forEach((r,idx)=>{
-
-        block.innerHTML+=`
-          Total ${r.totalKm.toFixed(2)} km
-          <button onclick="deleteRoute(${w},${i},${idx})">❌</button><br>
-        `;
-
+      day.forEach(r=>{
+        block.innerHTML+=`${r.totalKm.toFixed(2)} km<br>`;
         r.segments.forEach(s=>{
-          block.innerHTML+=s.start+" → "+s.end+
-          " ("+s.km.toFixed(2)+" km)<br>";
+          block.innerHTML+=s.start+" → "+s.end+"<br>";
         });
-
         block.innerHTML+="<br>";
       });
     });
@@ -367,7 +358,50 @@ function renderDB(){
   }
 }
 
-// ===== HELPERS =====
+// ===== CSV =====
+function exportCSV(){
+
+  let rows=[["Week","Day","KM","Start","End"]];
+
+  for(let w in weekData){
+    weekData[w].routes.forEach((day,i)=>{
+      day.forEach(r=>{
+        r.segments.forEach(s=>{
+          rows.push([w,days[i],s.km,s.start,s.end]);
+        });
+      });
+    });
+  }
+
+  let csv=rows.map(r=>r.join(",")).join("\n");
+
+  let blob=new Blob([csv],{type:"text/csv"});
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="routes.csv";
+  a.click();
+}
+
+// ===== SAVE =====
+function saveAll(){
+  localStorage.setItem("weekData",JSON.stringify(weekData));
+  localStorage.setItem("habits",JSON.stringify(habits));
+}
+
+// ===== IMPORT =====
+function importData(e){
+  let file=e.target.files[0];
+  let reader=new FileReader();
+  reader.onload=()=>{
+    let data=JSON.parse(reader.result);
+    weekData=data.weekData||{};
+    habits=data.habits||habits;
+    saveAll(); render();
+  };
+  reader.readAsText(file);
+}
+
+// ===== DIST =====
 function calc(r){
   let t=0;
   for(let i=1;i<r.length;i++) t+=dist(r[i-1],r[i]);
@@ -378,54 +412,10 @@ function dist(a,b){
   let R=6371;
   let dLat=(b.lat-a.lat)*Math.PI/180;
   let dLon=(b.lng-a.lng)*Math.PI/180;
-
   let x=Math.sin(dLat/2)**2+
     Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
     Math.sin(dLon/2)**2;
-
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-
-async function getAddr(c){
-  try{
-    let r=await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
-    );
-    let d=await r.json();
-    return d.display_name || "Unknown";
-  }catch{
-    return "Unknown";
-  }
-}
-
-// ===== SAVE / EXPORT =====
-function saveAll(){
-  localStorage.setItem("weekData",JSON.stringify(weekData));
-  localStorage.setItem("habits",JSON.stringify(habits));
-}
-
-function exportData(){
-  let blob=new Blob([JSON.stringify({weekData,habits})],{type:"application/json"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="tracker_backup.json";
-  a.click();
-}
-
-function importData(e){
-  let file=e.target.files[0];
-  let reader=new FileReader();
-
-  reader.onload=()=>{
-    let data=JSON.parse(reader.result);
-    weekData=data.weekData||{};
-    habits=data.habits||habits;
-    saveAll();
-    render();
-    alert("Imported");
-  };
-
-  reader.readAsText(file);
 }
 
 </script>
