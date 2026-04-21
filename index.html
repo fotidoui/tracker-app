@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tracker</title>
+<title>Tracker App</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -11,49 +11,41 @@
 body {
   margin:0;
   font-family: system-ui, Arial;
-  display:flex;
   background:#eef2f6;
 }
 
-/* SIDEBAR */
-#menu {
-  width:140px;
+/* TOP NAV (NEW SYSTEM) */
+#tabs {
+  display:flex;
   background:#111827;
   color:white;
-  display:flex;
-  flex-direction:column;
 }
 
-#menu button {
-  background:none;
-  color:#cbd5e1;
-  border:none;
+#tabs button {
+  flex:1;
   padding:14px;
-  text-align:left;
+  background:none;
+  border:none;
+  color:#cbd5e1;
   cursor:pointer;
 }
 
-#menu button:hover {
+#tabs button.active {
   background:#1f2937;
   color:white;
 }
 
 /* CONTENT */
 #content {
-  flex:1;
-  padding:20px;
+  padding:15px;
 }
 
-.screen {
-  display:none;
-}
-
-/* CARD STYLE */
+/* CARD */
 .card {
   background:white;
   padding:15px;
-  border-radius:12px;
   margin-bottom:15px;
+  border-radius:12px;
   box-shadow:0 2px 10px rgba(0,0,0,0.06);
 }
 
@@ -61,13 +53,11 @@ body {
 table {
   width:100%;
   border-collapse: collapse;
-  margin-top:10px;
 }
 
 td, th {
   border:1px solid #e5e7eb;
   padding:8px;
-  text-align:center;
 }
 
 th {
@@ -94,16 +84,10 @@ button {
   border-radius:6px;
   padding:8px 10px;
   cursor:pointer;
-  font-size:13px;
 }
 
 button:hover {
   background:#1d4ed8;
-}
-
-.small {
-  background:#ef4444;
-  padding:4px 8px;
 }
 
 /* MAP */
@@ -116,34 +100,18 @@ button:hover {
 
 <body>
 
-<div id="menu">
-  <button onclick="show('weekly')">Weekly</button>
-  <button onclick="show('routes')">Routes</button>
-  <button onclick="show('map');initMap()">Map</button>
-  <button onclick="show('db')">Database</button>
+<!-- TOP TABS -->
+<div id="tabs">
+  <button onclick="show('weekly')" id="tab-weekly">Weekly</button>
+  <button onclick="show('routes')" id="tab-routes">Routes</button>
+  <button onclick="show('map')" id="tab-map">Map</button>
+  <button onclick="show('db')" id="tab-db">Database</button>
 </div>
 
 <div id="content">
 
 <!-- WEEKLY -->
-<div id="weekly" class="screen">
-
-<div class="card">
-<h3>Week <input id="weekInput" type="number" value="1"></h3>
-<div id="kmSummary"></div>
-</div>
-
-<div class="card">
-<h3>Habits</h3>
-<table id="grid"></table>
-</div>
-
-<div class="card">
-<h3>Notes</h3>
-<div id="notesGrid"></div>
-</div>
-
-</div>
+<div id="weekly" class="screen"></div>
 
 <!-- ROUTES -->
 <div id="routes" class="screen">
@@ -163,33 +131,17 @@ button:hover {
 <h3>Map</h3>
 
 Week <input id="mapWeek" type="number" value="1">
-Day <select id="mapDay">
-<option value="0">Mon</option>
-<option value="1">Tue</option>
-<option value="2">Wed</option>
-<option value="3">Thu</option>
-<option value="4">Fri</option>
-<option value="5">Sat</option>
-<option value="6">Sun</option>
-</select>
-
+Day <input id="mapDay" type="number" value="0">
 Route <input id="mapRoute" type="number" value="0">
-<button onclick="drawRoute()">Show</button>
+
+<button onclick="drawRoute()">Show Route</button>
 
 <div id="mapContainer"></div>
 </div>
 </div>
 
 <!-- DB -->
-<div id="db" class="screen">
-<div class="card">
-<h3>Database</h3>
-<button onclick="exportCSV()">CSV</button>
-<button onclick="exportJSON()">Backup</button>
-<input type="file" onchange="importData(event)">
-<div id="dbContent"></div>
-</div>
-</div>
+<div id="db" class="screen"></div>
 
 </div>
 
@@ -199,10 +151,8 @@ Route <input id="mapRoute" type="number" value="0">
 let weekData = JSON.parse(localStorage.getItem("weekData")||"{}");
 let habits = JSON.parse(localStorage.getItem("habits")||"[]");
 
-// force 8 habits
-while(habits.length < 8){
-  habits.push("Habit "+(habits.length+1));
-}
+// FORCE 8 HABITS ALWAYS
+habits = Array.from({length:8}, (_,i)=>habits[i] || "Habit "+(i+1));
 
 let currentWeek=1;
 let session=null, watchId=null;
@@ -212,23 +162,24 @@ const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 // ===== INIT =====
 window.onload=()=>{
   ensureWeek();
-  render();
   show("weekly");
 };
 
 // ===== NAV =====
 function show(id){
+
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
+
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+
+  if(id==="weekly") renderWeekly();
   if(id==="db") renderDB();
+  if(id==="map") initMap();
 }
 
 // ===== WEEK =====
-document.getElementById("weekInput").onchange=function(){
-  currentWeek=Number(this.value)||1;
-  ensureWeek(); render();
-};
-
 function ensureWeek(){
   if(!weekData[currentWeek]){
     weekData[currentWeek]={
@@ -239,139 +190,117 @@ function ensureWeek(){
   }
 }
 
-// ===== RENDER WEEK =====
-function render(){
+// ===== WEEKLY UI =====
+function renderWeekly(){
 
   let w=weekData[currentWeek];
+  let html="";
 
-  // KM SUMMARY
-  let kmDiv=document.getElementById("kmSummary");
-  kmDiv.innerHTML="";
-
-  let totalWeek=0;
-  let html="<b>Daily KM:</b><br>";
+  // SUMMARY
+  let total=0;
+  html+=`<div class="card"><h3>Week ${currentWeek}</h3>`;
 
   w.routes.forEach((d,i)=>{
     let km=d.reduce((s,r)=>s+(r.totalKm||0),0);
-    totalWeek+=km;
-    html+=days[i]+": "+km.toFixed(1)+" km<br>";
+    total+=km;
+    html+=`${days[i]}: ${km.toFixed(1)} km<br>`;
   });
 
-  html+="<br><b>Total week:</b> "+totalWeek.toFixed(1)+" km";
-  kmDiv.innerHTML=html;
+  html+=`<br><b>Total: ${total.toFixed(1)} km</b></div>`;
 
   // HABITS
-  let table=document.getElementById("grid");
-  table.innerHTML="";
-
-  let tr=document.createElement("tr");
-  tr.appendChild(document.createElement("th"));
-  days.forEach(d=>{
-    let th=document.createElement("th");
-    th.innerText=d;
-    tr.appendChild(th);
-  });
-  table.appendChild(tr);
-
+  html+=`<div class="card"><h3>Habits</h3>`;
   habits.forEach((h,i)=>{
-    let row=document.createElement("tr");
-
-    let inp=document.createElement("input");
-    inp.value=h;
-    inp.onchange=()=>{habits[i]=inp.value;saveAll();};
-
-    let td=document.createElement("td");
-    td.appendChild(inp);
-    row.appendChild(td);
-
+    html+=`<b>${h}</b><br>`;
     for(let j=0;j<7;j++){
-      let cb=document.createElement("input");
-      cb.type="checkbox";
-      cb.checked=w.checks[i][j];
-      cb.onchange=()=>{w.checks[i][j]=cb.checked;saveAll();};
-
-      let cell=document.createElement("td");
-      cell.appendChild(cb);
-      row.appendChild(cell);
+      html+=`
+        <label>
+          <input type="checkbox"
+          ${w.checks[i][j]?"checked":""}
+          onchange="toggle(${i},${j})">
+          ${days[j]}
+        </label>
+      `;
     }
-
-    table.appendChild(row);
+    html+="<br><br>";
   });
+  html+="</div>";
 
-  // NOTES (FIXED & CLEAR)
-  let notes=document.getElementById("notesGrid");
-  notes.innerHTML="";
-
-  days.forEach((d,i)=>{
-    let div=document.createElement("div");
-    div.className="card";
-    div.innerHTML="<b>"+d+"</b>";
-
-    let t=document.createElement("textarea");
-    t.value=w.notes[i];
-    t.onchange=()=>{w.notes[i]=t.value;saveAll();};
-
-    div.appendChild(t);
-    notes.appendChild(div);
+  // NOTES (FIXED)
+  html+=`<div class="card"><h3>Notes per day</h3>`;
+  w.notes.forEach((n,i)=>{
+    html+=`
+      <b>${days[i]}</b>
+      <textarea onchange="setNote(${i},this.value)">${n}</textarea>
+    `;
   });
+  html+="</div>";
+
+  document.getElementById("weekly").innerHTML=html;
 }
 
-// ===== ROUTES (UNCHANGED CORE) =====
+// ===== NOTES FIX =====
+function setNote(i,val){
+  weekData[currentWeek].notes[i]=val;
+  saveAll();
+}
+
+// ===== HABITS FIX =====
+function toggle(i,j){
+  let w=weekData[currentWeek];
+  w.checks[i][j]=!w.checks[i][j];
+  saveAll();
+}
+
+// ===== ROUTES =====
 function startRoute(){
-  session={active:true,paused:false,segments:[[]]};
-  watchId=navigator.geolocation.watchPosition(pos=>{
-    if(!session.active||session.paused)return;
-    session.segments.at(-1).push({lat:pos.coords.latitude,lng:pos.coords.longitude});
+  session={segments:[[]],active:true,paused:false};
+  watchId=navigator.geolocation.watchPosition(p=>{
+    if(session.paused) return;
+    session.segments.at(-1).push({lat:p.coords.latitude,lng:p.coords.longitude});
   });
 }
 
-function pauseRoute(){ if(session){session.paused=true;session.segments.push([]);} }
-function resumeRoute(){ if(session){session.paused=false;} }
+function pauseRoute(){ session.paused=true; session.segments.push([]); }
+function resumeRoute(){ session.paused=false; }
 
 function stopRoute(){
-  if(!session)return;
-
-  session.active=false;
   navigator.geolocation.clearWatch(watchId);
 
   let day=(new Date().getDay()+6)%7;
   let route={segments:[],totalKm:0};
 
   session.segments.forEach(seg=>{
-    if(seg.length<2)return;
+    if(seg.length<2) return;
     let km=calc(seg);
     route.segments.push({km,coords:seg});
     route.totalKm+=km;
   });
 
   weekData[currentWeek].routes[day].push(route);
-  saveAll(); render();
+  saveAll();
 }
 
 // ===== MAP =====
 let map, layer;
 
 function initMap(){
-  if(map)return;
+  if(map) return;
 
   map=L.map('mapContainer').setView([52.1,5.3],7);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-  navigator.geolocation.watchPosition(pos=>{
-    let lat=pos.coords.latitude, lng=pos.coords.longitude;
-
-    if(!window.userMarker){
-      window.userMarker=L.circleMarker([lat,lng],{radius:8,color:'red'}).addTo(map);
-    } else window.userMarker.setLatLng([lat,lng]);
-  });
 }
 
 function drawRoute(){
+
   if(layer) layer.remove();
 
-  let w=mapWeek.value,d=mapDay.value,r=mapRoute.value;
+  let w=mapWeek.value;
+  let d=mapDay.value;
+  let r=mapRoute.value;
+
   let route=weekData[w]?.routes[d]?.[r];
-  if(!route)return alert("No route");
+  if(!route) return;
 
   let coords=[];
   route.segments.forEach(s=>coords.push(...s.coords));
@@ -380,39 +309,24 @@ function drawRoute(){
   map.fitBounds(layer.getBounds());
 }
 
-// ===== DB / EXPORT =====
+// ===== DB =====
 function renderDB(){
-  let div=dbContent;
-  div.innerHTML="";
+
+  let html="<div class='card'><h3>Database</h3>";
 
   for(let w in weekData){
-    let d=weekData[w];
-    let b=document.createElement("div");
-    b.className="card";
+    html+=`<b>Week ${w}</b><br>`;
 
-    b.innerHTML="<h3>Week "+w+"</h3>";
-
-    b.innerHTML+="<b>Habits:</b><br>";
-    d.checks.forEach((r,i)=>{
-      b.innerHTML+=habits[i]+": "+r.map(c=>c?"✔":"✖").join(" ")+"<br>";
+    weekData[w].routes.forEach((d,i)=>{
+      let km=d.reduce((s,r)=>s+(r.totalKm||0),0);
+      html+=`${days[i]}: ${km.toFixed(1)} km<br>`;
     });
 
-    b.innerHTML+="<br><b>Notes:</b><br>";
-    d.notes.forEach((n,i)=>{
-      if(n) b.innerHTML+=days[i]+": "+n+"<br>";
-    });
-
-    b.innerHTML+="<br><b>Routes:</b><br>";
-    d.routes.forEach((day,i)=>{
-      if(day.length===0)return;
-      b.innerHTML+="<u>"+days[i]+"</u><br>";
-      day.forEach(r=>{
-        b.innerHTML+=r.totalKm.toFixed(2)+" km<br>";
-      });
-    });
-
-    div.appendChild(b);
+    html+="<br>";
   }
+
+  html+="</div>";
+  document.getElementById("db").innerHTML=html;
 }
 
 // ===== SAVE =====
@@ -424,18 +338,11 @@ function saveAll(){
 // ===== DIST =====
 function calc(r){
   let t=0;
-  for(let i=1;i<r.length;i++) t+=dist(r[i-1],r[i]);
+  for(let i=1;i<r.length;i++){
+    let a=r[i-1],b=r[i];
+    t+=Math.hypot(b.lat-a.lat,b.lng-a.lng)*111;
+  }
   return t;
-}
-
-function dist(a,b){
-  let R=6371;
-  let dLat=(b.lat-a.lat)*Math.PI/180;
-  let dLon=(b.lng-a.lng)*Math.PI/180;
-  let x=Math.sin(dLat/2)**2+
-    Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
-    Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
 </script>
