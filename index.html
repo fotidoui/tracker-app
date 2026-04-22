@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GIS Engine Upgrade</title>
+<title>GIS Tracker Restored</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -11,34 +11,19 @@
 body { font-family: Arial; text-align:center; }
 .screen { display:none; }
 
-#map {
-  width:100%;
-  height:260px;
-  border:1px solid #ccc;
-}
+#map { height:260px; width:100%; border:1px solid #ccc; }
 
-.event {
-  font-size:11px;
-  border-bottom:1px solid #eee;
-  padding:3px;
-}
+table { width:100%; border-collapse:collapse; }
+td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
 
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-
-td, th {
-  border:1px solid #ccc;
-  font-size:12px;
-  padding:4px;
-}
+.event { font-size:11px; border-bottom:1px solid #eee; padding:3px; }
+textarea { width:90%; height:40px; }
 </style>
 </head>
 
 <body>
 
-<h2>GIS Engine (Upgraded)</h2>
+<h2>GIS Tracker Restored</h2>
 
 <div id="home" class="screen">
   <button onclick="show('weekly')">Weekly</button>
@@ -53,14 +38,14 @@ td, th {
 
   <input id="weekInput" type="number" placeholder="Week"><br>
 
-  <button onclick="startRoute()">Start Route</button>
+  <button onclick="startRoute()">Start</button>
   <button onclick="pauseRoute()">Pause</button>
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
-  <button onclick="renderAll()">Refresh</button>
+  <button onclick="saveWeek()">Save Week</button>
 
-  <div id="events"></div>
+  <div id="weeklyTable"></div>
 </div>
 
 <!-- MAP -->
@@ -79,13 +64,15 @@ td, th {
 
 // ================= STATE =================
 let events = JSON.parse(localStorage.getItem("events") || "[]");
+let database = JSON.parse(localStorage.getItem("database") || "[]");
 
 let week = null;
-
 let route = null;
 let watch = null;
 
 let map, layer;
+
+const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
 // ================= INIT =================
 window.onload = () => {
@@ -101,89 +88,7 @@ window.onload = () => {
 // ================= SAVE =================
 function save(){
   localStorage.setItem("events",JSON.stringify(events));
-}
-
-// ================= DISTANCE (REAL GIS CORE) =================
-function haversine(a,b){
-  const R = 6371;
-
-  const dLat = (b.lat-a.lat)*Math.PI/180;
-  const dLng = (b.lng-a.lng)*Math.PI/180;
-
-  const x =
-    Math.sin(dLat/2)**2 +
-    Math.cos(a.lat*Math.PI/180) *
-    Math.cos(b.lat*Math.PI/180) *
-    Math.sin(dLng/2)**2;
-
-  return 2*R*Math.asin(Math.sqrt(x));
-}
-
-// ================= REVERSE GEOCODE =================
-async function getAddress(lat,lng){
-  try{
-    let r = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
-    );
-    let j = await r.json();
-    return j.display_name;
-  }catch(e){
-    return "offline";
-  }
-}
-
-// ================= ROUTE ENGINE =================
-function startRoute(){
-
-  route = {
-    id:Date.now(),
-    active:true,
-    last:null,
-    distance:0,
-    points:[]
-  };
-
-  watch = navigator.geolocation.watchPosition(async p=>{
-
-    if(!route.active) return;
-
-    let point = {
-      lat:p.coords.latitude,
-      lng:p.coords.longitude,
-      time:Date.now()
-    };
-
-    if(route.last){
-      route.distance += haversine(route.last,point);
-    }
-
-    route.last = point;
-    route.points.push(point);
-
-    let address = await getAddress(point.lat,point.lng);
-
-    events.push({
-      id:Date.now()+Math.random(),
-      type:"route-point",
-      week,
-      routeId:route.id,
-      lat:point.lat,
-      lng:point.lng,
-      distance:route.distance,
-      address
-    });
-
-    save();
-    renderAll();
-  });
-}
-
-function pauseRoute(){ if(route) route.active=false; }
-function resumeRoute(){ if(route) route.active=true; }
-
-function stopRoute(){
-  navigator.geolocation.clearWatch(watch);
-  route=null;
+  localStorage.setItem("database",JSON.stringify(database));
 }
 
 // ================= NAV =================
@@ -200,6 +105,88 @@ function show(id){
 
   document.getElementById(id).style.display="block";
   renderAll();
+}
+
+// ================= ROUTE =================
+function startRoute(){
+
+  route = {id:Date.now(),active:true,last:null};
+
+  watch = navigator.geolocation.watchPosition(p=>{
+
+    if(!route.active) return;
+
+    let pt = {
+      lat:p.coords.latitude,
+      lng:p.coords.longitude,
+      time:Date.now()
+    };
+
+    events.push({
+      id:Date.now()+Math.random(),
+      type:"route-point",
+      week,
+      routeId:route.id,
+      lat:pt.lat,
+      lng:pt.lng
+    });
+
+    save();
+    renderAll();
+  });
+}
+
+function pauseRoute(){ if(route) route.active=false; }
+function resumeRoute(){ if(route) route.active=true; }
+
+function stopRoute(){
+  navigator.geolocation.clearWatch(watch);
+  route=null;
+}
+
+// ================= WEEKLY TABLE =================
+function renderWeekly(){
+
+  let div=document.getElementById("weeklyTable");
+  div.innerHTML="";
+
+  if(!week) return;
+
+  let table=document.createElement("table");
+
+  let header="<th>Type</th>"+days.map(d=>`<th>${d}</th>`).join("");
+  table.innerHTML="<tr>"+header+"</tr>";
+
+  let evs = events.filter(e=>e.week===week);
+
+  evs.forEach(e=>{
+    let row=document.createElement("tr");
+
+    row.innerHTML = `
+      <td>${e.type}</td>
+      <td colspan="7">${e.lat||""}, ${e.lng||""}</td>
+    `;
+
+    table.appendChild(row);
+  });
+
+  div.appendChild(table);
+}
+
+// ================= SAVE WEEK (FIXED - NO DUPLICATES) =================
+function saveWeek(){
+
+  if(!week) return;
+
+  database = database.filter(w=>w.week!==week);
+
+  database.push({
+    week,
+    data:JSON.parse(JSON.stringify(events.filter(e=>e.week===week)))
+  });
+
+  save();
+  alert("Week saved (deduplicated)");
 }
 
 // ================= MAP =================
@@ -240,44 +227,21 @@ function renderMap(){
   });
 }
 
-// ================= EVENTS =================
-function renderEvents(){
-
-  let div=document.getElementById("events");
-  div.innerHTML="<h3>Events</h3>";
-
-  events.filter(e=>e.week===week).forEach(e=>{
-
-    let d=document.createElement("div");
-    d.className="event";
-
-    d.innerText =
-      `${e.type} | ${e.lat},${e.lng} | ${e.address||""} | km:${(e.distance||0).toFixed(2)}`;
-
-    div.appendChild(d);
-  });
-}
-
 // ================= DB =================
 function renderDB(){
 
   let div=document.getElementById("dbView");
   div.innerHTML="";
 
-  let grouped={};
-
-  events.forEach(e=>{
-    grouped[e.week]=(grouped[e.week]||0)+1;
-  });
-
-  Object.keys(grouped).forEach(w=>{
-    div.innerHTML += `<h3>Week ${w}</h3>Events: ${grouped[w]}<br>`;
+  database.forEach(w=>{
+    div.innerHTML += `<h3>Week ${w.week}</h3>`;
+    div.innerHTML += `<div>Events: ${w.data.length}</div>`;
   });
 }
 
 // ================= MASTER =================
 function renderAll(){
-  renderEvents();
+  renderWeekly();
   renderDB();
   renderMap();
 }
