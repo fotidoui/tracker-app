@@ -2,7 +2,10 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FieldLog Stable</title>
+<title>FieldLog Stable v3</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 body{
@@ -41,7 +44,7 @@ body{
 
 #tabs button{
   flex:1;
-  padding:12px;
+  padding:10px;
   border:none;
   background:none;
   color:#cbd5e1;
@@ -61,20 +64,14 @@ body{
   font-size:11px;
 }
 
-#content{padding:12px;}
+#content{padding:10px;}
 
 .card{
   background:white;
-  padding:12px;
+  padding:10px;
   border-radius:10px;
-  margin-bottom:12px;
+  margin-bottom:10px;
   font-size:12px;
-}
-
-.small{
-  font-size:11px;
-  color:#555;
-  margin-top:3px;
 }
 
 table{
@@ -84,7 +81,7 @@ table{
 }
 
 td,th{
-  border:1px solid #e5e7eb;
+  border:1px solid #ddd;
   font-size:10px;
   text-align:center;
   padding:2px;
@@ -95,11 +92,9 @@ textarea{
   font-size:11px;
 }
 
-canvas{
-  width:100%;
-  height:300px;
-  background:white;
-  border-radius:10px;
+button{
+  font-size:11px;
+  margin:2px;
 }
 </style>
 </head>
@@ -114,7 +109,6 @@ canvas{
   <div id="tabs">
     <button onclick="tab('weekly')" id="t-weekly">Weekly</button>
     <button onclick="tab('routes')" id="t-routes">Routes</button>
-    <button onclick="tab('viz')" id="t-viz">Vectors</button>
     <button onclick="tab('db')" id="t-db">Database</button>
   </div>
   <button id="back" onclick="back()">Weeks</button>
@@ -123,20 +117,7 @@ canvas{
 <div id="content">
 
 <div id="weekly"></div>
-
 <div id="routes" style="display:none"></div>
-
-<div id="viz" style="display:none">
-  <div class="card">
-    <button onclick="drawVectors()">Render Route Vectors</button>
-    <div class="small">
-      → shows simplified movement lines<br>
-      → no map needed (lightweight)
-    </div>
-    <canvas id="canvas"></canvas>
-  </div>
-</div>
-
 <div id="db" style="display:none"></div>
 
 </div>
@@ -144,17 +125,16 @@ canvas{
 
 <script>
 
+/* ================= STATE ================= */
 let state={
   week:null,
   data:JSON.parse(localStorage.getItem("data")||"{}")
 };
 
-let habits=Array.from({length:8},(_,i)=>"Habit "+(i+1));
-
 let session=null;
 let watch=null;
 
-/* ================= WEEK SELECT ================= */
+/* ================= INIT WEEKS ================= */
 function initWeeks(){
   let c=document.getElementById("weekSelect");
   c.innerHTML="<h2 style='grid-column:1/-1'>Select Week</h2>";
@@ -203,11 +183,14 @@ function ensure(){
 
 /* ================= TABS ================= */
 function tab(t){
-  ["weekly","routes","viz","db"].forEach(x=>{
+  ["weekly","routes","db"].forEach(x=>{
     document.getElementById(x).style.display="none";
   });
 
   document.getElementById(t).style.display="block";
+
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.remove("active"));
+  document.getElementById("t-"+t).classList.add("active");
 
   if(t==="weekly") renderWeekly();
   if(t==="db") renderDB();
@@ -218,9 +201,9 @@ function renderWeekly(){
 
   let w=state.data[state.week];
 
-  let html="<div class='card'><b>Week "+state.week+"</b><div class='small'>Your weekly tracking overview</div></div>";
+  let html="<div class='card'><b>Week "+state.week+"</b></div>";
 
-  html+="<div class='card'><b>Habits</b><div class='small'>Check daily completion</div><table><tr><th></th>";
+  html+="<div class='card'><b>Habits</b><table><tr><th></th>";
 
   ["M","T","W","T","F","S","S"].forEach(d=>{
     html+="<th>"+d+"</th>";
@@ -228,8 +211,8 @@ function renderWeekly(){
 
   html+="</tr>";
 
-  habits.forEach((h,i)=>{
-    html+="<tr><td>"+h+"</td>";
+  for(let i=0;i<8;i++){
+    html+="<tr><td>H"+(i+1)+"</td>";
 
     for(let j=0;j<7;j++){
       html+=`
@@ -241,17 +224,16 @@ function renderWeekly(){
     }
 
     html+="</tr>";
-  });
+  }
 
   html+="</table></div>";
 
-  html+="<div class='card'><b>Notes</b><div class='small'>Daily notes per weekday</div>";
+  html+="<div class='card'><b>Notes</b>";
 
   w.notes.forEach((n,i)=>{
-    let label=["M","T","W","T","F","S","S"][i];
     html+=`
     <textarea onchange="note(${i},this.value)">
-${label} /${i+1} / ${n}
+Day ${i+1}: ${n}
 </textarea>`;
   });
 
@@ -260,10 +242,99 @@ ${label} /${i+1} / ${n}
   document.getElementById("weekly").innerHTML=html;
 }
 
-/* ================= DB FIXED ================= */
+/* ================= ROUTES ================= */
+function start(){
+  session={
+    active:true,
+    seg:[[]],
+    route:{segments:[],totalKm:0}
+  };
+
+  watch=navigator.geolocation.watchPosition(p=>{
+    session.seg.at(-1).push({
+      lat:p.coords.latitude,
+      lng:p.coords.longitude
+    });
+  });
+}
+
+function pause(){
+  session.seg.push([]);
+}
+
+function stop(){
+
+  navigator.geolocation.clearWatch(watch);
+
+  let w=state.data[state.week];
+  let day=(new Date().getDay()+6)%7;
+
+  session.seg.forEach(s=>{
+    if(s.length<2) return;
+
+    let km=calc(s);
+
+    session.route.segments.push({
+      points:s,
+      distanceKm:km
+    });
+
+    session.route.totalKm+=km;
+  });
+
+  w.routes[day].push(session.route);
+
+  save();
+  renderDB();
+}
+
+/* ================= DIST ================= */
+function calc(a){
+  let t=0;
+  for(let i=1;i<a.length;i++){
+    let x=a[i-1],y=a[i];
+    t+=Math.hypot(y.lat-x.lat,y.lng-x.lng)*111;
+  }
+  return t;
+}
+
+/* ================= DELETE ================= */
+function deleteRoute(day,i){
+  state.data[state.week].routes[day].splice(i,1);
+  save();
+  renderDB();
+}
+
+/* ================= REPLAY ================= */
+function replay(route){
+
+  let pts=[];
+  route.segments.forEach(s=>pts.push(...s.points));
+
+  let i=0;
+
+  let m=L.circleMarker([pts[0].lat,pts[0].lng],{
+    radius:6,
+    color:"red"
+  }).addTo(map);
+
+  let t=setInterval(()=>{
+
+    i++;
+    if(i>=pts.length){
+      clearInterval(t);
+      return;
+    }
+
+    m.setLatLng([pts[i].lat,pts[i].lng]);
+
+  },120);
+}
+
+/* ================= DB ================= */
 function renderDB(){
 
-  let html="<div class='card'><b>Database Overview</b><div class='small'>Full stored structure</div></div>";
+  let html="<div class='card'><b>Database</b></div>";
 
   for(let w in state.data){
 
@@ -271,67 +342,28 @@ function renderDB(){
 
     html+=`<div class='card'><b>Week ${w}</b>`;
 
-    /* habits summary */
-    html+="<div class='small'><b>Habits:</b><br>";
-
-    week.checks.forEach((r,i)=>{
-      html+=`H${i+1}: `+r.map(x=>x?"✔":"✖").join(" ")+"<br>";
-    });
-
-    html+="</div>";
-
-    /* notes */
-    html+="<div class='small'><b>Notes:</b><br>";
-
-    week.notes.forEach((n,i)=>{
-      html+=`D${i+1}: ${n}<br>`;
-    });
-
-    html+="</div>";
-
-    /* routes */
-    html+="<div class='small'><b>Routes:</b><br>";
-
     week.routes.forEach((d,i)=>{
-      let total=0;
-      d.forEach(r=>total+=r.total||0);
-      html+=`Day ${i+1}: ${total.toFixed(1)} km<br>`;
+
+      html+=`<b>Day ${i+1}</b><br>`;
+
+      d.forEach((r,j)=>{
+
+        html+=`
+        <div style="border:1px solid #ddd;margin:5px;padding:5px;">
+          ${r.totalKm.toFixed(2)} km<br>
+          Segments: ${r.segments.length}<br>
+
+          <button onclick='replay(state.data[${w}].routes[${i}][${j}])'>Replay</button>
+          <button onclick='deleteRoute(${i},${j})'>Delete</button>
+        </div>`;
+      });
+
     });
 
-    html+="</div></div>";
+    html+="</div>";
   }
 
   document.getElementById("db").innerHTML=html;
-}
-
-/* ================= VECTOR VIEW ================= */
-function drawVectors(){
-
-  let c=document.getElementById("canvas");
-  let ctx=c.getContext("2d");
-
-  ctx.clearRect(0,0,c.width,c.height);
-
-  let w=state.data[state.week];
-  if(!w) return;
-
-  ctx.strokeStyle="blue";
-
-  w.routes.forEach(day=>{
-    day.forEach(route=>{
-      if(!route.segments) return;
-
-      route.segments.forEach(seg=>{
-        let pts=seg.points;
-        for(let i=1;i<pts.length;i++){
-          ctx.beginPath();
-          ctx.moveTo(pts[i-1].lat,pts[i-1].lng);
-          ctx.lineTo(pts[i].lat,pts[i].lng);
-          ctx.stroke();
-        }
-      });
-    });
-  });
 }
 
 /* ================= SAVE ================= */
@@ -339,18 +371,7 @@ function save(){
   localStorage.setItem("data",JSON.stringify(state.data));
 }
 
-/* ================= CHECK ================= */
-function toggle(i,j){
-  state.data[state.week].checks[i][j]=!state.data[state.week].checks[i][j];
-  save();
-}
-
-/* ================= NOTES ================= */
-function note(i,v){
-  state.data[state.week].notes[i]=v;
-  save();
-}
-
 </script>
+
 </body>
 </html>
