@@ -11,19 +11,24 @@
 body { font-family: Arial; text-align:center; }
 .screen { display:none; }
 
-#map { height:260px; width:100%; border:1px solid #ccc; margin:10px 0; }
+#map, #vector {
+  width:100%;
+  height:260px;
+  border:1px solid #ccc;
+  margin:10px 0;
+}
 
 table { width:100%; border-collapse:collapse; }
 td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
 
-textarea { width:95%; height:40px; }
-
-.event { font-size:11px; border-bottom:1px solid #ddd; padding:2px; }
+.event { font-size:11px; border-bottom:1px solid #ddd; padding:3px; }
+button { margin:2px; }
 </style>
 </head>
+
 <body>
 
-<h2>GIS Tracker</h2>
+<h2>Offline GIS Tracker</h2>
 
 <div id="home" class="screen">
   <button onclick="show('weekly')">Weekly</button>
@@ -43,9 +48,13 @@ textarea { width:95%; height:40px; }
 
   <button onclick="saveWeek()">Save Week</button>
 
-  <div id="map"></div>
+  <button onclick="setMode('map')">Map</button>
+  <button onclick="setMode('vector')">Vector</button>
 
-  <table id="grid"></table>
+  <div id="map"></div>
+  <canvas id="vector"></canvas>
+
+  <table id="table"></table>
 
   <div id="events"></div>
 </div>
@@ -57,12 +66,16 @@ textarea { width:95%; height:40px; }
 
 <script>
 
+// ===================== CONSTANTS =====================
+const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
 // ===================== STATE =====================
-let events = JSON.parse(localStorage.getItem("events")||"[]");
-let db = JSON.parse(localStorage.getItem("db")||"[]");
+let events = JSON.parse(localStorage.getItem("events") || "[]");
+let db = JSON.parse(localStorage.getItem("db") || "[]");
 
 let week = null;
 let day = null;
+let mode = "map";
 
 let route = {active:false, paused:false, id:null};
 let watch = null;
@@ -80,10 +93,15 @@ window.onload = () => {
   show("home");
 };
 
-// ===================== SAVE =====================
+// ===================== STORAGE =====================
 function save(){
   localStorage.setItem("events",JSON.stringify(events));
   localStorage.setItem("db",JSON.stringify(db));
+}
+
+// ===================== WEEKDAY FIX =====================
+function getWeekday(date=new Date()){
+  return (date.getDay()+6)%7;
 }
 
 // ===================== NAV =====================
@@ -95,6 +113,14 @@ function show(id){
   if(id==="db") renderDB();
 }
 
+// ===================== MODE =====================
+function setMode(m){
+  mode = m;
+  document.getElementById("map").style.display = m==="map"?"block":"none";
+  document.getElementById("vector").style.display = m==="vector"?"block":"none";
+  renderAll();
+}
+
 // ===================== MAP =====================
 function initMap(){
   if(map) return;
@@ -104,14 +130,15 @@ function initMap(){
   layer = L.layerGroup().addTo(map);
 }
 
-// ===================== CORE RENDER =====================
+// ===================== RENDER MASTER =====================
 function renderAll(){
   renderTable();
   renderEvents();
   renderMap();
+  renderVector();
 }
 
-// ===================== GPS =====================
+// ===================== GPS WRAPPER =====================
 function gps(cb){
   navigator.geolocation.getCurrentPosition(
     p=>cb(p.coords),
@@ -125,12 +152,14 @@ function addEvent(type, extra={}){
   if(!Number.isFinite(week)) return;
 
   gps(c=>{
+    const now = new Date();
+
     events.push({
       id:Date.now()+Math.random(),
       type,
-      time:Date.now(),
+      time:now.getTime(),
       week:Number(week),
-      day:day ?? (new Date().getDay()+6)%7,
+      day:getWeekday(now),
       lat:c?.latitude||null,
       lng:c?.longitude||null,
       routeId:route.id,
@@ -142,18 +171,20 @@ function addEvent(type, extra={}){
   });
 }
 
-// ===================== ROUTE =====================
+// ===================== ROUTE SYSTEM =====================
 function startRoute(){
   route={active:true,paused:false,id:Date.now()};
   addEvent("route-start");
 
   watch = navigator.geolocation.watchPosition(p=>{
     if(route.active && !route.paused){
+
       events.push({
+        id:Date.now()+Math.random(),
         type:"route-point",
         time:Date.now(),
         week:Number(week),
-        day:day ?? 0,
+        day:getWeekday(new Date()),
         lat:p.coords.latitude,
         lng:p.coords.longitude,
         routeId:route.id
@@ -179,22 +210,20 @@ function renderTable(){
 
   if(!week) return;
 
-  let t=document.getElementById("grid");
+  let t=document.getElementById("table");
   t.innerHTML="";
 
-  let h=document.createElement("tr");
-  h.innerHTML="<th>Habit</th>" + Array(7).fill(0).map((_,i)=>`<th>${i}</th>`).join("");
-  t.appendChild(h);
+  let header = "<th>Habit</th>" + days.map(d=>`<th>${d}</th>`).join("");
+  t.innerHTML += "<tr>"+header+"</tr>";
 
-  for(let i=0;i<5;i++){
-    let r=document.createElement("tr");
+  for(let i=0;i<10;i++){
+    let row = "<td>Habit "+(i+1)+"</td>";
 
-    r.innerHTML = `<td>Habit ${i+1}</td>` +
-      Array(7).fill(0).map((_,d)=>
-        `<td><button onclick="day=${d};addEvent('habit',{habitIndex:${i}})">+</button></td>`
-      ).join("");
+    for(let d=0;d<7;d++){
+      row += `<td><button onclick="day=${d};addEvent('habit',{habitIndex:${i}})">+</button></td>`;
+    }
 
-    t.appendChild(r);
+    t.innerHTML += "<tr>"+row+"</tr>";
   }
 }
 
@@ -211,7 +240,7 @@ function renderEvents(){
     d.className="event";
 
     d.innerText =
-      `${e.type} | ${e.lat},${e.lng} | ${new Date(e.time).toLocaleString()}`;
+      `${e.type} | ${days[e.day]} | ${new Date(e.time).toLocaleString()} | ${e.lat},${e.lng}`;
 
     let del=document.createElement("button");
     del.innerText="X";
@@ -230,7 +259,7 @@ function renderEvents(){
 // ===================== MAP =====================
 function renderMap(){
 
-  if(!map || !week) return;
+  if(!map || mode!=="map" || !week) return;
 
   layer.clearLayers();
 
@@ -254,10 +283,45 @@ function renderMap(){
   });
 }
 
+// ===================== VECTOR =====================
+function renderVector(){
+
+  if(mode!=="vector" || !week) return;
+
+  let c=document.getElementById("vector");
+  c.width=c.offsetWidth;
+  c.height=260;
+
+  let ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+
+  let pts = events.filter(e=>e.week===week && e.lat);
+  if(pts.length<2) return;
+
+  let minLat=Math.min(...pts.map(p=>p.lat));
+  let maxLat=Math.max(...pts.map(p=>p.lat));
+  let minLng=Math.min(...pts.map(p=>p.lng));
+  let maxLng=Math.max(...pts.map(p=>p.lng));
+
+  const proj = p => [
+    (p.lng-minLng)/(maxLng-minLng)*c.width,
+    c.height-(p.lat-minLat)/(maxLat-minLat)*c.height
+  ];
+
+  ctx.beginPath();
+
+  pts.forEach((p,i)=>{
+    let [x,y]=proj(p);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+
+  ctx.stroke();
+}
+
 // ===================== DB =====================
 function saveWeek(){
 
-  if(!Number.isFinite(week)) return;
+  if(!week) return;
 
   db = db.filter(w=>w.week!==week);
 
@@ -279,7 +343,7 @@ function renderDB(){
 
     w.data.forEach(e=>{
       let d=document.createElement("div");
-      d.innerText=`${e.type} | ${e.lat},${e.lng}`;
+      d.innerText = `${e.type} | ${days[e.day]} | ${e.lat},${e.lng}`;
       div.appendChild(d);
     });
   });
