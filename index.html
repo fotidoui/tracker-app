@@ -85,11 +85,6 @@ let map, layer;
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-// ===== INIT =====
-window.onload=()=>{
-  show("home");
-};
-
 // ===== STORAGE =====
 function save(){
   localStorage.setItem("liveEvents",JSON.stringify(liveEvents));
@@ -101,10 +96,7 @@ function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
 
-  if(id==="weekly"){
-    setTimeout(initMap,100);
-  }
-
+  if(id==="weekly") setTimeout(initMap,100);
   if(id==="db") renderDB();
 }
 
@@ -113,7 +105,6 @@ function initMap(){
   if(map) return;
 
   map = L.map('map').setView([52,5],7);
-
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
   layer = L.layerGroup().addTo(map);
 }
@@ -122,9 +113,7 @@ function updateMap(){
 
   layer.clearLayers();
 
-  let evs = liveEvents.filter(e =>
-    e.week==currentWeek && e.lat
-  );
+  let evs = liveEvents.filter(e => e.week===currentWeek && e.lat);
 
   if(evs.length===0) return;
 
@@ -138,7 +127,6 @@ function updateMap(){
   });
 
   Object.values(grouped).forEach(group=>{
-
     let e = group[0];
 
     let marker = L.marker([e.lat,e.lng]).addTo(layer);
@@ -148,7 +136,6 @@ function updateMap(){
     ).join("<br>");
 
     marker.bindPopup(html);
-
     bounds.push([e.lat,e.lng]);
   });
 
@@ -165,15 +152,16 @@ function getDay(){
 function getPos(cb){
   navigator.geolocation.getCurrentPosition(
     pos=>cb(pos.coords),
-    ()=>cb(null)
+    ()=>cb(null),
+    {enableHighAccuracy:false, timeout:5000}
   );
 }
 
 // ===== EVENTS =====
 function record(type, extra={}){
 
-  if(currentWeek===null){
-    alert("Enter week first");
+  if(!Number.isFinite(currentWeek)){
+    alert("Enter valid week");
     return;
   }
 
@@ -184,7 +172,7 @@ function record(type, extra={}){
       time:Date.now(),
       lat:coords?.latitude,
       lng:coords?.longitude,
-      week:Number(currentWeek),
+      week:currentWeek,
       day:getDay(),
       routeId:routeSession.id,
       ...extra
@@ -208,14 +196,14 @@ function startRoute(){
         time:Date.now(),
         lat:pos.coords.latitude,
         lng:pos.coords.longitude,
-        week:Number(currentWeek),
+        week:currentWeek,
         day:getDay(),
         routeId:routeSession.id
       });
       save();
       updateMap();
     }
-  });
+  },null,{enableHighAccuracy:false, maximumAge:5000});
 }
 
 function pauseRoute(){
@@ -263,7 +251,6 @@ function renderWeek(){
 
   table.appendChild(h);
 
-  // HABITS
   for(let i=0;i<10;i++){
 
     let r=document.createElement("tr");
@@ -275,30 +262,42 @@ function renderWeek(){
 
       let cell=document.createElement("td");
 
-      let ev = liveEvents.find(e=>
+      let btn=document.createElement("button");
+      btn.innerText="+";
+
+      btn.onclick=()=>{
+        selectedDay=d;
+        record("habit",{habitIndex:i});
+      };
+
+      cell.appendChild(btn);
+
+      let evs = liveEvents.filter(e=>
         e.type==="habit" &&
-        e.week==currentWeek &&
+        e.week===currentWeek &&
         e.day===d &&
         e.habitIndex===i
       );
 
-      let cb=document.createElement("input");
-      cb.type="checkbox";
-      cb.checked=!!ev;
+      evs.forEach(ev=>{
+        let div=document.createElement("div");
+        div.className="eventBox";
+        div.innerText=new Date(ev.time).toLocaleTimeString();
 
-      cb.onclick=()=>{
-        if(ev){
+        let del=document.createElement("button");
+        del.innerText="X";
+
+        del.onclick=()=>{
           liveEvents.splice(liveEvents.indexOf(ev),1);
           save();
           renderWeek();
           updateMap();
-        } else {
-          selectedDay=d;
-          record("habit",{habitIndex:i});
-        }
-      };
+        };
 
-      cell.appendChild(cb);
+        div.appendChild(del);
+        cell.appendChild(div);
+      });
+
       r.appendChild(cell);
     }
 
@@ -330,7 +329,7 @@ function renderWeek(){
 
     let evs = liveEvents.filter(e=>
       e.type==="note" &&
-      e.week==currentWeek &&
+      e.week===currentWeek &&
       e.day===d
     );
 
@@ -368,7 +367,7 @@ function renderEventLog(){
   div.innerHTML="<h3>Events</h3>";
 
   let evs = liveEvents
-    .filter(e=>e.week==currentWeek)
+    .filter(e=>e.week===currentWeek)
     .sort((a,b)=>b.time-a.time);
 
   evs.forEach(ev=>{
@@ -395,16 +394,21 @@ function renderEventLog(){
 // ===== DATABASE =====
 function saveWeekToDB(){
 
-  let weekEvents = liveEvents.filter(e=>e.week==currentWeek);
+  if(!Number.isFinite(currentWeek)){
+    alert("Invalid week");
+    return;
+  }
 
-  let i = database.findIndex(w=>w.week==currentWeek);
+  let weekEvents = liveEvents.filter(e=>e.week===currentWeek);
+
+  let i = database.findIndex(w=>Number(w.week)===currentWeek);
 
   let copy = JSON.parse(JSON.stringify(weekEvents));
 
   if(i!==-1){
     database[i].data = copy;
   } else {
-    database.push({week:Number(currentWeek),data:copy});
+    database.push({week:currentWeek,data:copy});
   }
 
   save();
@@ -417,6 +421,7 @@ function renderDB(){
   div.innerHTML="";
 
   database.forEach(w=>{
+    if(!Number.isFinite(w.week)) return;
 
     let table=document.createElement("table");
 
@@ -452,7 +457,7 @@ function renderDB(){
 // ===== EXPORT =====
 function exportCSV(){
 
-  let evs = liveEvents.filter(e=>e.week==currentWeek);
+  let evs = liveEvents.filter(e=>e.week===currentWeek);
 
   let rows = ["type,day,time,lat,lng"];
 
@@ -465,7 +470,7 @@ function exportCSV(){
 
 function exportXML(){
 
-  let evs = liveEvents.filter(e=>e.week==currentWeek);
+  let evs = liveEvents.filter(e=>e.week===currentWeek);
 
   let xml = "<events>";
 
