@@ -85,6 +85,18 @@ let map, layer;
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
+// ===== INIT =====
+window.onload = () => {
+
+  document.getElementById("weekInput").onchange = (e)=>{
+    currentWeek = Number(e.target.value);
+    renderWeek();
+    updateMap();
+  };
+
+  show("home");
+};
+
 // ===== STORAGE =====
 function save(){
   localStorage.setItem("liveEvents",JSON.stringify(liveEvents));
@@ -105,11 +117,14 @@ function initMap(){
   if(map) return;
 
   map = L.map('map').setView([52,5],7);
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
   layer = L.layerGroup().addTo(map);
 }
 
 function updateMap(){
+
+  if(!map || currentWeek===null) return;
 
   layer.clearLayers();
 
@@ -203,7 +218,7 @@ function startRoute(){
       save();
       updateMap();
     }
-  },null,{enableHighAccuracy:false, maximumAge:5000});
+  }, null, {enableHighAccuracy:false, maximumAge:5000});
 }
 
 function pauseRoute(){
@@ -228,12 +243,6 @@ function stopRoute(){
 }
 
 // ===== WEEK =====
-document.getElementById("weekInput").onchange=e=>{
-  currentWeek=Number(e.target.value);
-  renderWeek();
-  updateMap();
-};
-
 function renderWeek(){
 
   let table=document.getElementById("grid");
@@ -456,30 +465,21 @@ function renderDB(){
 
 // ===== EXPORT =====
 function exportCSV(){
-
   let evs = liveEvents.filter(e=>e.week===currentWeek);
-
   let rows = ["type,day,time,lat,lng"];
-
   evs.forEach(e=>{
     rows.push(`${e.type},${e.day},${e.time},${e.lat},${e.lng}`);
   });
-
   download("data.csv",rows.join("\n"));
 }
 
 function exportXML(){
-
   let evs = liveEvents.filter(e=>e.week===currentWeek);
-
   let xml = "<events>";
-
   evs.forEach(e=>{
     xml+=`<event type="${e.type}" day="${e.day}" time="${e.time}" lat="${e.lat}" lng="${e.lng}" />`;
   });
-
   xml+="</events>";
-
   download("data.xml",xml);
 }
 
