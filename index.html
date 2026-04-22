@@ -16,8 +16,11 @@
 
     textarea { width:95%; height:40px; }
 
-    #map { height:250px; margin:10px; }
-    #vectorCanvas { border:1px solid #ccc; margin:10px; }
+    #map, #vectorCanvas {
+      height:250px;
+      width:100%;
+      margin:10px 0;
+    }
 
     .eventBox { font-size:10px; border-top:1px solid #ddd; }
   </style>
@@ -46,12 +49,11 @@
   <button onclick="setMode('map')">Map</button>
   <button onclick="setMode('vector')">Vector</button>
 
-  <div id="filters"></div>
-
   <div id="map"></div>
-  <canvas id="vectorCanvas" width="300" height="250"></canvas>
+  <canvas id="vectorCanvas"></canvas>
 
   <table id="grid"></table>
+
   <div id="eventLog"></div>
 </div>
 
@@ -63,25 +65,22 @@
 <script>
 
 // ===== STATE =====
+let habits = JSON.parse(localStorage.getItem("habits")) ||
+  Array(10).fill("").map((_,i)=>"Habit "+(i+1));
+
 let liveEvents = JSON.parse(localStorage.getItem("liveEvents")) || [];
 let database = JSON.parse(localStorage.getItem("database")) || [];
 
 let currentWeek = null;
 let selectedDay = null;
-
 let mode = "map";
 
 let routeSession = {active:false, paused:false, id:null};
 let watchId = null;
 
-let map, layer, userMarker;
+let map, layer;
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-let filters = {
-  days:[0,1,2,3,4,5,6],
-  types:["route-point","habit","note"]
-};
 
 // ===== INIT =====
 window.onload = ()=>{
@@ -91,7 +90,7 @@ window.onload = ()=>{
     updateMap();
     drawVectors();
   };
-  renderFilters();
+
   show("home");
 };
 
@@ -99,6 +98,7 @@ window.onload = ()=>{
 function save(){
   localStorage.setItem("liveEvents",JSON.stringify(liveEvents));
   localStorage.setItem("database",JSON.stringify(database));
+  localStorage.setItem("habits",JSON.stringify(habits));
 }
 
 // ===== NAV =====
@@ -115,9 +115,6 @@ function setMode(m){
   mode = m;
   document.getElementById("map").style.display = m==="map"?"block":"none";
   document.getElementById("vectorCanvas").style.display = m==="vector"?"block":"none";
-
-  updateMap();
-  drawVectors();
 }
 
 // ===== MAP =====
@@ -134,11 +131,7 @@ function updateMap(){
 
   layer.clearLayers();
 
-  let evs = liveEvents.filter(e =>
-    e.week===currentWeek &&
-    e.lat &&
-    filters.days.includes(e.day)
-  );
+  let evs = liveEvents.filter(e => e.week===currentWeek && e.lat);
 
   let routes={};
 
@@ -157,90 +150,64 @@ function updateMap(){
 
   evs.forEach(e=>{
     let m=L.circleMarker([e.lat,e.lng],{radius:4}).addTo(layer);
-    m.bindPopup(`${e.type} ${days[e.day]}`);
+    m.bindPopup(`${e.type}<br>${e.lat},${e.lng}`);
   });
 }
 
-// ===== VECTOR MODE =====
+// ===== VECTOR =====
 function drawVectors(){
   if(mode!=="vector") return;
 
-  let canvas = document.getElementById("vectorCanvas");
-  let ctx = canvas.getContext("2d");
+  let c=document.getElementById("vectorCanvas");
+  c.width=c.offsetWidth;
+  c.height=250;
 
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
 
-  let evs = liveEvents.filter(e=>e.week===currentWeek && e.lat);
+  let evs=liveEvents.filter(e=>e.week===currentWeek && e.lat);
 
-  if(evs.length===0) return;
+  if(evs.length<2) return;
 
-  let lats = evs.map(e=>e.lat);
-  let lngs = evs.map(e=>e.lng);
+  let minLat=Math.min(...evs.map(e=>e.lat));
+  let maxLat=Math.max(...evs.map(e=>e.lat));
+  let minLng=Math.min(...evs.map(e=>e.lng));
+  let maxLng=Math.max(...evs.map(e=>e.lng));
 
-  let minLat=Math.min(...lats), maxLat=Math.max(...lats);
-  let minLng=Math.min(...lngs), maxLng=Math.max(...lngs);
-
-  function proj(lat,lng){
-    let x = (lng-minLng)/(maxLng-minLng)*canvas.width;
-    let y = canvas.height - (lat-minLat)/(maxLat-minLat)*canvas.height;
-    return [x,y];
+  function proj(e){
+    return [
+      (e.lng-minLng)/(maxLng-minLng)*c.width,
+      c.height-(e.lat-minLat)/(maxLat-minLat)*c.height
+    ];
   }
 
-  let routes={};
+  ctx.beginPath();
 
-  evs.forEach(e=>{
-    if(e.routeId){
-      if(!routes[e.routeId]) routes[e.routeId]=[];
-      routes[e.routeId].push(e);
-    }
+  evs.forEach((e,i)=>{
+    let [x,y]=proj(e);
+    if(i===0) ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
   });
 
-  Object.values(routes).forEach(route=>{
-    ctx.beginPath();
-    route.forEach((p,i)=>{
-      let [x,y]=proj(p.lat,p.lng);
-      if(i===0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
-    });
-    ctx.stroke();
-  });
-}
-
-// ===== FILTERS =====
-function renderFilters(){
-  let div=document.getElementById("filters");
-  div.innerHTML="";
-
-  days.forEach((d,i)=>{
-    let cb=document.createElement("input");
-    cb.type="checkbox";
-    cb.checked=true;
-
-    cb.onchange=()=>{
-      if(cb.checked) filters.days.push(i);
-      else filters.days = filters.days.filter(x=>x!==i);
-      updateMap(); drawVectors();
-    };
-
-    div.appendChild(cb);
-    div.append(d+" ");
-  });
+  ctx.stroke();
 }
 
 // ===== EVENTS =====
 function record(type, extra={}){
+
   if(!Number.isFinite(currentWeek)){
     alert("Set week");
     return;
   }
 
   navigator.geolocation.getCurrentPosition(pos=>{
+
     liveEvents.push({
       type,
       time:Date.now(),
       lat:pos.coords.latitude,
       lng:pos.coords.longitude,
-      week:currentWeek,
+      week:Number(currentWeek),
       day:selectedDay ?? (new Date().getDay()+6)%7,
       routeId:routeSession.id,
       ...extra
@@ -265,7 +232,7 @@ function startRoute(){
         time:Date.now(),
         lat:pos.coords.latitude,
         lng:pos.coords.longitude,
-        week:currentWeek,
+        week:Number(currentWeek),
         day:selectedDay ?? 0,
         routeId:routeSession.id
       });
@@ -287,6 +254,7 @@ function stopRoute(){
 
 // ===== WEEK =====
 function renderWeek(){
+
   let table=document.getElementById("grid");
   table.innerHTML="";
 
@@ -302,10 +270,22 @@ function renderWeek(){
 
   table.appendChild(h);
 
-  for(let i=0;i<5;i++){
+  // HABITS
+  for(let i=0;i<10;i++){
+
     let r=document.createElement("tr");
+
     let td=document.createElement("td");
-    td.innerText="Habit "+(i+1);
+
+    let input=document.createElement("input");
+    input.value=habits[i];
+
+    input.onchange=()=>{
+      habits[i]=input.value;
+      save();
+    };
+
+    td.appendChild(input);
     r.appendChild(td);
 
     for(let d=0;d<7;d++){
@@ -318,23 +298,51 @@ function renderWeek(){
       cell.appendChild(btn);
       r.appendChild(cell);
     }
+
     table.appendChild(r);
   }
+
+  // NOTES
+  let r=document.createElement("tr");
+  r.appendChild(Object.assign(document.createElement("td"),{innerText:"Notes"}));
+
+  for(let d=0;d<7;d++){
+    let td=document.createElement("td");
+
+    let ta=document.createElement("textarea");
+    let btn=document.createElement("button");
+
+    btn.innerText="✔";
+    btn.onclick=()=>{
+      if(!ta.value.trim()) return;
+      selectedDay=d;
+      record("note",{text:ta.value});
+      ta.value="";
+    };
+
+    td.appendChild(ta);
+    td.appendChild(btn);
+    r.appendChild(td);
+  }
+
+  table.appendChild(r);
 
   renderEventLog();
 }
 
 // ===== EVENT LOG =====
 function renderEventLog(){
+
   let div=document.getElementById("eventLog");
-  div.innerHTML="<h3>Events (delete here)</h3>";
+  div.innerHTML="<h3>Events</h3>";
 
   let evs = liveEvents.filter(e=>e.week===currentWeek);
 
   evs.forEach(ev=>{
     let row=document.createElement("div");
 
-    row.innerText = `${days[ev.day]} ${ev.type}`;
+    row.innerText =
+      `${days[ev.day]} | ${ev.type} | ${new Date(ev.time).toLocaleString()} | ${ev.lat}, ${ev.lng}`;
 
     let del=document.createElement("button");
     del.innerText="X";
@@ -354,33 +362,44 @@ function renderEventLog(){
 
 // ===== DATABASE =====
 function saveWeekToDB(){
+
   if(!Number.isFinite(currentWeek)) return;
 
-  let i = database.findIndex(w=>Number(w.week)===currentWeek);
+  database = database.filter(w=>Number(w.week)!==currentWeek);
 
-  let data = JSON.parse(JSON.stringify(
-    liveEvents.filter(e=>e.week===currentWeek)
-  ));
-
-  if(i!==-1) database[i].data=data;
-  else database.push({week:currentWeek,data});
+  database.push({
+    week:Number(currentWeek),
+    data:JSON.parse(JSON.stringify(
+      liveEvents.filter(e=>e.week===currentWeek)
+    ))
+  });
 
   save();
 }
 
 function renderDB(){
+
+  // CLEAN duplicates before showing
+  let seen = {};
+  database = database.filter(w=>{
+    if(!Number.isFinite(w.week)) return false;
+    if(seen[w.week]) return false;
+    seen[w.week]=true;
+    return true;
+  });
+
+  save();
+
   let div=document.getElementById("dbContent");
   div.innerHTML="";
 
   database.forEach(w=>{
-    if(!Number.isFinite(w.week)) return;
-
     div.append("Week "+w.week);
     let table=document.createElement("table");
 
     w.data.forEach(e=>{
       let tr=document.createElement("tr");
-      tr.innerHTML=`<td>${e.type}</td><td>${e.lat||""}</td>`;
+      tr.innerHTML=`<td>${e.type}</td><td>${e.lat||""}</td><td>${e.lng||""}</td>`;
       table.appendChild(tr);
     });
 
@@ -389,5 +408,6 @@ function renderDB(){
 }
 
 </script>
+
 </body>
 </html>
