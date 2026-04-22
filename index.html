@@ -3,13 +3,17 @@
 <head>
   <title>Tracker App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <style>
     body { font-family: Arial; text-align:center; }
 
     .screen { display:none; }
 
     table {
-      margin:15px auto;
+      margin:10px auto;
       border-collapse: collapse;
       width:100%;
     }
@@ -18,18 +22,18 @@
       border:1px solid #ccc;
       padding:5px;
       font-size:12px;
-      vertical-align: top;
     }
 
     textarea { width:95%; height:40px; }
 
     button { margin:3px; padding:6px; }
 
+    #map { height:250px; margin:10px; border:1px solid #aaa; }
+
     .eventBox {
-      border-top:1px solid #ddd;
-      margin-top:5px;
       font-size:10px;
-      text-align:left;
+      border-top:1px solid #ddd;
+      margin-top:3px;
     }
   </style>
 </head>
@@ -46,14 +50,44 @@
 <!-- WEEKLY -->
 <div id="weekly" class="screen">
   <button onclick="show('home')">⬅</button><br>
+
   <input id="weekInput" type="number" placeholder="Week"><br>
 
+  <!-- ROUTE BUTTONS -->
   <button onclick="startRoute()">Start</button>
   <button onclick="pauseRoute()">Pause</button>
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
   <p id="gpsStatus"></p>
+
+  <!-- FILTERS -->
+  <select id="filterDay" onchange="updateMap()">
+    <option value="all">All Days</option>
+    <option value="0">Mon</option>
+    <option value="1">Tue</option>
+    <option value="2">Wed</option>
+    <option value="3">Thu</option>
+    <option value="4">Fri</option>
+    <option value="5">Sat</option>
+    <option value="6">Sun</option>
+  </select>
+
+  <select id="filterType" onchange="updateMap()">
+    <option value="all">All Types</option>
+    <option value="habit">Habits</option>
+    <option value="note">Notes</option>
+    <option value="route">Routes</option>
+  </select>
+
+  <!-- MAP MODE -->
+  <select id="mapMode" onchange="updateMap()">
+    <option value="off">Map OFF</option>
+    <option value="light" selected>Light Mode</option>
+    <option value="full">Full Map</option>
+  </select>
+
+  <div id="map"></div>
 
   <table id="grid"></table>
 </div>
@@ -66,7 +100,6 @@
 
 <script>
 
-let weekData = {};
 let habits = [];
 let events = [];
 let currentWeek = null;
@@ -74,10 +107,11 @@ let currentWeek = null;
 let lastPos = null;
 let watchId = null;
 
-let routeSession = {
-  active:false,
-  id:null
-};
+let routeSession = { active:false, id:null };
+
+let map = null;
+let markersLayer = null;
+let routeLayer = null;
 
 const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
@@ -86,13 +120,16 @@ function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
 
+  if(id==="weekly"){
+    setTimeout(initMap,100);
+  }
+
   if(id==="db") renderDB();
 }
 
 // ===== INIT =====
 window.onload = () => {
 
-  weekData = JSON.parse(localStorage.getItem("weekData")) || {};
   habits = JSON.parse(localStorage.getItem("habits")) || [];
   events = JSON.parse(localStorage.getItem("events")) || [];
 
@@ -119,41 +156,21 @@ function startGPS(){
 
   }, ()=>{}, {
     enableHighAccuracy:false,
-    maximumAge:10000,
-    timeout:5000
+    maximumAge:10000
   });
 }
 
-// ===== WEEK =====
-document.getElementById("weekInput").addEventListener("change", e=>{
-  currentWeek = Number(e.target.value);
+// ===== MAP =====
+function initMap(){
 
-  renderWeek();
-});
+  if(map) return;
 
-// ===== DATE CALC =====
-function getWeekDates(week){
+  map = L.map('map').setView([0,0],2);
 
-  let year = new Date().getFullYear();
-  let simple = new Date(year,0,1 + (week-1)*7);
+  markersLayer = L.layerGroup().addTo(map);
+  routeLayer = L.layerGroup().addTo(map);
 
-  let dow = simple.getDay();
-  let ISOweekStart = simple;
-
-  if(dow <= 4)
-    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
-  else
-    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
-
-  let dates=[];
-
-  for(let i=0;i<7;i++){
-    let d = new Date(ISOweekStart);
-    d.setDate(d.getDate()+i);
-    dates.push(d);
-  }
-
-  return dates;
+  updateMap();
 }
 
 // ===== SAVE =====
@@ -179,6 +196,7 @@ function recordEvent(type, extra={}){
   });
 
   save();
+  updateMap();
 }
 
 // ===== ROUTES =====
@@ -190,22 +208,122 @@ function pauseRoute(){ recordEvent("route-pause"); }
 function resumeRoute(){ recordEvent("route-resume"); }
 function stopRoute(){ recordEvent("route-end"); routeSession.active=false; }
 
-// ===== RENDER =====
+// ===== MAP UPDATE =====
+function updateMap(){
+
+  if(!map) return;
+
+  let mode = document.getElementById("mapMode").value;
+  let filterDay = document.getElementById("filterDay").value;
+  let filterType = document.getElementById("filterType").value;
+
+  markersLayer.clearLayers();
+  routeLayer.clearLayers();
+
+  map.eachLayer(l=>{
+    if(l instanceof L.TileLayer) map.removeLayer(l);
+  });
+
+  if(mode === "full"){
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  }
+
+  if(mode === "off") return;
+
+  let weekEvents = events.filter(e => {
+    return e.week === currentWeek &&
+      (filterDay==="all" || e.day == filterDay) &&
+      (filterType==="all" ||
+       (filterType==="route" && e.type.startsWith("route")) ||
+       e.type===filterType);
+  });
+
+  // POINTS
+  weekEvents.forEach(ev=>{
+
+    if(!ev.lat) return;
+
+    let color =
+      ev.type==="habit" ? "green" :
+      ev.type==="note" ? "blue" :
+      "red";
+
+    let marker = L.circleMarker([ev.lat,ev.lng],{
+      radius:5,
+      color
+    });
+
+    marker.bindPopup(`
+      ${ev.type}<br>
+      ${new Date(ev.timestamp).toLocaleString()}
+    `);
+
+    markersLayer.addLayer(marker);
+  });
+
+  // ROUTE LINES
+  let routes = {};
+
+  weekEvents.forEach(ev=>{
+    if(!ev.routeId || !ev.lat) return;
+
+    if(!routes[ev.routeId]) routes[ev.routeId] = [];
+    routes[ev.routeId].push(ev);
+  });
+
+  Object.values(routes).forEach(route=>{
+
+    route.sort((a,b)=>a.timestamp-b.timestamp);
+
+    let coords = route.map(p=>[p.lat,p.lng]);
+
+    if(coords.length < 2) return;
+
+    let line = L.polyline(coords,{color:"red"}).addTo(routeLayer);
+
+    let start = route[0];
+    let end = route[route.length-1];
+
+    let distance = 0;
+    for(let i=1;i<coords.length;i++){
+      distance += map.distance(coords[i-1],coords[i]);
+    }
+
+    line.bindPopup(`
+      Route<br>
+      From: ${new Date(start.timestamp).toLocaleTimeString()}<br>
+      To: ${new Date(end.timestamp).toLocaleTimeString()}<br>
+      Distance: ${(distance/1000).toFixed(2)} km
+    `);
+  });
+
+  if(weekEvents.length > 0){
+    let last = weekEvents[weekEvents.length-1];
+    if(last.lat) map.setView([last.lat,last.lng],13);
+  }
+}
+
+// ===== WEEK =====
+document.getElementById("weekInput").addEventListener("change", e=>{
+  currentWeek = Number(e.target.value);
+  renderWeek();
+  updateMap();
+});
+
+// ===== TABLE =====
 function renderWeek(){
 
   if(!currentWeek) return;
 
-  let dates = getWeekDates(currentWeek);
-
-  let table = document.getElementById("grid");
+  let table=document.getElementById("grid");
   table.innerHTML="";
 
   let header=document.createElement("tr");
   header.appendChild(document.createElement("th"));
 
-  dates.forEach((d,i)=>{
+  days.forEach(d=>{
     let th=document.createElement("th");
-    th.innerText = days[i] + " " + d.getDate();
+    th.innerText=d;
     header.appendChild(th);
   });
 
@@ -250,29 +368,6 @@ function renderWeek(){
 
       td.appendChild(cb);
 
-      evs.forEach(ev=>{
-        let div=document.createElement("div");
-        div.className="eventBox";
-
-        div.innerText =
-          new Date(ev.timestamp).toLocaleTimeString() +
-          " | " +
-          (ev.lat ? ev.lat.toFixed(3)+","+ev.lng.toFixed(3) : "noGPS");
-
-        let del=document.createElement("button");
-        del.innerText="X";
-        del.onclick=()=>{
-          if(confirm("Delete?")){
-            events.splice(events.indexOf(ev),1);
-            save();
-            renderWeek();
-          }
-        };
-
-        div.appendChild(del);
-        td.appendChild(div);
-      });
-
       row.appendChild(td);
     }
 
@@ -301,34 +396,6 @@ function renderWeek(){
     td.appendChild(ta);
     td.appendChild(btn);
 
-    let evs = events.filter(e =>
-      e.type==="note" &&
-      e.week===currentWeek &&
-      e.day===d
-    );
-
-    evs.forEach(ev=>{
-      let div=document.createElement("div");
-      div.className="eventBox";
-
-      div.innerText =
-        ev.text + " | " +
-        new Date(ev.timestamp).toLocaleTimeString();
-
-      let del=document.createElement("button");
-      del.innerText="X";
-      del.onclick=()=>{
-        if(confirm("Delete?")){
-          events.splice(events.indexOf(ev),1);
-          save();
-          renderWeek();
-        }
-      };
-
-      div.appendChild(del);
-      td.appendChild(div);
-    });
-
     row.appendChild(td);
   }
 
@@ -342,8 +409,8 @@ function renderDB(){
   div.innerHTML="";
 
   events.forEach(ev=>{
-
     let box=document.createElement("div");
+
     box.style.border="1px solid #ccc";
     box.style.margin="5px";
     box.style.padding="5px";
