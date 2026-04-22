@@ -11,19 +11,17 @@
     body { font-family: Arial; text-align:center; }
     .screen { display:none; }
 
-    table { margin:10px auto; border-collapse: collapse; width:100%; }
-    td, th { border:1px solid #ccc; padding:5px; font-size:12px; }
+    table { width:100%; border-collapse:collapse; margin:10px 0; }
+    td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
 
-    textarea { width:95%; height:40px; }
-
-    #map, #vectorCanvas {
+    #map, #vector {
       width:100%;
       height:260px;
-      margin:10px 0;
       border:1px solid #ccc;
+      margin:10px 0;
     }
 
-    .eventBox { font-size:11px; border-bottom:1px solid #ddd; padding:3px; }
+    textarea { width:95%; height:40px; }
   </style>
 </head>
 <body>
@@ -36,6 +34,7 @@
 </div>
 
 <div id="weekly" class="screen">
+
   <button onclick="show('home')">⬅</button><br>
 
   <input id="weekInput" type="number" placeholder="Week"><br>
@@ -45,68 +44,57 @@
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
-  <button onclick="saveWeekToDB()">💾 Save Week</button>
+  <button onclick="saveDB()">Save Week</button>
 
-  <br>
   <button onclick="setMode('map')">Map</button>
   <button onclick="setMode('vector')">Vector</button>
 
   <div id="map"></div>
-  <canvas id="vectorCanvas"></canvas>
+  <canvas id="vector"></canvas>
 
-  <table id="grid"></table>
+  <table id="table"></table>
 
-  <div id="eventLog"></div>
+  <div id="events"></div>
 </div>
 
 <div id="db" class="screen">
   <button onclick="show('home')">⬅</button>
-  <div id="dbContent"></div>
+  <div id="dbView"></div>
 </div>
 
 <script>
 
 // ===== STATE =====
-let habits = JSON.parse(localStorage.getItem("habits")) ||
-  Array.from({length:10},(_,i)=>"Habit "+(i+1));
+let events = JSON.parse(localStorage.getItem("events") || "[]");
+let db = JSON.parse(localStorage.getItem("db") || "[]");
+let habits = JSON.parse(localStorage.getItem("habits") || JSON.stringify(
+  Array.from({length:10},(_,i)=>"Habit "+(i+1))
+));
 
-let liveEvents = JSON.parse(localStorage.getItem("liveEvents")) || [];
-let database = JSON.parse(localStorage.getItem("database")) || [];
-
-let currentWeek = null;
-let selectedDay = null;
+let week = null;
+let day = null;
 let mode = "map";
 
-let routeSession = {active:false, paused:false, id:null};
-let watchId = null;
+let route = {active:false,paused:false,id:null};
+let watch = null;
 
 let map, layer;
 
-const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+// ===== INIT SAFE =====
+window.onload = () => {
 
-// ===== INIT =====
-window.onload = ()=>{
   document.getElementById("weekInput").onchange = e=>{
-    currentWeek = Number(e.target.value);
+    week = Number(e.target.value);
     renderAll();
   };
 
-  setMode("map"); // FIX double view bug
   show("home");
 };
 
-// ===== CORE RENDER =====
-function renderAll(){
-  renderWeek();
-  updateMap();
-  drawVectors();
-  renderEventLog();
-}
-
-// ===== STORAGE =====
+// ===== SAVE =====
 function save(){
-  localStorage.setItem("liveEvents",JSON.stringify(liveEvents));
-  localStorage.setItem("database",JSON.stringify(database));
+  localStorage.setItem("events",JSON.stringify(events));
+  localStorage.setItem("db",JSON.stringify(db));
   localStorage.setItem("habits",JSON.stringify(habits));
 }
 
@@ -123,252 +111,224 @@ function show(id){
 function setMode(m){
   mode = m;
   document.getElementById("map").style.display = m==="map"?"block":"none";
-  document.getElementById("vectorCanvas").style.display = m==="vector"?"block":"none";
+  document.getElementById("vector").style.display = m==="vector"?"block":"none";
+  renderAll();
 }
 
 // ===== MAP =====
 function initMap(){
   if(map) return;
 
-  map = L.map('map').setView([52,5],7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  map = L.map("map").setView([52,5],7);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
   layer = L.layerGroup().addTo(map);
 }
 
-function updateMap(){
-  if(mode!=="map" || !map || !currentWeek) return;
+// ===== RENDER MASTER =====
+function renderAll(){
+  renderTable();
+  renderEvents();
+  drawMap();
+  drawVector();
+}
+
+// ===== SAFE GPS WRAPPER =====
+function gps(cb){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    cb(pos.coords);
+  },()=>cb(null));
+}
+
+// ===== EVENT CORE =====
+function addEvent(type, extra={}){
+
+  if(!Number.isFinite(week)) return;
+
+  gps(coords=>{
+
+    events.push({
+      type,
+      time:Date.now(),
+      lat:coords?.latitude || null,
+      lng:coords?.longitude || null,
+      week:Number(week),
+      day:day ?? (new Date().getDay()+6)%7,
+      routeId:route.id,
+      ...extra
+    });
+
+    save();
+    renderAll();
+  });
+}
+
+// ===== ROUTES =====
+function startRoute(){
+  route={active:true,paused:false,id:Date.now()};
+  addEvent("route-start");
+
+  watch = navigator.geolocation.watchPosition(pos=>{
+    if(route.active && !route.paused){
+      events.push({
+        type:"route-point",
+        time:Date.now(),
+        lat:pos.coords.latitude,
+        lng:pos.coords.longitude,
+        week:Number(week),
+        day:day ?? 0,
+        routeId:route.id
+      });
+      save();
+      renderAll();
+    }
+  });
+}
+
+function pauseRoute(){ route.paused=true; addEvent("pause"); }
+function resumeRoute(){ route.paused=false; addEvent("resume"); }
+
+function stopRoute(){
+  navigator.geolocation.clearWatch(watch);
+  addEvent("end");
+  route={active:false,paused:false,id:null};
+}
+
+// ===== TABLE =====
+function renderTable(){
+
+  if(!week) return;
+
+  let t=document.getElementById("table");
+  t.innerHTML="";
+
+  let h=document.createElement("tr");
+  h.innerHTML="<th>Habit</th>"+Array.from({length:7},(_,i)=>`<th>${i}</th>`).join("");
+  t.appendChild(h);
+
+  for(let i=0;i<10;i++){
+    let r=document.createElement("tr");
+
+    let name=document.createElement("td");
+    name.innerText=habits[i];
+    r.appendChild(name);
+
+    for(let d=0;d<7;d++){
+      let c=document.createElement("td");
+
+      let b=document.createElement("button");
+      b.innerText="+";
+
+      b.onclick=()=>{
+        day=d;
+        addEvent("habit",{habitIndex:i});
+      };
+
+      c.appendChild(b);
+      r.appendChild(c);
+    }
+
+    t.appendChild(r);
+  }
+}
+
+// ===== EVENTS VIEW =====
+function renderEvents(){
+
+  let div=document.getElementById("events");
+  div.innerHTML="<h3>Events</h3>";
+
+  let filtered = events.filter(e=>e.week===week);
+
+  filtered.forEach(e=>{
+    let d=document.createElement("div");
+    d.innerText = `${e.type} | ${e.lat},${e.lng} | ${new Date(e.time).toLocaleTimeString()}`;
+
+    let del=document.createElement("button");
+    del.innerText="X";
+
+    del.onclick=()=>{
+      events = events.filter(x=>x!==e);
+      save();
+      renderAll();
+    };
+
+    d.appendChild(del);
+    div.appendChild(d);
+  });
+}
+
+// ===== MAP =====
+function drawMap(){
+
+  if(mode!=="map" || !map || !week) return;
 
   layer.clearLayers();
 
-  let evs = liveEvents.filter(e=>e.week===currentWeek && e.lat);
+  let pts = events.filter(e=>e.week===week && e.lat);
 
-  let routes={};
+  let routeMap={};
 
-  evs.forEach(e=>{
-    if(e.routeId){
-      if(!routes[e.routeId]) routes[e.routeId]=[];
-      routes[e.routeId].push([e.lat,e.lng]);
+  pts.forEach(p=>{
+    if(p.routeId){
+      if(!routeMap[p.routeId]) routeMap[p.routeId]=[];
+      routeMap[p.routeId].push([p.lat,p.lng]);
     }
   });
 
-  Object.values(routes).forEach(r=>{
+  Object.values(routeMap).forEach(r=>{
     if(r.length>1) L.polyline(r,{color:"blue"}).addTo(layer);
   });
 
-  evs.forEach(e=>{
-    let m=L.circleMarker([e.lat,e.lng],{radius:4}).addTo(layer);
-    m.bindPopup(JSON.stringify(e,null,1));
+  pts.forEach(p=>{
+    L.circleMarker([p.lat,p.lng]).addTo(layer);
   });
 }
 
 // ===== VECTOR =====
-function drawVectors(){
-  if(mode!=="vector" || !currentWeek) return;
+function drawVector(){
 
-  let c=document.getElementById("vectorCanvas");
+  if(mode!=="vector" || !week) return;
+
+  let c=document.getElementById("vector");
   c.width=c.offsetWidth;
   c.height=260;
 
   let ctx=c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
 
-  let evs=liveEvents.filter(e=>e.week===currentWeek && e.lat);
-  if(evs.length<2) return;
+  let pts = events.filter(e=>e.week===week && e.lat);
+  if(pts.length<2) return;
 
-  let minLat=Math.min(...evs.map(e=>e.lat));
-  let maxLat=Math.max(...evs.map(e=>e.lat));
-  let minLng=Math.min(...evs.map(e=>e.lng));
-  let maxLng=Math.max(...evs.map(e=>e.lng));
+  let minLat=Math.min(...pts.map(p=>p.lat));
+  let maxLat=Math.max(...pts.map(p=>p.lat));
+  let minLng=Math.min(...pts.map(p=>p.lng));
+  let maxLng=Math.max(...pts.map(p=>p.lng));
 
-  function proj(e){
-    return [
-      (e.lng-minLng)/(maxLng-minLng)*c.width,
-      c.height-(e.lat-minLat)/(maxLat-minLat)*c.height
-    ];
-  }
+  const proj = p => [
+    (p.lng-minLng)/(maxLng-minLng)*c.width,
+    c.height-(p.lat-minLat)/(maxLat-minLat)*c.height
+  ];
 
   ctx.beginPath();
-  evs.forEach((e,i)=>{
-    let [x,y]=proj(e);
+
+  pts.forEach((p,i)=>{
+    let [x,y]=proj(p);
     i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
+
   ctx.stroke();
 }
 
-// ===== EVENT PIPELINE =====
-function addEvent(ev){
-  liveEvents.push(ev);
-  save();
-  renderAll();
-}
+// ===== DB =====
+function saveDB(){
 
-function record(type, extra={}){
+  if(!week) return;
 
-  if(!Number.isFinite(currentWeek)){
-    alert("Set week");
-    return;
-  }
+  db = db.filter(w=>w.week!==week);
 
-  navigator.geolocation.getCurrentPosition(pos=>{
-    addEvent({
-      type,
-      time:Date.now(),
-      lat:pos.coords.latitude,
-      lng:pos.coords.longitude,
-      week:Number(currentWeek),
-      day:selectedDay ?? (new Date().getDay()+6)%7,
-      routeId:routeSession.id,
-      ...extra
-    });
-  });
-}
-
-// ===== ROUTES =====
-function startRoute(){
-  routeSession={active:true,paused:false,id:Date.now()};
-  record("route-start");
-
-  watchId = navigator.geolocation.watchPosition(pos=>{
-    if(routeSession.active && !routeSession.paused){
-      addEvent({
-        type:"route-point",
-        time:Date.now(),
-        lat:pos.coords.latitude,
-        lng:pos.coords.longitude,
-        week:Number(currentWeek),
-        day:selectedDay ?? 0,
-        routeId:routeSession.id
-      });
-    }
-  });
-}
-
-function pauseRoute(){ routeSession.paused=true; record("route-pause"); }
-function resumeRoute(){ routeSession.paused=false; record("route-resume"); }
-
-function stopRoute(){
-  navigator.geolocation.clearWatch(watchId);
-  record("route-end");
-  routeSession={active:false,paused:false,id:null};
-}
-
-// ===== WEEK =====
-function renderWeek(){
-
-  let table=document.getElementById("grid");
-  table.innerHTML="";
-
-  let h=document.createElement("tr");
-  h.appendChild(document.createElement("th"));
-
-  days.forEach((d,i)=>{
-    let th=document.createElement("th");
-    th.innerText=d;
-    th.onclick=()=>selectedDay=i;
-    h.appendChild(th);
-  });
-
-  table.appendChild(h);
-
-  for(let i=0;i<10;i++){
-
-    let r=document.createElement("tr");
-
-    let td=document.createElement("td");
-
-    let input=document.createElement("input");
-    input.value=habits[i];
-
-    input.onchange=()=>{
-      habits[i]=input.value;
-      save();
-    };
-
-    td.appendChild(input);
-    r.appendChild(td);
-
-    for(let d=0;d<7;d++){
-      let cell=document.createElement("td");
-
-      let btn=document.createElement("button");
-      btn.innerText="+";
-      btn.onclick=()=>{selectedDay=d;record("habit",{habitIndex:i});};
-
-      cell.appendChild(btn);
-      r.appendChild(cell);
-    }
-
-    table.appendChild(r);
-  }
-
-  // NOTES
-  let r=document.createElement("tr");
-  r.appendChild(Object.assign(document.createElement("td"),{innerText:"Notes"}));
-
-  for(let d=0;d<7;d++){
-    let td=document.createElement("td");
-
-    let ta=document.createElement("textarea");
-    let btn=document.createElement("button");
-
-    btn.innerText="✔";
-    btn.onclick=()=>{
-      if(!ta.value.trim()) return;
-      selectedDay=d;
-      record("note",{text:ta.value});
-      ta.value="";
-    };
-
-    td.appendChild(ta);
-    td.appendChild(btn);
-    r.appendChild(td);
-  }
-
-  table.appendChild(r);
-}
-
-// ===== EVENTS =====
-function renderEventLog(){
-
-  let div=document.getElementById("eventLog");
-  div.innerHTML="<h3>Events</h3>";
-
-  let evs = liveEvents.filter(e=>e.week===currentWeek);
-
-  evs.forEach(ev=>{
-    let row=document.createElement("div");
-    row.className="eventBox";
-
-    row.innerText =
-      `${days[ev.day]} | ${ev.type} | ${new Date(ev.time).toLocaleString()}
-Lat:${ev.lat} Lng:${ev.lng}`;
-
-    let del=document.createElement("button");
-    del.innerText="X";
-
-    del.onclick=()=>{
-      liveEvents.splice(liveEvents.indexOf(ev),1);
-      save();
-      renderAll();
-    };
-
-    row.appendChild(del);
-    div.appendChild(row);
-  });
-}
-
-// ===== DATABASE =====
-function saveWeekToDB(){
-
-  if(!Number.isFinite(currentWeek)) return;
-
-  database = database.filter(w=>Number(w.week)!==currentWeek);
-
-  database.push({
-    week:Number(currentWeek),
-    data:JSON.parse(JSON.stringify(
-      liveEvents.filter(e=>e.week===currentWeek)
-    ))
+  db.push({
+    week:Number(week),
+    data:JSON.parse(JSON.stringify(events.filter(e=>e.week===week)))
   });
 
   save();
@@ -376,31 +336,20 @@ function saveWeekToDB(){
 
 function renderDB(){
 
-  let div=document.getElementById("dbContent");
-  div.innerHTML="";
+  let d=document.getElementById("dbView");
+  d.innerHTML="";
 
-  database.forEach(w=>{
-    div.append("Week "+w.week);
-
-    let table=document.createElement("table");
+  db.forEach(w=>{
+    d.innerHTML+="<h4>Week "+w.week+"</h4>";
 
     w.data.forEach(e=>{
-      let tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${e.type}</td>
-        <td>${e.day}</td>
-        <td>${e.lat||""}</td>
-        <td>${e.lng||""}</td>
-        <td>${e.text||""}</td>
-      `;
-      table.appendChild(tr);
+      let row=document.createElement("div");
+      row.innerText=`${e.type} | ${e.lat},${e.lng}`;
+      d.appendChild(row);
     });
-
-    div.appendChild(table);
   });
 }
 
 </script>
-
 </body>
 </html>
