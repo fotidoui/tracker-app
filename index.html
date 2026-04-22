@@ -104,26 +104,18 @@ window.onload = () => {
   show("home");
 };
 
-// ===== GPS BACKGROUND =====
+// ===== GPS =====
 function startGPS(){
 
   if(!navigator.geolocation) return;
 
   watchId = navigator.geolocation.watchPosition(pos=>{
-    let newPos = {
+    lastPos = {
       lat:pos.coords.latitude,
       lng:pos.coords.longitude
     };
 
-    if(lastPos){
-      let d = distance(lastPos,newPos);
-      if(d < 0.02) return;
-    }
-
-    lastPos = newPos;
-
-    document.getElementById("gpsStatus").innerText =
-      "GPS active";
+    document.getElementById("gpsStatus").innerText = "GPS active";
 
   }, ()=>{}, {
     enableHighAccuracy:false,
@@ -136,28 +128,41 @@ function startGPS(){
 document.getElementById("weekInput").addEventListener("change", e=>{
   currentWeek = Number(e.target.value);
 
-  if(!weekData[currentWeek]){
-    weekData[currentWeek] = createWeek();
-  }
-
   renderWeek();
 });
 
-function createWeek(){
-  return {
-    notes:Array(7).fill().map(()=>[]),
-    routes:Array(7).fill().map(()=>[])
-  };
+// ===== DATE CALC =====
+function getWeekDates(week){
+
+  let year = new Date().getFullYear();
+  let simple = new Date(year,0,1 + (week-1)*7);
+
+  let dow = simple.getDay();
+  let ISOweekStart = simple;
+
+  if(dow <= 4)
+    ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+  else
+    ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+
+  let dates=[];
+
+  for(let i=0;i<7;i++){
+    let d = new Date(ISOweekStart);
+    d.setDate(d.getDate()+i);
+    dates.push(d);
+  }
+
+  return dates;
 }
 
 // ===== SAVE =====
 function save(){
-  localStorage.setItem("weekData", JSON.stringify(weekData));
-  localStorage.setItem("habits", JSON.stringify(habits));
   localStorage.setItem("events", JSON.stringify(events));
+  localStorage.setItem("habits", JSON.stringify(habits));
 }
 
-// ===== EVENT RECORD =====
+// ===== EVENT =====
 function recordEvent(type, extra={}){
 
   let day = (new Date().getDay()+6)%7;
@@ -178,46 +183,29 @@ function recordEvent(type, extra={}){
 
 // ===== ROUTES =====
 function startRoute(){
-  if(!currentWeek) return alert("Select week first");
-
-  routeSession = {
-    active:true,
-    id:Date.now()
-  };
-
+  routeSession = {active:true,id:Date.now()};
   recordEvent("route-start");
 }
+function pauseRoute(){ recordEvent("route-pause"); }
+function resumeRoute(){ recordEvent("route-resume"); }
+function stopRoute(){ recordEvent("route-end"); routeSession.active=false; }
 
-function pauseRoute(){
-  if(!routeSession.active) return;
-  recordEvent("route-pause");
-}
-
-function resumeRoute(){
-  if(!routeSession.active) return;
-  recordEvent("route-resume");
-}
-
-function stopRoute(){
-  if(!routeSession.active) return;
-
-  recordEvent("route-end");
-
-  routeSession.active=false;
-}
-
-// ===== WEEK RENDER =====
+// ===== RENDER =====
 function renderWeek(){
+
+  if(!currentWeek) return;
+
+  let dates = getWeekDates(currentWeek);
 
   let table = document.getElementById("grid");
   table.innerHTML="";
 
-  let header = document.createElement("tr");
+  let header=document.createElement("tr");
   header.appendChild(document.createElement("th"));
 
-  days.forEach(d=>{
+  dates.forEach((d,i)=>{
     let th=document.createElement("th");
-    th.innerText=d;
+    th.innerText = days[i] + " " + d.getDate();
     header.appendChild(th);
   });
 
@@ -262,13 +250,18 @@ function renderWeek(){
 
       td.appendChild(cb);
 
-      evs.forEach((ev,idx)=>{
+      evs.forEach(ev=>{
         let div=document.createElement("div");
         div.className="eventBox";
 
-        let btn=document.createElement("button");
-        btn.innerText="X";
-        btn.onclick=()=>{
+        div.innerText =
+          new Date(ev.timestamp).toLocaleTimeString() +
+          " | " +
+          (ev.lat ? ev.lat.toFixed(3)+","+ev.lng.toFixed(3) : "noGPS");
+
+        let del=document.createElement("button");
+        del.innerText="X";
+        del.onclick=()=>{
           if(confirm("Delete?")){
             events.splice(events.indexOf(ev),1);
             save();
@@ -276,8 +269,7 @@ function renderWeek(){
           }
         };
 
-        div.innerText=new Date(ev.timestamp).toLocaleTimeString();
-        div.appendChild(btn);
+        div.appendChild(del);
         td.appendChild(div);
       });
 
@@ -319,12 +311,14 @@ function renderWeek(){
       let div=document.createElement("div");
       div.className="eventBox";
 
-      div.innerText=ev.text;
+      div.innerText =
+        ev.text + " | " +
+        new Date(ev.timestamp).toLocaleTimeString();
 
       let del=document.createElement("button");
       del.innerText="X";
       del.onclick=()=>{
-        if(confirm("Delete note?")){
+        if(confirm("Delete?")){
           events.splice(events.indexOf(ev),1);
           save();
           renderWeek();
@@ -348,27 +342,23 @@ function renderDB(){
   div.innerHTML="";
 
   events.forEach(ev=>{
-    let p=document.createElement("div");
 
-    p.innerText =
-      ev.type+" | week "+ev.week+" | "+days[ev.day]+" | "+
-      (ev.lat?ev.lat.toFixed(3):"noGPS");
+    let box=document.createElement("div");
+    box.style.border="1px solid #ccc";
+    box.style.margin="5px";
+    box.style.padding="5px";
 
-    div.appendChild(p);
+    box.innerHTML = `
+      <b>${ev.type}</b><br>
+      Week: ${ev.week} | Day: ${days[ev.day]}<br>
+      Time: ${new Date(ev.timestamp).toLocaleString()}<br>
+      GPS: ${ev.lat ? ev.lat.toFixed(5)+", "+ev.lng.toFixed(5) : "No GPS"}<br>
+      Route: ${ev.routeId || "-"}<br>
+      ${ev.text ? "Note: "+ev.text : ""}
+    `;
+
+    div.appendChild(box);
   });
-}
-
-// ===== DISTANCE =====
-function distance(a,b){
-  let R=6371;
-  let dLat=(b.lat-a.lat)*Math.PI/180;
-  let dLon=(b.lng-a.lng)*Math.PI/180;
-
-  let x=Math.sin(dLat/2)**2+
-    Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*
-    Math.sin(dLon/2)**2;
-
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 
 </script>
