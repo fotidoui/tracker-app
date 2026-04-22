@@ -2,21 +2,21 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tracker CLEAN v2</title>
+<title>Tracker CLEAN v3</title>
 
 <style>
 body{margin:0;font-family:system-ui;background:#eef2f6}
-#weeks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px}
-.box{background:white;padding:10px;border-radius:8px;text-align:center;cursor:pointer}
+#weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px}
+.box{background:white;padding:12px;border-radius:8px;text-align:center;cursor:pointer}
 #app{display:none}
 header{display:flex;background:#111827;color:white}
-header button{flex:1;padding:10px;border:none;background:none;color:#ccc}
+header button{flex:1;padding:12px;border:none;background:none;color:#ccc;font-size:14px}
 header button.active{background:#1f2937;color:white}
 .card{background:white;margin:10px;padding:10px;border-radius:8px}
-table{width:100%;border-collapse:collapse;font-size:11px}
-td,th{border:1px solid #ddd;padding:3px;text-align:center}
-textarea{width:100%}
-button{font-size:11px;margin:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{border:1px solid #ddd;padding:4px;text-align:center}
+textarea{width:100%;min-height:60px}
+button{font-size:14px;margin:3px;padding:8px}
 </style>
 </head>
 
@@ -25,21 +25,17 @@ button{font-size:11px;margin:3px}
 <div id="weeks"></div>
 
 <div id="app">
-
 <header>
 <button onclick="tab('w')" id="bw">Weekly</button>
 <button onclick="tab('r')" id="br">Routes</button>
 <button onclick="tab('d')" id="bd">DB</button>
 <button onclick="sync()">SYNC</button>
 </header>
-
 <div id="view"></div>
-
 </div>
 
 <script>
 
-/* ================= STATE ================= */
 const S={
   week:null,
   data:JSON.parse(localStorage.getItem("DATA")||"{}"),
@@ -47,7 +43,7 @@ const S={
   watch:null
 };
 
-/* ================= WEEKS ================= */
+/* ========== WEEKS ========== */
 const w=document.getElementById("weeks");
 
 for(let i=1;i<=52;i++){
@@ -77,7 +73,7 @@ function openWeek(i){
   tab("w");
 }
 
-/* ================= TAB ================= */
+/* ========== TAB ========== */
 function tab(t){
   document.querySelectorAll("header button").forEach(b=>b.classList.remove("active"));
 
@@ -86,15 +82,13 @@ function tab(t){
   if(t==="d"){bd.classList.add("active");renderD();}
 }
 
-/* ================= WEEKLY ================= */
+/* ========== WEEKLY ========== */
 function renderW(){
-
 let w=S.data[S.week];
 
 let html="<div class='card'><b>Week "+S.week+"</b></div>";
 
 html+="<div class='card'><table><tr><th></th>";
-
 ["M","T","W","T","F","S","S"].forEach(d=>html+="<th>"+d+"</th>");
 html+="</tr>";
 
@@ -122,9 +116,8 @@ html+="</div>";
 document.getElementById("view").innerHTML=html;
 }
 
-/* ================= ROUTES ================= */
+/* ========== ROUTES ========== */
 function renderR(){
-
 let html=`
 <div class='card'>
 <button onclick='start()'>Start</button>
@@ -132,74 +125,106 @@ let html=`
 </div>
 <div class='card'>Recording: ${S.session?S.session.points.length:0}</div>
 `;
-
 document.getElementById("view").innerHTML=html;
 }
 
-/* ================= START ================= */
+/* ========== START GPS ========== */
 function start(){
 
 if(!S.week) return;
 
-S.session={
-  points:[]
-};
-
-S.watch=navigator.geolocation.watchPosition(async p=>{
-
-let pt={
-  lat:p.coords.latitude,
-  lng:p.coords.longitude
-};
-
-S.session.points.push(pt);
-
-});
-
+if(!navigator.geolocation){
+  alert("Geolocation not supported");
+  return;
 }
 
-/* ================= STOP ================= */
+S.session={points:[]};
+
+S.watch = navigator.geolocation.watchPosition(
+(p)=>{
+
+if(p.coords.accuracy>50) return;
+
+S.session.points.push({
+  lat:p.coords.latitude,
+  lng:p.coords.longitude
+});
+
+renderR();
+
+},
+(err)=>{
+alert("Location error: "+err.message);
+},
+{
+enableHighAccuracy:true,
+maximumAge:1000,
+timeout:10000
+}
+);
+}
+
+/* ========== STOP GPS ========== */
 async function stop(){
 
-navigator.geolocation.clearWatch(S.watch);
+if(S.watch) navigator.geolocation.clearWatch(S.watch);
 
-if(!S.session || S.session.points.length<2) return;
+if(!S.session || S.session.points.length<2){
+  alert("Not enough data");
+  return;
+}
 
 let pts=S.session.points;
+
 let km=distance(pts);
 
 let start=await reverse(pts[0]);
-let end=await reverse(pts.at(-1));
+let end=await reverse(pts[pts.length-1]);
 
-let route={
-  km:km,
-  start:start,
-  end:end
-};
+let route={km,start,end};
 
 let day=(new Date().getDay()+6)%7;
 
 S.data[S.week].routes[day].push(route);
 
+S.session=null;
+
 save();
 tab("d");
 }
 
-/* ================= DISTANCE ================= */
+/* ========== DISTANCE (REAL) ========== */
 function distance(a){
+
+function d2r(d){return d*Math.PI/180;}
+
 let t=0;
+
 for(let i=1;i<a.length;i++){
-t+=Math.hypot(a[i].lat-a[i-1].lat,a[i].lng-a[i-1].lng)*111;
+
+let R=6371;
+
+let dLat=d2r(a[i].lat-a[i-1].lat);
+let dLon=d2r(a[i].lng-a[i-1].lng);
+
+let lat1=d2r(a[i-1].lat);
+let lat2=d2r(a[i].lat);
+
+let x=Math.sin(dLat/2)**2+
+Math.sin(dLon/2)**2*Math.cos(lat1)*Math.cos(lat2);
+
+let c=2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+
+t+=R*c;
 }
+
 return t;
 }
 
-/* ================= REVERSE GEO ================= */
+/* ========== REVERSE GEO ========== */
 async function reverse(c){
 try{
-let r=await fetch(
-`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
-);
+let r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`);
 let d=await r.json();
 return d.display_name || `${c.lat},${c.lng}`;
 }catch{
@@ -207,9 +232,8 @@ return `${c.lat},${c.lng}`;
 }
 }
 
-/* ================= DB ================= */
+/* ========== DATABASE ========== */
 function renderD(){
-
 let w=S.data[S.week];
 
 let html="<div class='card'><b>Database</b></div>";
@@ -217,19 +241,19 @@ let html="<div class='card'><b>Database</b></div>";
 w.routes.forEach((d,i)=>{
 let sum=0;
 d.forEach(r=>sum+=r.km);
-html+="Day "+(i+1)+": "+sum.toFixed(1)+" km<br>";
+html+="Day "+(i+1)+": "+sum.toFixed(2)+" km<br>";
 });
 
 document.getElementById("view").innerHTML=html;
 }
 
-/* ================= SYNC ================= */
+/* ========== SYNC ========== */
 function sync(){
 save();
-tab(S.week?S.tab:"w");
+tab("w");
 }
 
-/* ================= SAVE ================= */
+/* ========== SAVE ========== */
 function save(){
 localStorage.setItem("DATA",JSON.stringify(S.data));
 }
