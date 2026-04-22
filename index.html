@@ -30,11 +30,6 @@
       font-size:10px;
       border-top:1px solid #ddd;
     }
-
-    .filters {
-      margin:10px;
-      font-size:12px;
-    }
   </style>
 </head>
 <body>
@@ -51,19 +46,14 @@
 
   <input id="weekInput" type="number" placeholder="Week"><br>
 
-  <button onclick="startRoute()">Start Route</button>
-  <button onclick="stopRoute()">Stop Route</button>
+  <button onclick="startRoute()">Start</button>
+  <button onclick="pauseRoute()">Pause</button>
+  <button onclick="resumeRoute()">Resume</button>
+  <button onclick="stopRoute()">Stop</button>
+
   <button onclick="saveWeekToDB()">💾 Save Week</button>
-
-  <div class="filters">
-    <b>Filter Days:</b>
-    <span id="dayFilters"></span><br>
-
-    <b>Types:</b>
-    <label><input type="checkbox" checked onchange="toggleType('route-point')">Route</label>
-    <label><input type="checkbox" checked onchange="toggleType('habit')">Habit</label>
-    <label><input type="checkbox" checked onchange="toggleType('note')">Note</label>
-  </div>
+  <button onclick="exportCSV()">CSV</button>
+  <button onclick="exportXML()">XML</button>
 
   <div id="map"></div>
 
@@ -88,17 +78,12 @@ let database = JSON.parse(localStorage.getItem("database")) || [];
 let currentWeek = null;
 let selectedDay = null;
 
-let routeSession = {active:false,id:null};
+let routeSession = {active:false, paused:false, id:null};
 let watchId = null;
 
 let map, layer;
 
 const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-let mapFilters = {
-  days:[0,1,2,3,4,5,6],
-  types:["route-point","habit","note"]
-};
 
 // ===== INIT =====
 window.onload=()=>{
@@ -118,7 +103,6 @@ function show(id){
 
   if(id==="weekly"){
     setTimeout(initMap,100);
-    renderDayFilters();
   }
 
   if(id==="db") renderDB();
@@ -128,7 +112,8 @@ function show(id){
 function initMap(){
   if(map) return;
 
-  map = L.map('map').setView([0,0],2);
+  map = L.map('map').setView([52,5],7);
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
   layer = L.layerGroup().addTo(map);
 }
@@ -138,108 +123,111 @@ function updateMap(){
   layer.clearLayers();
 
   let evs = liveEvents.filter(e =>
-    e.week===currentWeek &&
-    e.lat &&
-    mapFilters.days.includes(e.day) &&
-    mapFilters.types.includes(e.type)
+    e.week==currentWeek && e.lat
   );
 
   if(evs.length===0) return;
 
   let bounds=[];
-  let routes={};
+  let grouped={};
 
   evs.forEach(e=>{
-    if(e.routeId){
-      if(!routes[e.routeId]) routes[e.routeId]=[];
-      routes[e.routeId].push([e.lat,e.lng]);
-    }
+    let key = e.lat.toFixed(4)+","+e.lng.toFixed(4);
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push(e);
   });
 
-  Object.values(routes).forEach(coords=>{
-    if(coords.length>1){
-      L.polyline(coords,{color:"blue"}).addTo(layer);
-    }
-  });
+  Object.values(grouped).forEach(group=>{
 
-  evs.forEach(e=>{
-    L.circleMarker([e.lat,e.lng],{
-      radius:5,
-      color:
-        e.type==="habit"?"green":
-        e.type==="note"?"orange":"red"
-    }).addTo(layer);
+    let e = group[0];
+
+    let marker = L.marker([e.lat,e.lng]).addTo(layer);
+
+    let html = group.map(g=>
+      `${g.type} | ${days[g.day]} | ${new Date(g.time).toLocaleTimeString()}`
+    ).join("<br>");
+
+    marker.bindPopup(html);
 
     bounds.push([e.lat,e.lng]);
   });
 
-  map.fitBounds(bounds,{maxZoom:18});
+  map.fitBounds(bounds);
 }
 
 // ===== GEO =====
-function getPosition(){
-  return new Promise(resolve=>{
-    navigator.geolocation.getCurrentPosition(
-      pos=>resolve({
-        lat:pos.coords.latitude,
-        lng:pos.coords.longitude
-      }),
-      ()=>resolve(null)
-    );
-  });
+function getDay(){
+  return selectedDay!==null
+    ? selectedDay
+    : (new Date().getDay()+6)%7;
+}
+
+function getPos(cb){
+  navigator.geolocation.getCurrentPosition(
+    pos=>cb(pos.coords),
+    ()=>cb(null)
+  );
 }
 
 // ===== EVENTS =====
-async function record(type, extra={}){
+function record(type, extra={}){
 
   if(currentWeek===null){
     alert("Enter week first");
     return;
   }
 
-  let pos = await getPosition();
+  getPos(coords=>{
 
-  let dayToUse = selectedDay!==null
-    ? selectedDay
-    : (new Date().getDay()+6)%7;
+    liveEvents.push({
+      type,
+      time:Date.now(),
+      lat:coords?.latitude,
+      lng:coords?.longitude,
+      week:Number(currentWeek),
+      day:getDay(),
+      routeId:routeSession.id,
+      ...extra
+    });
 
-  liveEvents.push({
-    type,
-    time:Date.now(),
-    lat:pos?.lat,
-    lng:pos?.lng,
-    week:currentWeek,
-    day:dayToUse,
-    routeId:routeSession.id,
-    ...extra
+    save();
+    renderWeek();
+    updateMap();
   });
-
-  save();
-  renderWeek();
-  updateMap();
 }
 
 // ===== ROUTES =====
 function startRoute(){
-
-  routeSession={active:true,id:Date.now()};
+  routeSession={active:true,paused:false,id:Date.now()};
+  record("route-start");
 
   watchId = navigator.geolocation.watchPosition(pos=>{
-    liveEvents.push({
-      type:"route-point",
-      time:Date.now(),
-      lat:pos.coords.latitude,
-      lng:pos.coords.longitude,
-      week:currentWeek,
-      day:selectedDay ?? (new Date().getDay()+6)%7,
-      routeId:routeSession.id
-    });
-
-    save();
-    updateMap();
+    if(routeSession.active && !routeSession.paused){
+      liveEvents.push({
+        type:"route-point",
+        time:Date.now(),
+        lat:pos.coords.latitude,
+        lng:pos.coords.longitude,
+        week:Number(currentWeek),
+        day:getDay(),
+        routeId:routeSession.id
+      });
+      save();
+      updateMap();
+    }
   });
+}
 
-  record("route-start");
+function pauseRoute(){
+  if(!routeSession.active) return;
+  routeSession.paused=true;
+  record("route-pause");
+}
+
+function resumeRoute(){
+  if(!routeSession.active) return;
+  routeSession.paused=false;
+  record("route-resume");
 }
 
 function stopRoute(){
@@ -247,9 +235,8 @@ function stopRoute(){
     navigator.geolocation.clearWatch(watchId);
     watchId=null;
   }
-
   record("route-end");
-  routeSession.active=false;
+  routeSession={active:false,paused:false,id:null};
 }
 
 // ===== WEEK =====
@@ -276,10 +263,10 @@ function renderWeek(){
 
   table.appendChild(h);
 
+  // HABITS
   for(let i=0;i<10;i++){
 
     let r=document.createElement("tr");
-
     let td=document.createElement("td");
     td.innerText=habits[i];
     r.appendChild(td);
@@ -290,7 +277,7 @@ function renderWeek(){
 
       let ev = liveEvents.find(e=>
         e.type==="habit" &&
-        e.week===currentWeek &&
+        e.week==currentWeek &&
         e.day===d &&
         e.habitIndex===i
       );
@@ -302,11 +289,13 @@ function renderWeek(){
       cb.onclick=()=>{
         if(ev){
           liveEvents.splice(liveEvents.indexOf(ev),1);
+          save();
+          renderWeek();
+          updateMap();
         } else {
+          selectedDay=d;
           record("habit",{habitIndex:i});
         }
-        save();
-        renderWeek();
       };
 
       cell.appendChild(cb);
@@ -315,6 +304,59 @@ function renderWeek(){
 
     table.appendChild(r);
   }
+
+  // NOTES
+  let r=document.createElement("tr");
+  r.appendChild(Object.assign(document.createElement("td"),{innerText:"Notes"}));
+
+  for(let d=0;d<7;d++){
+
+    let td=document.createElement("td");
+
+    let ta=document.createElement("textarea");
+
+    let btn=document.createElement("button");
+    btn.innerText="✔";
+
+    btn.onclick=()=>{
+      if(!ta.value.trim()) return;
+      selectedDay=d;
+      record("note",{text:ta.value});
+      ta.value="";
+    };
+
+    td.appendChild(ta);
+    td.appendChild(btn);
+
+    let evs = liveEvents.filter(e=>
+      e.type==="note" &&
+      e.week==currentWeek &&
+      e.day===d
+    );
+
+    evs.forEach(ev=>{
+      let div=document.createElement("div");
+      div.className="eventBox";
+      div.innerText=ev.text;
+
+      let del=document.createElement("button");
+      del.innerText="X";
+
+      del.onclick=()=>{
+        liveEvents.splice(liveEvents.indexOf(ev),1);
+        save();
+        renderWeek();
+        updateMap();
+      };
+
+      div.appendChild(del);
+      td.appendChild(div);
+    });
+
+    r.appendChild(td);
+  }
+
+  table.appendChild(r);
 
   renderEventLog();
 }
@@ -326,11 +368,10 @@ function renderEventLog(){
   div.innerHTML="<h3>Events</h3>";
 
   let evs = liveEvents
-    .filter(e=>e.week===currentWeek)
+    .filter(e=>e.week==currentWeek)
     .sort((a,b)=>b.time-a.time);
 
   evs.forEach(ev=>{
-
     let row=document.createElement("div");
 
     row.innerText =
@@ -351,54 +392,19 @@ function renderEventLog(){
   });
 }
 
-// ===== FILTERS =====
-function renderDayFilters(){
-
-  let div=document.getElementById("dayFilters");
-  div.innerHTML="";
-
-  days.forEach((d,i)=>{
-    let label=document.createElement("label");
-
-    let cb=document.createElement("input");
-    cb.type="checkbox";
-    cb.checked=true;
-
-    cb.onchange=()=>{
-      if(cb.checked) mapFilters.days.push(i);
-      else mapFilters.days = mapFilters.days.filter(x=>x!==i);
-
-      updateMap();
-    };
-
-    label.appendChild(cb);
-    label.append(d+" ");
-    div.appendChild(label);
-  });
-}
-
-function toggleType(type){
-
-  if(mapFilters.types.includes(type)){
-    mapFilters.types = mapFilters.types.filter(t=>t!==type);
-  } else {
-    mapFilters.types.push(type);
-  }
-
-  updateMap();
-}
-
 // ===== DATABASE =====
 function saveWeekToDB(){
 
-  let weekEvents = liveEvents.filter(e=>e.week===currentWeek);
+  let weekEvents = liveEvents.filter(e=>e.week==currentWeek);
 
-  let i = database.findIndex(w=>w.week===currentWeek);
+  let i = database.findIndex(w=>w.week==currentWeek);
+
+  let copy = JSON.parse(JSON.stringify(weekEvents));
 
   if(i!==-1){
-    database[i].data = JSON.parse(JSON.stringify(weekEvents));
+    database[i].data = copy;
   } else {
-    database.push({week:currentWeek,data:weekEvents});
+    database.push({week:Number(currentWeek),data:copy});
   }
 
   save();
@@ -443,6 +449,43 @@ function renderDB(){
   });
 }
 
+// ===== EXPORT =====
+function exportCSV(){
+
+  let evs = liveEvents.filter(e=>e.week==currentWeek);
+
+  let rows = ["type,day,time,lat,lng"];
+
+  evs.forEach(e=>{
+    rows.push(`${e.type},${e.day},${e.time},${e.lat},${e.lng}`);
+  });
+
+  download("data.csv",rows.join("\n"));
+}
+
+function exportXML(){
+
+  let evs = liveEvents.filter(e=>e.week==currentWeek);
+
+  let xml = "<events>";
+
+  evs.forEach(e=>{
+    xml+=`<event type="${e.type}" day="${e.day}" time="${e.time}" lat="${e.lat}" lng="${e.lng}" />`;
+  });
+
+  xml+="</events>";
+
+  download("data.xml",xml);
+}
+
+function download(name,content){
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([content]));
+  a.download=name;
+  a.click();
+}
+
 </script>
+
 </body>
 </html>
