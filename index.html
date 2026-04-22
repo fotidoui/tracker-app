@@ -17,12 +17,13 @@
     textarea { width:95%; height:40px; }
 
     #map, #vectorCanvas {
-      height:250px;
       width:100%;
+      height:260px;
       margin:10px 0;
+      border:1px solid #ccc;
     }
 
-    .eventBox { font-size:10px; border-top:1px solid #ddd; }
+    .eventBox { font-size:11px; border-bottom:1px solid #ddd; padding:3px; }
   </style>
 </head>
 <body>
@@ -44,8 +45,9 @@
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
-  <button onclick="saveWeekToDB()">💾 Save</button>
+  <button onclick="saveWeekToDB()">💾 Save Week</button>
 
+  <br>
   <button onclick="setMode('map')">Map</button>
   <button onclick="setMode('vector')">Vector</button>
 
@@ -66,7 +68,7 @@
 
 // ===== STATE =====
 let habits = JSON.parse(localStorage.getItem("habits")) ||
-  Array(10).fill("").map((_,i)=>"Habit "+(i+1));
+  Array.from({length:10},(_,i)=>"Habit "+(i+1));
 
 let liveEvents = JSON.parse(localStorage.getItem("liveEvents")) || [];
 let database = JSON.parse(localStorage.getItem("database")) || [];
@@ -86,13 +88,20 @@ const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 window.onload = ()=>{
   document.getElementById("weekInput").onchange = e=>{
     currentWeek = Number(e.target.value);
-    renderWeek();
-    updateMap();
-    drawVectors();
+    renderAll();
   };
 
+  setMode("map"); // FIX double view bug
   show("home");
 };
+
+// ===== CORE RENDER =====
+function renderAll(){
+  renderWeek();
+  updateMap();
+  drawVectors();
+  renderEventLog();
+}
 
 // ===== STORAGE =====
 function save(){
@@ -127,11 +136,11 @@ function initMap(){
 }
 
 function updateMap(){
-  if(mode!=="map" || !map) return;
+  if(mode!=="map" || !map || !currentWeek) return;
 
   layer.clearLayers();
 
-  let evs = liveEvents.filter(e => e.week===currentWeek && e.lat);
+  let evs = liveEvents.filter(e=>e.week===currentWeek && e.lat);
 
   let routes={};
 
@@ -142,31 +151,28 @@ function updateMap(){
     }
   });
 
-  Object.values(routes).forEach(coords=>{
-    if(coords.length>1){
-      L.polyline(coords,{color:"blue"}).addTo(layer);
-    }
+  Object.values(routes).forEach(r=>{
+    if(r.length>1) L.polyline(r,{color:"blue"}).addTo(layer);
   });
 
   evs.forEach(e=>{
     let m=L.circleMarker([e.lat,e.lng],{radius:4}).addTo(layer);
-    m.bindPopup(`${e.type}<br>${e.lat},${e.lng}`);
+    m.bindPopup(JSON.stringify(e,null,1));
   });
 }
 
 // ===== VECTOR =====
 function drawVectors(){
-  if(mode!=="vector") return;
+  if(mode!=="vector" || !currentWeek) return;
 
   let c=document.getElementById("vectorCanvas");
   c.width=c.offsetWidth;
-  c.height=250;
+  c.height=260;
 
   let ctx=c.getContext("2d");
   ctx.clearRect(0,0,c.width,c.height);
 
   let evs=liveEvents.filter(e=>e.week===currentWeek && e.lat);
-
   if(evs.length<2) return;
 
   let minLat=Math.min(...evs.map(e=>e.lat));
@@ -182,17 +188,20 @@ function drawVectors(){
   }
 
   ctx.beginPath();
-
   evs.forEach((e,i)=>{
     let [x,y]=proj(e);
-    if(i===0) ctx.moveTo(x,y);
-    else ctx.lineTo(x,y);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
-
   ctx.stroke();
 }
 
-// ===== EVENTS =====
+// ===== EVENT PIPELINE =====
+function addEvent(ev){
+  liveEvents.push(ev);
+  save();
+  renderAll();
+}
+
 function record(type, extra={}){
 
   if(!Number.isFinite(currentWeek)){
@@ -201,8 +210,7 @@ function record(type, extra={}){
   }
 
   navigator.geolocation.getCurrentPosition(pos=>{
-
-    liveEvents.push({
+    addEvent({
       type,
       time:Date.now(),
       lat:pos.coords.latitude,
@@ -212,11 +220,6 @@ function record(type, extra={}){
       routeId:routeSession.id,
       ...extra
     });
-
-    save();
-    renderWeek();
-    updateMap();
-    drawVectors();
   });
 }
 
@@ -227,7 +230,7 @@ function startRoute(){
 
   watchId = navigator.geolocation.watchPosition(pos=>{
     if(routeSession.active && !routeSession.paused){
-      liveEvents.push({
+      addEvent({
         type:"route-point",
         time:Date.now(),
         lat:pos.coords.latitude,
@@ -236,9 +239,6 @@ function startRoute(){
         day:selectedDay ?? 0,
         routeId:routeSession.id
       });
-      save();
-      updateMap();
-      drawVectors();
     }
   });
 }
@@ -270,7 +270,6 @@ function renderWeek(){
 
   table.appendChild(h);
 
-  // HABITS
   for(let i=0;i<10;i++){
 
     let r=document.createElement("tr");
@@ -326,11 +325,9 @@ function renderWeek(){
   }
 
   table.appendChild(r);
-
-  renderEventLog();
 }
 
-// ===== EVENT LOG =====
+// ===== EVENTS =====
 function renderEventLog(){
 
   let div=document.getElementById("eventLog");
@@ -340,9 +337,11 @@ function renderEventLog(){
 
   evs.forEach(ev=>{
     let row=document.createElement("div");
+    row.className="eventBox";
 
     row.innerText =
-      `${days[ev.day]} | ${ev.type} | ${new Date(ev.time).toLocaleString()} | ${ev.lat}, ${ev.lng}`;
+      `${days[ev.day]} | ${ev.type} | ${new Date(ev.time).toLocaleString()}
+Lat:${ev.lat} Lng:${ev.lng}`;
 
     let del=document.createElement("button");
     del.innerText="X";
@@ -350,9 +349,7 @@ function renderEventLog(){
     del.onclick=()=>{
       liveEvents.splice(liveEvents.indexOf(ev),1);
       save();
-      renderWeek();
-      updateMap();
-      drawVectors();
+      renderAll();
     };
 
     row.appendChild(del);
@@ -379,27 +376,23 @@ function saveWeekToDB(){
 
 function renderDB(){
 
-  // CLEAN duplicates before showing
-  let seen = {};
-  database = database.filter(w=>{
-    if(!Number.isFinite(w.week)) return false;
-    if(seen[w.week]) return false;
-    seen[w.week]=true;
-    return true;
-  });
-
-  save();
-
   let div=document.getElementById("dbContent");
   div.innerHTML="";
 
   database.forEach(w=>{
     div.append("Week "+w.week);
+
     let table=document.createElement("table");
 
     w.data.forEach(e=>{
       let tr=document.createElement("tr");
-      tr.innerHTML=`<td>${e.type}</td><td>${e.lat||""}</td><td>${e.lng||""}</td>`;
+      tr.innerHTML=`
+        <td>${e.type}</td>
+        <td>${e.day}</td>
+        <td>${e.lat||""}</td>
+        <td>${e.lng||""}</td>
+        <td>${e.text||""}</td>
+      `;
       table.appendChild(tr);
     });
 
