@@ -1,32 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tracker App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offline GIS Tracker</title>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <style>
-    body { font-family: Arial; text-align:center; }
-    .screen { display:none; }
+<style>
+body { font-family: Arial; text-align:center; }
+.screen { display:none; }
 
-    table { width:100%; border-collapse:collapse; margin:10px 0; }
-    td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
+#map { height:260px; width:100%; border:1px solid #ccc; margin:10px 0; }
 
-    #map, #vector {
-      width:100%;
-      height:260px;
-      border:1px solid #ccc;
-      margin:10px 0;
-    }
+table { width:100%; border-collapse:collapse; }
+td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
 
-    textarea { width:95%; height:40px; }
-  </style>
+textarea { width:95%; height:40px; }
+
+.event { font-size:11px; border-bottom:1px solid #ddd; padding:2px; }
+</style>
 </head>
 <body>
 
-<h2>Tracker App</h2>
+<h2>GIS Tracker</h2>
 
 <div id="home" class="screen">
   <button onclick="show('weekly')">Weekly</button>
@@ -44,15 +41,11 @@
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
-  <button onclick="saveDB()">Save Week</button>
-
-  <button onclick="setMode('map')">Map</button>
-  <button onclick="setMode('vector')">Vector</button>
+  <button onclick="saveWeek()">Save Week</button>
 
   <div id="map"></div>
-  <canvas id="vector"></canvas>
 
-  <table id="table"></table>
+  <table id="grid"></table>
 
   <div id="events"></div>
 </div>
@@ -64,23 +57,19 @@
 
 <script>
 
-// ===== STATE =====
-let events = JSON.parse(localStorage.getItem("events") || "[]");
-let db = JSON.parse(localStorage.getItem("db") || "[]");
-let habits = JSON.parse(localStorage.getItem("habits") || JSON.stringify(
-  Array.from({length:10},(_,i)=>"Habit "+(i+1))
-));
+// ===================== STATE =====================
+let events = JSON.parse(localStorage.getItem("events")||"[]");
+let db = JSON.parse(localStorage.getItem("db")||"[]");
 
 let week = null;
 let day = null;
-let mode = "map";
 
-let route = {active:false,paused:false,id:null};
+let route = {active:false, paused:false, id:null};
 let watch = null;
 
 let map, layer;
 
-// ===== INIT SAFE =====
+// ===================== INIT =====================
 window.onload = () => {
 
   document.getElementById("weekInput").onchange = e=>{
@@ -91,31 +80,22 @@ window.onload = () => {
   show("home");
 };
 
-// ===== SAVE =====
+// ===================== SAVE =====================
 function save(){
   localStorage.setItem("events",JSON.stringify(events));
   localStorage.setItem("db",JSON.stringify(db));
-  localStorage.setItem("habits",JSON.stringify(habits));
 }
 
-// ===== NAV =====
+// ===================== NAV =====================
 function show(id){
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
   document.getElementById(id).style.display="block";
 
-  if(id==="weekly") setTimeout(initMap,100);
+  if(id==="weekly") initMap();
   if(id==="db") renderDB();
 }
 
-// ===== MODE =====
-function setMode(m){
-  mode = m;
-  document.getElementById("map").style.display = m==="map"?"block":"none";
-  document.getElementById("vector").style.display = m==="vector"?"block":"none";
-  renderAll();
-}
-
-// ===== MAP =====
+// ===================== MAP =====================
 function initMap(){
   if(map) return;
 
@@ -124,35 +104,35 @@ function initMap(){
   layer = L.layerGroup().addTo(map);
 }
 
-// ===== RENDER MASTER =====
+// ===================== CORE RENDER =====================
 function renderAll(){
   renderTable();
   renderEvents();
-  drawMap();
-  drawVector();
+  renderMap();
 }
 
-// ===== SAFE GPS WRAPPER =====
+// ===================== GPS =====================
 function gps(cb){
-  navigator.geolocation.getCurrentPosition(pos=>{
-    cb(pos.coords);
-  },()=>cb(null));
+  navigator.geolocation.getCurrentPosition(
+    p=>cb(p.coords),
+    ()=>cb(null)
+  );
 }
 
-// ===== EVENT CORE =====
+// ===================== ADD EVENT =====================
 function addEvent(type, extra={}){
 
   if(!Number.isFinite(week)) return;
 
-  gps(coords=>{
-
+  gps(c=>{
     events.push({
+      id:Date.now()+Math.random(),
       type,
       time:Date.now(),
-      lat:coords?.latitude || null,
-      lng:coords?.longitude || null,
       week:Number(week),
       day:day ?? (new Date().getDay()+6)%7,
+      lat:c?.latitude||null,
+      lng:c?.longitude||null,
       routeId:route.id,
       ...extra
     });
@@ -162,22 +142,23 @@ function addEvent(type, extra={}){
   });
 }
 
-// ===== ROUTES =====
+// ===================== ROUTE =====================
 function startRoute(){
   route={active:true,paused:false,id:Date.now()};
   addEvent("route-start");
 
-  watch = navigator.geolocation.watchPosition(pos=>{
+  watch = navigator.geolocation.watchPosition(p=>{
     if(route.active && !route.paused){
       events.push({
         type:"route-point",
         time:Date.now(),
-        lat:pos.coords.latitude,
-        lng:pos.coords.longitude,
         week:Number(week),
         day:day ?? 0,
+        lat:p.coords.latitude,
+        lng:p.coords.longitude,
         routeId:route.id
       });
+
       save();
       renderAll();
     }
@@ -189,65 +170,54 @@ function resumeRoute(){ route.paused=false; addEvent("resume"); }
 
 function stopRoute(){
   navigator.geolocation.clearWatch(watch);
-  addEvent("end");
+  addEvent("stop");
   route={active:false,paused:false,id:null};
 }
 
-// ===== TABLE =====
+// ===================== TABLE =====================
 function renderTable(){
 
   if(!week) return;
 
-  let t=document.getElementById("table");
+  let t=document.getElementById("grid");
   t.innerHTML="";
 
   let h=document.createElement("tr");
-  h.innerHTML="<th>Habit</th>"+Array.from({length:7},(_,i)=>`<th>${i}</th>`).join("");
+  h.innerHTML="<th>Habit</th>" + Array(7).fill(0).map((_,i)=>`<th>${i}</th>`).join("");
   t.appendChild(h);
 
-  for(let i=0;i<10;i++){
+  for(let i=0;i<5;i++){
     let r=document.createElement("tr");
 
-    let name=document.createElement("td");
-    name.innerText=habits[i];
-    r.appendChild(name);
-
-    for(let d=0;d<7;d++){
-      let c=document.createElement("td");
-
-      let b=document.createElement("button");
-      b.innerText="+";
-
-      b.onclick=()=>{
-        day=d;
-        addEvent("habit",{habitIndex:i});
-      };
-
-      c.appendChild(b);
-      r.appendChild(c);
-    }
+    r.innerHTML = `<td>Habit ${i+1}</td>` +
+      Array(7).fill(0).map((_,d)=>
+        `<td><button onclick="day=${d};addEvent('habit',{habitIndex:${i}})">+</button></td>`
+      ).join("");
 
     t.appendChild(r);
   }
 }
 
-// ===== EVENTS VIEW =====
+// ===================== EVENTS =====================
 function renderEvents(){
 
   let div=document.getElementById("events");
   div.innerHTML="<h3>Events</h3>";
 
-  let filtered = events.filter(e=>e.week===week);
+  let evs = events.filter(e=>e.week===week);
 
-  filtered.forEach(e=>{
+  evs.forEach(e=>{
     let d=document.createElement("div");
-    d.innerText = `${e.type} | ${e.lat},${e.lng} | ${new Date(e.time).toLocaleTimeString()}`;
+    d.className="event";
+
+    d.innerText =
+      `${e.type} | ${e.lat},${e.lng} | ${new Date(e.time).toLocaleString()}`;
 
     let del=document.createElement("button");
     del.innerText="X";
 
     del.onclick=()=>{
-      events = events.filter(x=>x!==e);
+      events = events.filter(x=>x.id!==e.id);
       save();
       renderAll();
     };
@@ -257,25 +227,25 @@ function renderEvents(){
   });
 }
 
-// ===== MAP =====
-function drawMap(){
+// ===================== MAP =====================
+function renderMap(){
 
-  if(mode!=="map" || !map || !week) return;
+  if(!map || !week) return;
 
   layer.clearLayers();
 
   let pts = events.filter(e=>e.week===week && e.lat);
 
-  let routeMap={};
+  let routes={};
 
   pts.forEach(p=>{
     if(p.routeId){
-      if(!routeMap[p.routeId]) routeMap[p.routeId]=[];
-      routeMap[p.routeId].push([p.lat,p.lng]);
+      if(!routes[p.routeId]) routes[p.routeId]=[];
+      routes[p.routeId].push([p.lat,p.lng]);
     }
   });
 
-  Object.values(routeMap).forEach(r=>{
+  Object.values(routes).forEach(r=>{
     if(r.length>1) L.polyline(r,{color:"blue"}).addTo(layer);
   });
 
@@ -284,45 +254,10 @@ function drawMap(){
   });
 }
 
-// ===== VECTOR =====
-function drawVector(){
+// ===================== DB =====================
+function saveWeek(){
 
-  if(mode!=="vector" || !week) return;
-
-  let c=document.getElementById("vector");
-  c.width=c.offsetWidth;
-  c.height=260;
-
-  let ctx=c.getContext("2d");
-  ctx.clearRect(0,0,c.width,c.height);
-
-  let pts = events.filter(e=>e.week===week && e.lat);
-  if(pts.length<2) return;
-
-  let minLat=Math.min(...pts.map(p=>p.lat));
-  let maxLat=Math.max(...pts.map(p=>p.lat));
-  let minLng=Math.min(...pts.map(p=>p.lng));
-  let maxLng=Math.max(...pts.map(p=>p.lng));
-
-  const proj = p => [
-    (p.lng-minLng)/(maxLng-minLng)*c.width,
-    c.height-(p.lat-minLat)/(maxLat-minLat)*c.height
-  ];
-
-  ctx.beginPath();
-
-  pts.forEach((p,i)=>{
-    let [x,y]=proj(p);
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
-  });
-
-  ctx.stroke();
-}
-
-// ===== DB =====
-function saveDB(){
-
-  if(!week) return;
+  if(!Number.isFinite(week)) return;
 
   db = db.filter(w=>w.week!==week);
 
@@ -336,16 +271,16 @@ function saveDB(){
 
 function renderDB(){
 
-  let d=document.getElementById("dbView");
-  d.innerHTML="";
+  let div=document.getElementById("dbView");
+  div.innerHTML="";
 
   db.forEach(w=>{
-    d.innerHTML+="<h4>Week "+w.week+"</h4>";
+    div.innerHTML += `<h3>Week ${w.week}</h3>`;
 
     w.data.forEach(e=>{
-      let row=document.createElement("div");
-      row.innerText=`${e.type} | ${e.lat},${e.lng}`;
-      d.appendChild(row);
+      let d=document.createElement("div");
+      d.innerText=`${e.type} | ${e.lat},${e.lng}`;
+      div.appendChild(d);
     });
   });
 }
