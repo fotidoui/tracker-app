@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hybrid GIS Tracker</title>
+<title>GIS Engine Upgrade</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -11,18 +11,34 @@
 body { font-family: Arial; text-align:center; }
 .screen { display:none; }
 
-#map { width:100%; height:260px; border:1px solid #ccc; }
+#map {
+  width:100%;
+  height:260px;
+  border:1px solid #ccc;
+}
 
-table { width:100%; border-collapse:collapse; }
-td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
+.event {
+  font-size:11px;
+  border-bottom:1px solid #eee;
+  padding:3px;
+}
 
-.event { font-size:11px; border-bottom:1px solid #eee; padding:3px; }
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+td, th {
+  border:1px solid #ccc;
+  font-size:12px;
+  padding:4px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Hybrid GIS Tracker</h2>
+<h2>GIS Engine (Upgraded)</h2>
 
 <div id="home" class="screen">
   <button onclick="show('weekly')">Weekly</button>
@@ -30,32 +46,30 @@ td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
   <button onclick="show('db')">Database</button>
 </div>
 
-<!-- ================= WEEKLY ================= -->
+<!-- WEEKLY -->
 <div id="weekly" class="screen">
 
   <button onclick="show('home')">⬅</button><br>
 
   <input id="weekInput" type="number" placeholder="Week"><br>
 
-  <button onclick="startRoute()">Start</button>
+  <button onclick="startRoute()">Start Route</button>
   <button onclick="pauseRoute()">Pause</button>
   <button onclick="resumeRoute()">Resume</button>
   <button onclick="stopRoute()">Stop</button>
 
   <button onclick="renderAll()">Refresh</button>
 
-  <table id="table"></table>
-
   <div id="events"></div>
 </div>
 
-<!-- ================= MAP ================= -->
+<!-- MAP -->
 <div id="mapScreen" class="screen">
   <button onclick="show('home')">⬅</button>
   <div id="map"></div>
 </div>
 
-<!-- ================= DB ================= -->
+<!-- DB -->
 <div id="db" class="screen">
   <button onclick="show('home')">⬅</button>
   <div id="dbView"></div>
@@ -65,19 +79,17 @@ td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
 
 // ================= STATE =================
 let events = JSON.parse(localStorage.getItem("events") || "[]");
-let routes = {};
 
 let week = null;
+
 let route = null;
 let watch = null;
 
 let map, layer;
 
-// ================= WEEKDAYS =================
-const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
 // ================= INIT =================
 window.onload = () => {
+
   document.getElementById("weekInput").onchange = e=>{
     week = Number(e.target.value);
     renderAll();
@@ -91,20 +103,12 @@ function save(){
   localStorage.setItem("events",JSON.stringify(events));
 }
 
-// ================= NAV =================
-function show(id){
-  document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
-  document.getElementById(id==="map"?"mapScreen":id).style.display="block";
+// ================= DISTANCE (REAL GIS CORE) =================
+function haversine(a,b){
+  const R = 6371;
 
-  if(id==="map") initMap();
-  if(id==="db") renderDB();
-}
-
-// ================= DISTANCE (Haversine) =================
-function dist(a,b){
-  const R=6371;
-  const dLat=(b.lat-a.lat)*Math.PI/180;
-  const dLng=(b.lng-a.lng)*Math.PI/180;
+  const dLat = (b.lat-a.lat)*Math.PI/180;
+  const dLng = (b.lng-a.lng)*Math.PI/180;
 
   const x =
     Math.sin(dLat/2)**2 +
@@ -128,39 +132,15 @@ async function getAddress(lat,lng){
   }
 }
 
-// ================= ADD EVENT =================
-async function addEvent(type, coords){
-
-  let now = new Date();
-
-  let address = coords
-    ? await getAddress(coords.lat,coords.lng)
-    : null;
-
-  events.push({
-    id:Date.now()+Math.random(),
-    type,
-    time:now.getTime(),
-    week,
-    day:(now.getDay()+6)%7,
-    lat:coords?.lat,
-    lng:coords?.lng,
-    address
-  });
-
-  save();
-  renderAll();
-}
-
-// ================= ROUTE SYSTEM =================
+// ================= ROUTE ENGINE =================
 function startRoute(){
 
   route = {
     id:Date.now(),
-    points:[],
-    distance:0,
     active:true,
-    last:null
+    last:null,
+    distance:0,
+    points:[]
   };
 
   watch = navigator.geolocation.watchPosition(async p=>{
@@ -174,69 +154,52 @@ function startRoute(){
     };
 
     if(route.last){
-      route.distance += dist(route.last,point);
+      route.distance += haversine(route.last,point);
     }
 
     route.last = point;
     route.points.push(point);
 
+    let address = await getAddress(point.lat,point.lng);
+
     events.push({
       id:Date.now()+Math.random(),
       type:"route-point",
       week,
+      routeId:route.id,
       lat:point.lat,
       lng:point.lng,
-      routeId:route.id,
-      distance:route.distance
+      distance:route.distance,
+      address
     });
 
     save();
+    renderAll();
   });
 }
 
-function pauseRoute(){ route.active=false; }
-function resumeRoute(){ route.active=true; }
+function pauseRoute(){ if(route) route.active=false; }
+function resumeRoute(){ if(route) route.active=true; }
 
 function stopRoute(){
   navigator.geolocation.clearWatch(watch);
-  route.active=false;
+  route=null;
 }
 
-// ================= RENDER =================
-function renderAll(){
-  renderTable();
-  renderEvents();
-  renderMap();
-}
+// ================= NAV =================
+function show(id){
 
-// ================= TABLE =================
-function renderTable(){
+  document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
 
-  if(!week) return;
+  if(id==="map"){
+    document.getElementById("mapScreen").style.display="block";
+    initMap();
+    renderMap();
+    return;
+  }
 
-  let t=document.getElementById("table");
-  t.innerHTML="";
-
-  let h="<th>Habit</th>"+days.map(d=>`<th>${d}</th>`).join("");
-  t.innerHTML="<tr>"+h+"</tr>";
-}
-
-// ================= EVENTS =================
-function renderEvents(){
-
-  let div=document.getElementById("events");
-  div.innerHTML="<h3>Events</h3>";
-
-  events.filter(e=>e.week===week).forEach(e=>{
-
-    let d=document.createElement("div");
-    d.className="event";
-
-    d.innerText =
-      `${e.type} | ${e.lat},${e.lng} | ${e.address||""} | km:${e.distance||0}`;
-
-    div.appendChild(d);
-  });
+  document.getElementById(id).style.display="block";
+  renderAll();
 }
 
 // ================= MAP =================
@@ -245,16 +208,16 @@ function initMap(){
   if(map) return;
 
   map = L.map("map").setView([52,5],7);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+    .addTo(map);
 
   layer = L.layerGroup().addTo(map);
-
-  renderMap();
 }
 
 function renderMap(){
 
-  if(!map) return;
+  if(!map || !week) return;
 
   layer.clearLayers();
 
@@ -277,22 +240,46 @@ function renderMap(){
   });
 }
 
+// ================= EVENTS =================
+function renderEvents(){
+
+  let div=document.getElementById("events");
+  div.innerHTML="<h3>Events</h3>";
+
+  events.filter(e=>e.week===week).forEach(e=>{
+
+    let d=document.createElement("div");
+    d.className="event";
+
+    d.innerText =
+      `${e.type} | ${e.lat},${e.lng} | ${e.address||""} | km:${(e.distance||0).toFixed(2)}`;
+
+    div.appendChild(d);
+  });
+}
+
 // ================= DB =================
 function renderDB(){
 
   let div=document.getElementById("dbView");
   div.innerHTML="";
 
-  let grouped = {};
+  let grouped={};
 
   events.forEach(e=>{
-    if(!grouped[e.week]) grouped[e.week]=0;
-    grouped[e.week]++;
+    grouped[e.week]=(grouped[e.week]||0)+1;
   });
 
   Object.keys(grouped).forEach(w=>{
     div.innerHTML += `<h3>Week ${w}</h3>Events: ${grouped[w]}<br>`;
   });
+}
+
+// ================= MASTER =================
+function renderAll(){
+  renderEvents();
+  renderDB();
+  renderMap();
 }
 
 </script>
