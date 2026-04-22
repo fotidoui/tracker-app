@@ -2,12 +2,12 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tracker STABLE CORE</title>
+<title>Tracker CLEAN v2</title>
 
 <style>
 body{margin:0;font-family:system-ui;background:#eef2f6}
 #weeks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:10px}
-.box{background:white;padding:10px;border-radius:8px;cursor:pointer;text-align:center}
+.box{background:white;padding:10px;border-radius:8px;text-align:center;cursor:pointer}
 #app{display:none}
 header{display:flex;background:#111827;color:white}
 header button{flex:1;padding:10px;border:none;background:none;color:#ccc}
@@ -16,7 +16,7 @@ header button.active{background:#1f2937;color:white}
 table{width:100%;border-collapse:collapse;font-size:11px}
 td,th{border:1px solid #ddd;padding:3px;text-align:center}
 textarea{width:100%}
-button{font-size:11px;margin:2px}
+button{font-size:11px;margin:3px}
 </style>
 </head>
 
@@ -27,10 +27,10 @@ button{font-size:11px;margin:2px}
 <div id="app">
 
 <header>
-<button onclick="go('w')" id="bw">Weekly</button>
-<button onclick="go('r')" id="br">Routes</button>
-<button onclick="go('d')" id="bd">DB</button>
-<button onclick="exportCSV()">CSV</button>
+<button onclick="tab('w')" id="bw">Weekly</button>
+<button onclick="tab('r')" id="br">Routes</button>
+<button onclick="tab('d')" id="bd">DB</button>
+<button onclick="sync()">SYNC</button>
 </header>
 
 <div id="view"></div>
@@ -39,13 +39,12 @@ button{font-size:11px;margin:2px}
 
 <script>
 
-/* ================= CORE STATE ================= */
+/* ================= STATE ================= */
 const S={
   week:null,
   data:JSON.parse(localStorage.getItem("DATA")||"{}"),
   session:null,
-  watch:null,
-  tab:"w"
+  watch:null
 };
 
 /* ================= WEEKS ================= */
@@ -61,6 +60,7 @@ for(let i=1;i<=52;i++){
 
 function openWeek(i){
   S.week=i;
+
   if(!S.data[i]){
     S.data[i]={
       habits:Array(8).fill().map(()=>Array(7).fill(false)),
@@ -68,14 +68,17 @@ function openWeek(i){
       routes:Array(7).fill().map(()=>[])
     };
   }
+
+  save();
+
   document.getElementById("weeks").style.display="none";
   document.getElementById("app").style.display="block";
-  go("w");
+
+  tab("w");
 }
 
-/* ================= TAB SYSTEM ================= */
-function go(t){
-  S.tab=t;
+/* ================= TAB ================= */
+function tab(t){
   document.querySelectorAll("header button").forEach(b=>b.classList.remove("active"));
 
   if(t==="w"){bw.classList.add("active");renderW();}
@@ -85,6 +88,7 @@ function go(t){
 
 /* ================= WEEKLY ================= */
 function renderW(){
+
 let w=S.data[S.week];
 
 let html="<div class='card'><b>Week "+S.week+"</b></div>";
@@ -124,60 +128,83 @@ function renderR(){
 let html=`
 <div class='card'>
 <button onclick='start()'>Start</button>
-<button onclick='pause()'>Pause</button>
 <button onclick='stop()'>Stop</button>
 </div>
-<div class='card'>Live session: ${S.session?S.session.points.length:0}</div>
+<div class='card'>Recording: ${S.session?S.session.points.length:0}</div>
 `;
 
 document.getElementById("view").innerHTML=html;
 }
 
+/* ================= START ================= */
 function start(){
-S.session={seg:[[]],points:[]};
 
-S.watch=navigator.geolocation.watchPosition(p=>{
-let pt={lat:p.coords.latitude,lng:p.coords.longitude};
-S.session.seg.at(-1).push(pt);
+if(!S.week) return;
+
+S.session={
+  points:[]
+};
+
+S.watch=navigator.geolocation.watchPosition(async p=>{
+
+let pt={
+  lat:p.coords.latitude,
+  lng:p.coords.longitude
+};
+
 S.session.points.push(pt);
+
 });
+
 }
 
-function pause(){
-if(!S.session) return;
-S.session.seg.push([]);
-}
-
-function stop(){
-
-if(!S.session) return;
+/* ================= STOP ================= */
+async function stop(){
 
 navigator.geolocation.clearWatch(S.watch);
 
-let w=S.data[S.week];
+if(!S.session || S.session.points.length<2) return;
+
+let pts=S.session.points;
+let km=distance(pts);
+
+let start=await reverse(pts[0]);
+let end=await reverse(pts.at(-1));
+
+let route={
+  km:km,
+  start:start,
+  end:end
+};
+
 let day=(new Date().getDay()+6)%7;
 
-let route={segments:[],totalKm:0};
-
-S.session.seg.forEach(s=>{
-if(s.length<2)return;
-let km=dist(s);
-route.segments.push({points:s,km});
-route.totalKm+=km;
-});
-
-w.routes[day].push(route);
+S.data[S.week].routes[day].push(route);
 
 save();
+tab("d");
 }
 
-/* ================= DIST ================= */
-function dist(a){
+/* ================= DISTANCE ================= */
+function distance(a){
 let t=0;
 for(let i=1;i<a.length;i++){
 t+=Math.hypot(a[i].lat-a[i-1].lat,a[i].lng-a[i-1].lng)*111;
 }
 return t;
+}
+
+/* ================= REVERSE GEO ================= */
+async function reverse(c){
+try{
+let r=await fetch(
+`https://nominatim.openstreetmap.org/reverse?format=json&lat=${c.lat}&lon=${c.lng}`
+);
+let d=await r.json();
+return d.display_name || `${c.lat},${c.lng}`;
+}catch{
+return `${c.lat},${c.lng}`;
+}
 }
 
 /* ================= DB ================= */
@@ -189,31 +216,17 @@ let html="<div class='card'><b>Database</b></div>";
 
 w.routes.forEach((d,i)=>{
 let sum=0;
-d.forEach(r=>sum+=r.totalKm||0);
+d.forEach(r=>sum+=r.km);
 html+="Day "+(i+1)+": "+sum.toFixed(1)+" km<br>";
 });
 
 document.getElementById("view").innerHTML=html;
 }
 
-/* ================= CSV ================= */
-function exportCSV(){
-
-let out="week,day,km\n";
-
-for(let w in S.data){
-S.data[w].routes.forEach((d,i)=>{
-d.forEach(r=>{
-out+=`${w},${i},${r.totalKm||0}\n`;
-});
-});
-}
-
-let blob=new Blob([out],{type:"text/csv"});
-let a=document.createElement("a");
-a.href=URL.createObjectURL(blob);
-a.download="routes.csv";
-a.click();
+/* ================= SYNC ================= */
+function sync(){
+save();
+tab(S.week?S.tab:"w");
 }
 
 /* ================= SAVE ================= */
