@@ -6,324 +6,405 @@
   <title>Personal Spatial Journal</title>
   <style>
     :root{
-      --sea:#1f5f78;
-      --sea-2:#2e7d91;
-      --sand:#efe7d3;
-      --olive:#6f8a54;
-      --terracotta:#c9774f;
-      --coral:#d95f5f;
-      --sky:#9fc4d6;
-      --ink:#23313a;
+      --sea:#2f6f7e;
+      --sea2:#4d8c95;
+      --sand:#f2e7cf;
+      --cream:#fbf6ea;
+      --olive:#718455;
+      --terracotta:#c57449;
+      --coral:#d95d5d;
+      --ink:#24333b;
+      --muted:#6f7b82;
+      --line:#d8ccb2;
       --panel:#fffaf0;
-      --line:#d8ccb6;
-      --bg:#f6efe2;
-      --text:#1f2a30;
-      --muted:#6b777d;
-      --shadow:0 10px 24px rgba(35,49,58,.12);
-      --radius:16px;
+      --shadow:0 14px 34px rgba(36,51,59,.14);
+      --radius:18px;
+      --glass:rgba(255,250,240,.88);
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    body{min-height:100dvh}
-    .app{display:grid;grid-template-rows:auto auto 1fr;min-height:100dvh}
-    .topbar{
-      position:sticky;top:0;z-index:30;
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-      padding:10px 12px;background:rgba(246,239,226,.94);backdrop-filter:blur(8px);
-      border-bottom:1px solid var(--line)
-    }
-    .brand{font-weight:800;color:var(--sea)}
-    .toolbar{
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center;
-      padding:10px 12px;background:#fbf6ec;border-bottom:1px solid var(--line)
-    }
-    .screen{display:none;padding:12px}
-    .screen.active{display:block}
-    .panel{
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      padding:12px;box-shadow:var(--shadow);margin-bottom:12px
-    }
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .spacer{flex:1 1 auto}
-    button,select,input,textarea{
-      font:inherit;color:var(--text);background:white;border:1px solid var(--line);
+    html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{min-height:100dvh;overflow:hidden}
+    button,input,select,textarea{
+      font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);
       border-radius:12px;padding:10px 12px;outline:none
     }
     button{cursor:pointer;touch-action:manipulation}
-    button.primary{background:var(--sea);border-color:var(--sea);color:white}
+    button.primary{background:var(--sea);color:#fff;border-color:var(--sea)}
     button.soft{background:#fff}
-    button.warn{background:#fff3e8;border-color:#efc49d}
-    button.good{background:#edf6ea;border-color:#b9d0a9}
-    button.danger{background:#fff0ef;border-color:#e4b0aa}
-    button.active{outline:2px solid var(--sea-2);outline-offset:1px}
-    .pill{
-      display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;
-      background:#fff;border:1px solid var(--line);font-size:12px
+    button.warn{background:#fff1e7;border-color:#efc59e}
+    button.good{background:#eff5e8;border-color:#bfd1ac}
+    button.danger{background:#fff0ef;border-color:#e3b1aa}
+    button.active{outline:2px solid var(--sea2);outline-offset:1px}
+
+    .app{
+      position:relative;
+      width:100vw;
+      height:100dvh;
+      overflow:hidden;
+      background:linear-gradient(180deg,#f8f1e3,#f3eadb);
     }
-    .muted{color:var(--muted)}
+
+    #mapWrap{
+      position:absolute; inset:0;
+      overflow:hidden;
+      background:linear-gradient(180deg,#fffaf2,#f6efdf);
+      touch-action:none;
+    }
+    canvas{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+
+    .overlay{
+      position:absolute;
+      z-index:20;
+      background:var(--glass);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(216,204,178,.95);
+      box-shadow:var(--shadow);
+      border-radius:18px;
+    }
+
+    .topBar{
+      top:10px; left:10px; right:10px;
+      padding:10px;
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+    }
+
+    .statusBar{
+      top:84px; left:10px;
+      padding:10px 12px;
+      min-width:280px;
+      max-width:min(92vw,560px);
+    }
+
+    .toolsBar{
+      bottom:12px; left:12px;
+      padding:10px;
+      display:flex; gap:8px; flex-wrap:wrap;
+      max-width:min(92vw,760px);
+    }
+
+    .zoomBar{
+      right:12px; bottom:12px;
+      padding:10px;
+      display:flex; flex-direction:column; gap:8px;
+      align-items:stretch;
+    }
+
+    .sideInfo{
+      top:140px; right:12px;
+      padding:10px;
+      width:min(92vw,290px);
+    }
+
+    .panelToggleBar{
+      top:140px; left:12px;
+      padding:10px;
+      display:flex; flex-direction:column; gap:8px;
+    }
+
+    .panel{
+      position:absolute;
+      z-index:30;
+      top:130px;
+      left:76px;
+      width:min(94vw,520px);
+      max-height:calc(100dvh - 150px);
+      overflow:auto;
+      display:none;
+      padding:12px;
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+    }
+    .panel.active{display:block}
+
+    .panel h3{
+      margin:0 0 10px 0;
+    }
+
+    .panelHeader{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:10px;
+      position:sticky;
+      top:0;
+      background:var(--panel);
+      padding-bottom:10px;
+      z-index:3;
+    }
+
+    .spacer{flex:1 1 auto}
     .small{font-size:12px}
-    .grid{display:grid;gap:12px}
-    .grid.two{grid-template-columns:1.2fr .8fr}
-    @media (max-width:900px){.grid.two{grid-template-columns:1fr}}
-    #canvasWrap{
-      position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--line);
-      background:linear-gradient(180deg,#fffaf2,#f7f0e3);touch-action:none
+    .muted{color:var(--muted)}
+    .pill{
+      display:inline-flex; align-items:center;
+      border-radius:999px;
+      border:1px solid var(--line);
+      padding:5px 10px;
+      background:#fff;
+      font-size:12px;
     }
-    canvas{display:block;width:100%;height:min(68dvh,720px)}
-    .status{
-      padding:10px 12px;border-radius:12px;background:#fff;border:1px solid var(--line)
+    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+    .grid{display:grid; gap:10px}
+    .grid.two{grid-template-columns:1fr 1fr}
+    @media (max-width:700px){
+      .grid.two{grid-template-columns:1fr}
+      .statusBar{top:94px}
+      .sideInfo{top:176px}
+      .panel{left:12px;width:min(94vw,560px)}
     }
-    .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-    .legend span::before{
-      content:"";display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;vertical-align:middle
+
+    table{
+      width:100%;
+      border-collapse:collapse;
     }
-    .lg-habit::before{background:var(--olive)}
-    .lg-note::before{background:var(--coral)}
-    .lg-route::before{background:var(--terracotta)}
-    .lg-area::before{background:var(--sea-2)}
-    table{width:100%;border-collapse:collapse}
-    th,td{border:1px solid var(--line);padding:8px;vertical-align:top}
-    th{background:#f9f3e8}
-    .weekly-table td,.weekly-table th{text-align:center}
-    .weekly-table td:first-child,.weekly-table th:first-child{
-      text-align:left;position:sticky;left:0;background:#f9f3e8;z-index:1
+    th,td{
+      border:1px solid var(--line);
+      padding:8px;
+      vertical-align:top;
     }
-    .db-wrap{overflow:auto;max-height:62dvh;border-radius:14px;border:1px solid var(--line)}
-    .note-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px}
-    .notes-block{display:grid;gap:10px}
+    th{background:#f8f0df}
+    .weeklyTable td,.weeklyTable th{text-align:center}
+    .weeklyTable td:first-child,.weeklyTable th:first-child{
+      text-align:left; position:sticky; left:0; background:#f8f0df; z-index:1;
+    }
+
+    .recordCard{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
+    }
+
+    .recordCard.selected{
+      outline:2px solid var(--sea2);
+      outline-offset:1px;
+    }
+
+    .dbWrap{
+      max-height:56dvh;
+      overflow:auto;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+
     dialog{
-      width:min(720px,calc(100vw - 24px));border:1px solid var(--line);border-radius:18px;
-      background:var(--panel);color:var(--text);padding:0;box-shadow:var(--shadow)
+      width:min(92vw,760px);
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--panel);
+      color:var(--ink);
+      padding:0;
+      box-shadow:var(--shadow);
     }
-    dialog::backdrop{background:rgba(35,49,58,.26)}
-    .modal-head,.modal-body,.modal-foot{padding:14px;border-bottom:1px solid var(--line)}
-    .modal-foot{border-bottom:0;display:flex;justify-content:flex-end;gap:8px}
-    .chipbar{display:flex;gap:8px;flex-wrap:wrap}
-    .hidden{display:none !important}
+    dialog::backdrop{background:rgba(36,51,59,.22)}
+    .modalHead,.modalBody,.modalFoot{
+      padding:14px;
+      border-bottom:1px solid var(--line);
+    }
+    .modalFoot{border-bottom:0;display:flex;gap:8px;justify-content:flex-end}
+    .menuGrid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
+    @media (max-width:640px){
+      .menuGrid{grid-template-columns:1fr}
+    }
+
     .hint{font-size:13px;color:var(--muted)}
-    .menu-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    @media (max-width:640px){.menu-grid{grid-template-columns:1fr}}
+    .hidden{display:none !important}
   </style>
 </head>
 <body>
 <div class="app">
-  <div class="topbar">
-    <div class="brand">Personal Spatial Journal</div>
-    <button id="navCanvas" class="primary active">Canvas</button>
-    <button id="navWeekly" class="soft">Weekly</button>
-    <button id="navDB" class="soft">Database</button>
-    <button id="navSettings" class="soft">Settings</button>
-    <div class="spacer"></div>
-    <span id="networkPill" class="pill">Checking…</span>
+  <div id="mapWrap">
+    <canvas id="mapCanvas"></canvas>
   </div>
 
-  <div class="toolbar">
+  <div class="overlay topBar">
+    <strong style="color:var(--sea)">Personal Spatial Journal</strong>
+
+    <button id="btnLiveMode" class="primary active">Live</button>
+    <button id="btnDayScope" class="soft">Day</button>
+    <button id="btnWeekScope" class="soft active">Week</button>
+    <button id="btnMonthScope" class="soft">Month</button>
+
+    <label id="scopeDateWrap">
+      <input id="scopeDate" type="date">
+    </label>
+
+    <div class="spacer"></div>
+    <span id="netPill" class="pill">Checking…</span>
+    <span id="compassPill" class="pill">Compass --</span>
+  </div>
+
+  <div class="overlay statusBar">
     <div class="row">
-      <label>Mode
-        <select id="modeSelect">
-          <option value="live">Live</option>
-          <option value="history">History</option>
+      <span id="selectedPeriodText" class="pill">Current week</span>
+      <span id="routeStateText" class="pill">Route: idle</span>
+      <span id="selectedItemText" class="pill">Selected: none</span>
+    </div>
+    <div style="margin-top:8px" id="statusText">Ready.</div>
+  </div>
+
+  <div class="overlay sideInfo">
+    <div class="small muted">Map state</div>
+    <div id="mapStateText">Week mode</div>
+    <div style="margin-top:10px" class="small muted">Current live position</div>
+    <div id="livePosText">Not available</div>
+    <div style="margin-top:10px" class="small muted">Hint</div>
+    <div class="hint">Tap to inspect. Long press or right click to add or control records.</div>
+  </div>
+
+  <div class="overlay panelToggleBar">
+    <button id="toggleWeekly" class="soft">Weekly</button>
+    <button id="toggleDatabase" class="soft">Database</button>
+    <button id="toggleSettings" class="soft">Settings</button>
+  </div>
+
+  <div class="overlay toolsBar">
+    <button id="btnRecord" class="primary">Record</button>
+    <button id="btnRoute" class="warn">Route</button>
+    <button id="btnArea" class="good">Area</button>
+    <button id="btnPinMe" class="soft">Pin Me</button>
+    <button id="btnPinSelected" class="soft">Pin Selected</button>
+    <button id="btnFitScope" class="soft">Fit Scope</button>
+    <button id="btnRefreshAddresses" class="soft">Refresh Addresses</button>
+  </div>
+
+  <div class="overlay zoomBar">
+    <button id="btnZoomIn">+</button>
+    <button id="btnZoomOut">−</button>
+    <button id="btnResetView">Reset</button>
+  </div>
+
+  <div id="weeklyPanel" class="panel">
+    <div class="panelHeader">
+      <h3>Weekly</h3>
+      <div class="spacer"></div>
+      <button id="weekPrev">←</button>
+      <button id="weekToday">This Week</button>
+      <button id="weekNext">→</button>
+      <button data-close-panel="weeklyPanel">Close</button>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <span id="weekRangeText" class="pill"></span>
+    </div>
+    <div id="weeklySummaryWrap"></div>
+    <div id="weeklyRecordsWrap" style="margin-top:12px"></div>
+  </div>
+
+  <div id="databasePanel" class="panel">
+    <div class="panelHeader">
+      <h3>Database</h3>
+      <div class="spacer"></div>
+      <label>Day <input id="dbFilterDate" type="date"></label>
+      <label>Type
+        <select id="dbFilterType">
+          <option value="">All</option>
+          <option value="habit">Habit</option>
+          <option value="note">Note</option>
+          <option value="route">Route</option>
+          <option value="route-event">Route Event</option>
+          <option value="area">Area</option>
         </select>
       </label>
-      <label id="historyDateWrap" class="hidden">Day
-        <input id="historyDate" type="date">
-      </label>
-      <label>Canvas
-        <select id="canvasModeSelect">
-          <option value="view">View</option>
-          <option value="edit">Edit</option>
-        </select>
-      </label>
-      <label>Route every
-        <input id="routeIntervalSec" type="number" min="1" step="1" value="5" style="width:80px">
-      </label>
-      <span class="small muted">sec</span>
+      <button id="dbApply">Apply</button>
+      <button id="dbClear">Clear</button>
+      <button data-close-panel="databasePanel">Close</button>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <span id="dbCountText" class="pill"></span>
+    </div>
+    <div class="dbWrap">
+      <table id="dbTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Type</th><th>Date</th><th>Time</th><th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th><th>Route km</th><th>Area m²</th><th>Delete</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </div>
 
-  <main>
-    <section id="screenCanvas" class="screen active">
-      <div class="grid two">
-        <div class="panel">
-          <div class="row">
-            <button id="btnRecord" class="primary">Record</button>
-            <button id="btnRoute" class="warn">Route</button>
-            <button id="btnArea" class="good">Area</button>
-            <button id="btnRefreshAddresses" class="soft">Refresh Addresses</button>
-            <div class="spacer"></div>
-            <button id="btnZoomIn" class="soft">+</button>
-            <button id="btnZoomOut" class="soft">−</button>
-            <button id="btnFit" class="soft">Fit</button>
-          </div>
-          <div style="margin-top:10px" class="status" id="statusBox">Ready.</div>
-          <div style="margin-top:10px" class="legend">
-            <span class="lg-habit">Habit</span>
-            <span class="lg-note">Note</span>
-            <span class="lg-route">Route</span>
-            <span class="lg-area">Area</span>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="row">
-            <div>
-              <div class="small muted">Selected day</div>
-              <div id="selectedDayText">Today</div>
-            </div>
-            <div>
-              <div class="small muted">Route state</div>
-              <div id="routeStateText">Not recording</div>
-            </div>
-            <div>
-              <div class="small muted">Area state</div>
-              <div id="areaStateText">No open area</div>
-            </div>
-            <div>
-              <div class="small muted">Compass</div>
-              <div id="compassText">Unavailable</div>
-            </div>
-          </div>
-          <div style="margin-top:10px" class="hint">
-            Long press on phone or right click on desktop to open the action menu at a canvas point.
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div id="canvasWrap">
-          <canvas id="spaceCanvas"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <section id="screenWeekly" class="screen">
-      <div class="panel">
-        <div class="row">
-          <button id="weekPrev">← Prev Week</button>
-          <button id="weekToday">This Week</button>
-          <button id="weekNext">Next Week →</button>
-          <div class="spacer"></div>
-          <span id="weekRangeLabel" class="pill"></span>
-        </div>
-      </div>
-      <div class="panel">
-        <div id="weeklyTableWrap"></div>
-        <div id="weeklyNotesWrap" class="notes-block"></div>
-      </div>
-    </section>
-
-    <section id="screenDB" class="screen">
-      <div class="panel">
-        <div class="row">
-          <label>Day
-            <input id="dbFilterDate" type="date">
-          </label>
-          <label>Type
-            <select id="dbFilterType">
-              <option value="">All</option>
-              <option value="habit">Habit</option>
-              <option value="note">Note</option>
-              <option value="route">Route</option>
-              <option value="route-event">Route Event</option>
-              <option value="area">Area</option>
-            </select>
-          </label>
-          <button id="dbApplyFilters">Apply</button>
-          <button id="dbClearFilters">Clear</button>
-          <div class="spacer"></div>
-          <span id="dbCount" class="pill"></span>
-        </div>
-      </div>
-      <div class="panel db-wrap">
-        <table id="dbTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Type</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Name</th>
-              <th>Text</th>
-              <th>Lat</th>
-              <th>Lng</th>
-              <th>Address</th>
-              <th>Route km</th>
-              <th>Area m²</th>
-              <th>Delete</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
-
-    <section id="screenSettings" class="screen">
-      <div class="panel">
-        <h3 style="margin-top:0">Habit Names</h3>
-        <div id="habitSettingsWrap" class="menu-grid"></div>
-        <div class="row" style="margin-top:12px">
-          <button id="saveHabitSettings" class="primary">Save Habit Names</button>
-          <button id="resetHabitSettings">Reset</button>
-        </div>
-      </div>
-      <div class="panel">
-        <h3 style="margin-top:0">Data</h3>
-        <div class="row">
-          <button id="btnExportJSON">Export JSON</button>
-          <button id="btnExportCSV">Export CSV</button>
-          <button id="btnImportJSON">Import JSON</button>
-          <input id="importJSONInput" class="hidden" type="file" accept=".json,application/json">
-        </div>
-        <div class="hint" style="margin-top:10px">
-          Export often. IndexedDB is local browser storage.
-        </div>
-      </div>
-    </section>
-  </main>
+  <div id="settingsPanel" class="panel">
+    <div class="panelHeader">
+      <h3>Settings</h3>
+      <div class="spacer"></div>
+      <button data-close-panel="settingsPanel">Close</button>
+    </div>
+    <div class="grid two" id="habitSettingsWrap"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="saveHabitNames" class="primary">Save Habit Names</button>
+      <button id="resetHabitNames">Reset</button>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button id="exportJSON">Export JSON</button>
+      <button id="exportCSV">Export CSV</button>
+      <button id="importJSONBtn">Import JSON</button>
+      <input id="importJSONInput" type="file" accept=".json,application/json" class="hidden">
+    </div>
+    <div class="hint" style="margin-top:10px">
+      Export regularly. All data is stored locally in this browser.
+    </div>
+  </div>
 </div>
 
-<dialog id="habitPickerDialog">
-  <div class="modal-head"><strong>Choose Habit</strong></div>
-  <div class="modal-body">
-    <div id="habitPickerButtons" class="chipbar"></div>
+<dialog id="actionDialog">
+  <div class="modalHead"><strong>Action Menu</strong></div>
+  <div class="modalBody">
+    <div class="menuGrid">
+      <button data-action="add-habit">Add Habit Here</button>
+      <button data-action="add-note">Add Note Here</button>
+      <button data-action="route-start">Route Start</button>
+      <button data-action="route-pause">Route Pause</button>
+      <button data-action="route-resume">Route Resume</button>
+      <button data-action="route-end">Route End</button>
+      <button data-action="area-start">Start Area</button>
+      <button data-action="area-vertex">Add Area Vertex Here</button>
+      <button data-action="area-gps">Add GPS Area Vertex</button>
+      <button data-action="area-close">Close Area</button>
+      <button data-action="symbol">Drop Symbol Placeholder</button>
+      <button data-action="inspect">Inspect Nearby</button>
+    </div>
   </div>
-  <div class="modal-foot">
-    <button onclick="document.getElementById('habitPickerDialog').close()">Close</button>
+  <div class="modalFoot">
+    <button onclick="document.getElementById('actionDialog').close()">Close</button>
+  </div>
+</dialog>
+
+<dialog id="habitDialog">
+  <div class="modalHead"><strong>Choose Habit</strong></div>
+  <div id="habitDialogBody" class="modalBody"></div>
+  <div class="modalFoot">
+    <button onclick="document.getElementById('habitDialog').close()">Close</button>
   </div>
 </dialog>
 
 <dialog id="noteDialog">
-  <div class="modal-head"><strong>Add Note</strong></div>
-  <div class="modal-body">
-    <textarea id="noteText" rows="5" style="width:100%" placeholder="Write your note here..."></textarea>
+  <div class="modalHead"><strong>Add Note</strong></div>
+  <div class="modalBody">
+    <textarea id="noteInput" rows="5" style="width:100%" placeholder="Write your note..."></textarea>
   </div>
-  <div class="modal-foot">
+  <div class="modalFoot">
     <button onclick="document.getElementById('noteDialog').close()">Cancel</button>
-    <button id="saveNoteBtn" class="primary">Save</button>
+    <button id="saveNote" class="primary">Save</button>
   </div>
 </dialog>
 
-<dialog id="pointInfoDialog">
-  <div class="modal-head"><strong>Record Details</strong></div>
-  <div id="pointInfoBody" class="modal-body"></div>
-  <div class="modal-foot">
-    <button onclick="document.getElementById('pointInfoDialog').close()">Close</button>
-  </div>
-</dialog>
-
-<dialog id="actionMenuDialog">
-  <div class="modal-head"><strong>Canvas Action</strong></div>
-  <div class="modal-body">
-    <div class="menu-grid">
-      <button data-action="habit">Drop Habit Here</button>
-      <button data-action="note">Drop Note Here</button>
-      <button data-action="area-vertex">Add Area Vertex Here</button>
-      <button data-action="area-gps">Add GPS Area Vertex</button>
-      <button data-action="route-point">Drop Route Marker Here</button>
-      <button data-action="view">Inspect Nearby Point</button>
-    </div>
-  </div>
-  <div class="modal-foot">
-    <button onclick="document.getElementById('actionMenuDialog').close()">Close</button>
+<dialog id="infoDialog">
+  <div class="modalHead"><strong>Record Details</strong></div>
+  <div id="infoBody" class="modalBody"></div>
+  <div class="modalFoot">
+    <button onclick="document.getElementById('infoDialog').close()">Close</button>
   </div>
 </dialog>
 
@@ -332,201 +413,270 @@
   "use strict";
 
   // ---------- DOM ----------
-  const $ = (id) => document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-  const navCanvas = $("navCanvas");
-  const navWeekly = $("navWeekly");
-  const navDB = $("navDB");
-  const navSettings = $("navSettings");
+  const canvas = $("mapCanvas");
+  const ctx = canvas.getContext("2d");
 
-  const screenCanvas = $("screenCanvas");
-  const screenWeekly = $("screenWeekly");
-  const screenDB = $("screenDB");
-  const screenSettings = $("screenSettings");
+  const btnLiveMode = $("btnLiveMode");
+  const btnDayScope = $("btnDayScope");
+  const btnWeekScope = $("btnWeekScope");
+  const btnMonthScope = $("btnMonthScope");
+  const scopeDate = $("scopeDate");
 
-  const networkPill = $("networkPill");
-  const modeSelect = $("modeSelect");
-  const historyDateWrap = $("historyDateWrap");
-  const historyDate = $("historyDate");
-  const canvasModeSelect = $("canvasModeSelect");
-  const routeIntervalSec = $("routeIntervalSec");
+  const selectedPeriodText = $("selectedPeriodText");
+  const routeStateText = $("routeStateText");
+  const selectedItemText = $("selectedItemText");
+  const statusText = $("statusText");
+  const mapStateText = $("mapStateText");
+  const livePosText = $("livePosText");
+  const netPill = $("netPill");
+  const compassPill = $("compassPill");
 
   const btnRecord = $("btnRecord");
   const btnRoute = $("btnRoute");
   const btnArea = $("btnArea");
+  const btnPinMe = $("btnPinMe");
+  const btnPinSelected = $("btnPinSelected");
+  const btnFitScope = $("btnFitScope");
   const btnRefreshAddresses = $("btnRefreshAddresses");
   const btnZoomIn = $("btnZoomIn");
   const btnZoomOut = $("btnZoomOut");
-  const btnFit = $("btnFit");
+  const btnResetView = $("btnResetView");
 
-  const statusBox = $("statusBox");
-  const selectedDayText = $("selectedDayText");
-  const routeStateText = $("routeStateText");
-  const areaStateText = $("areaStateText");
-  const compassText = $("compassText");
+  const toggleWeekly = $("toggleWeekly");
+  const toggleDatabase = $("toggleDatabase");
+  const toggleSettings = $("toggleSettings");
+
+  const weeklyPanel = $("weeklyPanel");
+  const databasePanel = $("databasePanel");
+  const settingsPanel = $("settingsPanel");
 
   const weekPrev = $("weekPrev");
   const weekToday = $("weekToday");
   const weekNext = $("weekNext");
-  const weekRangeLabel = $("weekRangeLabel");
-  const weeklyTableWrap = $("weeklyTableWrap");
-  const weeklyNotesWrap = $("weeklyNotesWrap");
+  const weekRangeText = $("weekRangeText");
+  const weeklySummaryWrap = $("weeklySummaryWrap");
+  const weeklyRecordsWrap = $("weeklyRecordsWrap");
 
   const dbFilterDate = $("dbFilterDate");
   const dbFilterType = $("dbFilterType");
-  const dbApplyFilters = $("dbApplyFilters");
-  const dbClearFilters = $("dbClearFilters");
-  const dbCount = $("dbCount");
+  const dbApply = $("dbApply");
+  const dbClear = $("dbClear");
+  const dbCountText = $("dbCountText");
   const dbTableBody = document.querySelector("#dbTable tbody");
 
   const habitSettingsWrap = $("habitSettingsWrap");
-  const saveHabitSettings = $("saveHabitSettings");
-  const resetHabitSettings = $("resetHabitSettings");
-
-  const btnExportJSON = $("btnExportJSON");
-  const btnExportCSV = $("btnExportCSV");
-  const btnImportJSON = $("btnImportJSON");
+  const saveHabitNames = $("saveHabitNames");
+  const resetHabitNames = $("resetHabitNames");
+  const exportJSON = $("exportJSON");
+  const exportCSV = $("exportCSV");
+  const importJSONBtn = $("importJSONBtn");
   const importJSONInput = $("importJSONInput");
 
-  const habitPickerDialog = $("habitPickerDialog");
-  const habitPickerButtons = $("habitPickerButtons");
+  const actionDialog = $("actionDialog");
+  const habitDialog = $("habitDialog");
+  const habitDialogBody = $("habitDialogBody");
   const noteDialog = $("noteDialog");
-  const noteText = $("noteText");
-  const saveNoteBtn = $("saveNoteBtn");
-  const pointInfoDialog = $("pointInfoDialog");
-  const pointInfoBody = $("pointInfoBody");
-  const actionMenuDialog = $("actionMenuDialog");
-
-  const canvas = $("spaceCanvas");
-  const ctx = canvas.getContext("2d");
+  const noteInput = $("noteInput");
+  const saveNote = $("saveNote");
+  const infoDialog = $("infoDialog");
+  const infoBody = $("infoBody");
 
   // ---------- STATE ----------
-  const DEFAULT_HABITS = Array.from({length: 10}, (_, i) => `Habit ${i + 1}`);
+  const DEFAULT_HABITS = Array.from({length:10}, (_, i) => `Habit ${i+1}`);
   let habits = [...DEFAULT_HABITS];
 
   let db;
   let records = [];
 
-  let currentScreen = "canvas";
-  let appMode = "live";     // live | history
-  let canvasMode = "view";  // view | edit
-  let selectedHistoryDate = todayYMD();
-  let weekAnchorDate = new Date();
+  // modes
+  let isLiveMode = true;
+  let scope = "week"; // day | week | month
+  let anchorDate = new Date(); // used when not live, and for weekly panel
+  scopeDate.value = toYMD(anchorDate);
 
-  let compassHeading = null;
+  // camera in projected meters
+  let projectionOrigin = null; // {lat,lng}
+  let camera = { centerX: 0, centerY: 0, zoom: 1 }; // px per meter
+  let cameraDefault = { centerX: 0, centerY: 0, zoom: 1 };
+
   let livePosition = null;
   let liveBlink = true;
-
-  let view = { scale: 1, offsetX: 0, offsetY: 0 };
-  let pan = { active: false, startX: 0, startY: 0, startOffsetX: 0, startOffsetY: 0 };
-  let hitCache = [];
+  let compassHeading = null;
+  let selectedRecordId = null;
   let longPressTimer = null;
   let longPressPoint = null;
+  let hitCache = [];
+  let pan = { active:false, startX:0, startY:0, startCenterX:0, startCenterY:0 };
 
-  let routeState = {
-    active: false,
-    paused: false,
-    routeId: null,
-    points: [],
-    timer: null,
-    startedAt: null,
-    startAddress: "",
-    pauseEvents: [],
-    resumeEvents: [],
-    endAddress: ""
+  // live session / route
+  let liveSessionStartedAt = null;
+  let route = {
+    active:false,
+    paused:false,
+    routeId:null,
+    startedAt:null,
+    points:[],
+    timer:null,
+    startAddress:"",
+    endAddress:"",
+    pauseEvents:[],
+    resumeEvents:[]
   };
 
-  let areaState = {
-    active: false,
-    areaId: null,
-    points: [],
-    startAddress: "",
-    color: "#2e7d91"
+  let area = {
+    active:false,
+    areaId:null,
+    points:[],
+    color:"#4d8c95",
+    startAddress:""
   };
 
-  let pendingActionPoint = null;
+  let pendingCanvasWorld = null;
 
   // ---------- HELPERS ----------
-  function setStatus(msg) { statusBox.textContent = msg; }
-  function todayYMD() {
-    const d = new Date();
-    return toYMD(d);
-  }
-  function toYMD(d) {
+  function setStatus(msg){ statusText.textContent = msg; }
+  function todayYMD(){ return toYMD(new Date()); }
+  function toYMD(d){
     const x = new Date(d);
     return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
   }
-  function toTimeHM(dateLike) {
-    if (!dateLike) return "";
+  function toTimeHM(dateLike){
+    if(!dateLike) return "";
     const d = new Date(dateLike);
     return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
   }
-  function esc(s="") {
-    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  function escapeHtml(s=""){
+    return String(s).replace(/[&<>"']/g, ch => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
   }
-  function uid(prefix="id") {
-    return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-  }
-  function isOnline() { return navigator.onLine; }
-  function updateNetworkPill() { networkPill.textContent = isOnline() ? "Online" : "Offline"; }
-  function currentActionDate() { return appMode === "history" ? selectedHistoryDate : todayYMD(); }
-  function safeNum(v, fb=0) { const n = Number(v); return Number.isFinite(n) ? n : fb; }
-  function mondayOfWeek(date) {
+  function uid(prefix="id"){ return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
+  function safeNum(v, fb=0){ const n = Number(v); return Number.isFinite(n) ? n : fb; }
+  function isOnline(){ return navigator.onLine; }
+  function updateNetPill(){ netPill.textContent = isOnline() ? "Online" : "Offline"; }
+  function currentActionDate(){ return isLiveMode ? todayYMD() : toYMD(anchorDate); }
+
+  function mondayOfWeek(date){
     const d = new Date(date);
     const day = (d.getDay()+6)%7;
     d.setDate(d.getDate()-day);
     d.setHours(0,0,0,0);
     return d;
   }
-  function addDays(date, days) {
+  function firstOfMonth(date){
     const d = new Date(date);
-    d.setDate(d.getDate()+days);
+    d.setDate(1); d.setHours(0,0,0,0);
     return d;
   }
-  function formatDateLabel(ymd) {
-    return new Date(`${ymd}T12:00:00`).toLocaleDateString([], {weekday:"short", day:"2-digit", month:"2-digit"});
+  function addDays(date, n){
+    const d = new Date(date);
+    d.setDate(d.getDate()+n);
+    return d;
   }
-  function haversineKm(lat1, lon1, lat2, lon2) {
+
+  function setProjectionOriginIfMissing(lat, lng){
+    if(!projectionOrigin && lat != null && lng != null){
+      projectionOrigin = {lat, lng};
+    }
+  }
+
+  function llToXY(lat, lng){
+    if(!projectionOrigin) setProjectionOriginIfMissing(lat, lng);
+    const origin = projectionOrigin || {lat:0, lng:0};
+    const R = 6378137;
+    const x = R * (lng - origin.lng) * Math.PI/180 * Math.cos(origin.lat * Math.PI/180);
+    const y = R * (lat - origin.lat) * Math.PI/180;
+    return {x, y};
+  }
+  function xyToLL(x, y){
+    const origin = projectionOrigin || {lat:0, lng:0};
+    const R = 6378137;
+    const lat = origin.lat + (y / R) * 180/Math.PI;
+    const lng = origin.lng + (x / (R * Math.cos(origin.lat * Math.PI/180))) * 180/Math.PI;
+    return {lat, lng};
+  }
+
+  function screenToWorld(px, py){
+    const w = canvas.getBoundingClientRect().width || 1;
+    const h = canvas.getBoundingClientRect().height || 1;
+    const x = camera.centerX + (px - w/2) / camera.zoom;
+    const y = camera.centerY - (py - h/2) / camera.zoom;
+    return {x, y};
+  }
+  function worldToScreen(x, y){
+    const w = canvas.getBoundingClientRect().width || 1;
+    const h = canvas.getBoundingClientRect().height || 1;
+    const px = (x - camera.centerX) * camera.zoom + w/2;
+    const py = h/2 - (y - camera.centerY) * camera.zoom;
+    return {x:px, y:py};
+  }
+  function latLngToScreen(lat, lng){
+    const p = llToXY(lat, lng);
+    return worldToScreen(p.x, p.y);
+  }
+
+  function hexToRgba(color, alpha){
+    if(!color) return `rgba(77,140,149,${alpha})`;
+    if(color.startsWith("#")){
+      let c = color.slice(1);
+      if(c.length===3) c = c.split("").map(ch => ch+ch).join("");
+      if(c.length===6){
+        const r = parseInt(c.slice(0,2),16);
+        const g = parseInt(c.slice(2,4),16);
+        const b = parseInt(c.slice(4,6),16);
+        return `rgba(${r},${g},${b},${alpha})`;
+      }
+    }
+    return color;
+  }
+
+  function haversineKm(lat1, lng1, lat2, lng2){
     const R = 6371;
     const rad = x => x * Math.PI/180;
-    const dLat = rad(lat2-lat1), dLon = rad(lon2-lon1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)**2;
-    return 2 * R * Math.asin(Math.sqrt(a));
+    const dLat = rad(lat2-lat1);
+    const dLng = rad(lng2-lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(a));
   }
-  function routeDistanceKm(points=[]) {
+  function routeDistanceKm(points=[]){
     let km = 0;
-    for (let i=1;i<points.length;i++) km += haversineKm(points[i-1].lat, points[i-1].lng, points[i].lat, points[i].lng);
+    for(let i=1;i<points.length;i++){
+      km += haversineKm(points[i-1].lat, points[i-1].lng, points[i].lat, points[i].lng);
+    }
     return km;
   }
-  function polygonAreaSqM(points=[]) {
-    if (points.length < 3) return 0;
+  function polygonAreaSqM(points=[]){
+    if(points.length < 3) return 0;
     const lat0 = points.reduce((s,p)=>s+p.lat,0)/points.length;
     const lng0 = points.reduce((s,p)=>s+p.lng,0)/points.length;
-    const R = 6378137, lat0r = lat0*Math.PI/180;
+    const R = 6378137;
+    const lat0r = lat0 * Math.PI/180;
     const xy = points.map(p => ({
       x: R * (p.lng-lng0) * Math.PI/180 * Math.cos(lat0r),
       y: R * (p.lat-lat0) * Math.PI/180
     }));
-    let area = 0;
-    for (let i=0;i<xy.length;i++) {
+    let area2 = 0;
+    for(let i=0;i<xy.length;i++){
       const j = (i+1)%xy.length;
-      area += xy[i].x*xy[j].y - xy[j].x*xy[i].y;
+      area2 += xy[i].x*xy[j].y - xy[j].x*xy[i].y;
     }
-    return Math.abs(area/2);
+    return Math.abs(area2/2);
   }
 
   // ---------- DB ----------
-  function openDB() {
+  function openDB(){
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open("personalSpatialJournalDB", 1);
-      req.onupgradeneeded = (e) => {
+      const req = indexedDB.open("oneScreenSpatialJournalDB", 1);
+      req.onupgradeneeded = e => {
         const dbx = e.target.result;
-        if (!dbx.objectStoreNames.contains("records")) {
-          const st = dbx.createObjectStore("records", {keyPath:"id", autoIncrement:true});
-          st.createIndex("date", "date", {unique:false});
-          st.createIndex("type", "type", {unique:false});
+        if(!dbx.objectStoreNames.contains("records")){
+          const store = dbx.createObjectStore("records", {keyPath:"id", autoIncrement:true});
+          store.createIndex("date", "date", {unique:false});
+          store.createIndex("type", "type", {unique:false});
         }
-        if (!dbx.objectStoreNames.contains("settings")) {
+        if(!dbx.objectStoreNames.contains("settings")){
           dbx.createObjectStore("settings", {keyPath:"key"});
         }
       };
@@ -534,103 +684,113 @@
       req.onerror = () => reject(req.error);
     });
   }
-  function dbAdd(storeName, val) {
+  function dbAdd(storeName, value){
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, "readwrite");
-      const st = tx.objectStore(storeName);
-      const req = st.add(val);
+      const store = tx.objectStore(storeName);
+      const req = store.add(value);
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
   }
-  function dbPut(storeName, val) {
+  function dbPut(storeName, value){
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, "readwrite");
-      const st = tx.objectStore(storeName);
-      const req = st.put(val);
+      const store = tx.objectStore(storeName);
+      const req = store.put(value);
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
   }
-  function dbGetAll(storeName) {
+  function dbDelete(storeName, id){
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      const req = store.delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function dbGetAll(storeName){
     return new Promise((resolve, reject) => {
       const tx = db.transaction(storeName, "readonly");
-      const st = tx.objectStore(storeName);
-      const req = st.getAll();
+      const store = tx.objectStore(storeName);
+      const req = store.getAll();
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => reject(req.error);
     });
   }
-  function dbDelete(storeName, id) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, "readwrite");
-      const st = tx.objectStore(storeName);
-      const req = st.delete(id);
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-  }
-  function dbGetSetting(key) {
+  function dbGetSetting(key){
     return new Promise((resolve, reject) => {
       const tx = db.transaction("settings", "readonly");
-      const st = tx.objectStore("settings");
-      const req = st.get(key);
+      const store = tx.objectStore("settings");
+      const req = store.get(key);
       req.onsuccess = () => resolve(req.result ? req.result.value : undefined);
       req.onerror = () => reject(req.error);
     });
   }
-  function dbSetSetting(key, value) {
+  function dbSetSetting(key, value){
     return new Promise((resolve, reject) => {
       const tx = db.transaction("settings", "readwrite");
-      const st = tx.objectStore("settings");
-      const req = st.put({key, value});
+      const store = tx.objectStore("settings");
+      const req = store.put({key, value});
       req.onsuccess = () => resolve();
       req.onerror = () => reject(req.error);
     });
   }
 
-  async function refreshRecords() {
+  async function refreshRecords(){
     records = await dbGetAll("records");
-    records.sort((a,b)=>String(a.createdAt||a.timestamp||"").localeCompare(String(b.createdAt||b.timestamp||"")));
+    records.sort((a,b)=>String(a.createdAt || a.timestamp || "").localeCompare(String(b.createdAt || b.timestamp || "")));
+    for(const r of records){
+      if(r.lat != null && r.lng != null) setProjectionOriginIfMissing(r.lat, r.lng);
+      if(Array.isArray(r.points)){
+        for(const p of r.points) setProjectionOriginIfMissing(p.lat, p.lng);
+      }
+    }
     renderAll();
   }
 
   // ---------- SETTINGS ----------
-  async function loadSettings() {
+  async function loadSettings(){
     const savedHabits = await dbGetSetting("habits");
-    habits = Array.isArray(savedHabits) && savedHabits.length === 10 ? savedHabits : [...DEFAULT_HABITS];
-    const savedInterval = await dbGetSetting("routeIntervalSec");
-    if (safeNum(savedInterval, 0) > 0) routeIntervalSec.value = String(savedInterval);
+    if(Array.isArray(savedHabits) && savedHabits.length === 10) habits = savedHabits;
     renderHabitSettings();
     renderHabitPicker();
   }
 
-  function renderHabitSettings() {
+  function renderHabitSettings(){
     habitSettingsWrap.innerHTML = "";
     habits.forEach((h, i) => {
       const wrap = document.createElement("label");
-      wrap.innerHTML = `<div class="small muted">Habit ${i+1}</div><input data-habit-index="${i}" type="text" value="${esc(h)}">`;
+      wrap.innerHTML = `<div class="small muted">Habit ${i+1}</div><input data-idx="${i}" type="text" value="${escapeHtml(h)}">`;
       habitSettingsWrap.appendChild(wrap);
     });
   }
 
-  function renderHabitPicker() {
-    habitPickerButtons.innerHTML = "";
-    habits.forEach((h) => {
-      const b = document.createElement("button");
-      b.textContent = h;
-      b.onclick = async () => {
-        habitPickerDialog.close();
-        await addGPSPointRecord("habit", {name:h, text:""});
+  function renderHabitPicker(){
+    habitDialogBody.innerHTML = `<div class="menuGrid">${
+      habits.map((h, i) => `<button data-habit-index="${i}">${escapeHtml(h)}</button>`).join("")
+    }</div>`;
+    habitDialogBody.querySelectorAll("button[data-habit-index]").forEach(btn => {
+      btn.onclick = async () => {
+        const i = Number(btn.dataset.habitIndex);
+        habitDialog.close();
+        if(pendingCanvasWorld){
+          const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
+          await addManualRecord("habit", ll.lat, ll.lng, {name: habits[i]});
+          pendingCanvasWorld = null;
+        } else {
+          await addGPSRecord("habit", {name: habits[i]});
+        }
       };
-      habitPickerButtons.appendChild(b);
     });
   }
 
   // ---------- GEO / COMPASS ----------
-  async function getPosition() {
+  async function getPosition(){
     return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) return reject(new Error("Geolocation not supported"));
+      if(!navigator.geolocation) return reject(new Error("Geolocation not supported"));
       navigator.geolocation.getCurrentPosition(
         pos => resolve(pos),
         err => reject(err),
@@ -639,70 +799,74 @@
     });
   }
 
-  async function reverseGeocode(lat, lng) {
-    if (!isOnline()) return "";
-    try {
+  async function reverseGeocode(lat, lng){
+    if(!isOnline()) return "";
+    try{
       const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`;
       const res = await fetch(url, {headers:{Accept:"application/json"}});
-      if (!res.ok) return "";
-      const j = await res.json();
-      return j.display_name || "";
-    } catch {
+      if(!res.ok) return "";
+      const json = await res.json();
+      return json.display_name || "";
+    }catch{
       return "";
     }
   }
 
-  async function initCompass() {
-    try {
-      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-        // iOS-style permission flow
+  async function initCompass(){
+    try{
+      if(typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function"){
         const granted = await DeviceOrientationEvent.requestPermission();
-        if (granted !== "granted") {
-          compassText.textContent = "Permission denied";
+        if(granted !== "granted"){
+          compassPill.textContent = "Compass denied";
           return;
         }
       }
-      window.addEventListener("deviceorientation", onOrientation, true);
       window.addEventListener("deviceorientationabsolute", onOrientation, true);
-    } catch {
-      compassText.textContent = "Unavailable";
+      window.addEventListener("deviceorientation", onOrientation, true);
+    }catch{
+      compassPill.textContent = "Compass unavailable";
     }
   }
 
-  function onOrientation(e) {
+  function onOrientation(e){
     let heading = null;
-    if (typeof e.webkitCompassHeading === "number") {
+    if(typeof e.webkitCompassHeading === "number"){
       heading = e.webkitCompassHeading;
-    } else if (typeof e.alpha === "number") {
+    }else if(typeof e.alpha === "number"){
       heading = 360 - e.alpha;
     }
-    if (heading != null && Number.isFinite(heading)) {
+    if(heading != null && Number.isFinite(heading)){
       compassHeading = (heading + 360) % 360;
-      compassText.textContent = `${Math.round(compassHeading)}°`;
+      compassPill.textContent = `Compass ${Math.round(compassHeading)}°`;
       drawCanvas();
     }
   }
 
-  async function updateLivePosition() {
-    if (appMode !== "live") return;
-    try {
+  async function refreshLivePosition(){
+    if(!isLiveMode) return;
+    try{
       const pos = await getPosition();
       livePosition = {
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
         accuracy: pos.coords.accuracy ?? null,
-        heading: pos.coords.heading ?? null
+        heading: pos.coords.heading ?? null,
+        timestamp: new Date().toISOString()
       };
+      setProjectionOriginIfMissing(livePosition.lat, livePosition.lng);
+      livePosText.textContent = `${livePosition.lat.toFixed(6)}, ${livePosition.lng.toFixed(6)}${livePosition.accuracy != null ? ` · ±${Math.round(livePosition.accuracy)}m` : ""}`;
       drawCanvas();
-    } catch {}
+    }catch(err){
+      livePosText.textContent = `Unavailable`;
+    }
   }
 
   // ---------- RECORDS ----------
-  function baseRecord(type) {
+  function baseRecord(type){
     return {
       type,
       date: currentActionDate(),
-      timestamp: appMode === "history" ? "" : new Date().toISOString(),
+      timestamp: isLiveMode ? new Date().toISOString() : "",
       createdAt: new Date().toISOString(),
       name: "",
       text: "",
@@ -723,13 +887,15 @@
     };
   }
 
-  async function addGPSPointRecord(type, extra={}) {
-    try {
+  async function addGPSRecord(type, extra={}){
+    try{
       setStatus(`Getting GPS for ${type}…`);
       const pos = await getPosition();
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      setProjectionOriginIfMissing(lat, lng);
       const address = await reverseGeocode(lat, lng);
+
       const rec = {
         ...baseRecord(type),
         ...extra,
@@ -742,14 +908,15 @@
       };
       await dbAdd("records", rec);
       await refreshRecords();
-      autoFit();
+      fitScope();
       setStatus(`${type} saved.`);
-    } catch (err) {
+    }catch(err){
       setStatus(`Failed to save ${type}: ${err.message || err}`);
     }
   }
 
-  async function addManualPointRecord(type, lat, lng, extra={}) {
+  async function addManualRecord(type, lat, lng, extra={}){
+    setProjectionOriginIfMissing(lat, lng);
     const rec = {
       ...baseRecord(type),
       ...extra,
@@ -760,641 +927,326 @@
     setStatus(`${type} saved on ${currentActionDate()}.`);
   }
 
-  async function addRouteEvent(eventName) {
-    try {
+  async function addRouteEvent(name){
+    try{
       const pos = await getPosition();
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      setProjectionOriginIfMissing(lat, lng);
       const address = await reverseGeocode(lat, lng);
       const rec = {
         ...baseRecord("route-event"),
-        name: eventName,
+        name,
         lat, lng,
         accuracy: pos.coords.accuracy ?? null,
         altitude: pos.coords.altitude ?? null,
         speed: pos.coords.speed ?? null,
         heading: pos.coords.heading ?? null,
         address,
-        routeId: routeState.routeId || ""
+        routeId: route.routeId || ""
       };
       await dbAdd("records", rec);
       return {lat, lng, address, pos};
-    } catch (err) {
+    }catch(err){
       setStatus(`Route event failed: ${err.message || err}`);
       return null;
     }
   }
 
-  // ---------- ROUTE ----------
-  async function captureRouteSample() {
-    if (!routeState.active || routeState.paused) return;
-    try {
-      const pos = await getPosition();
-      routeState.points.push({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        timestamp: new Date().toISOString(),
-        accuracy: pos.coords.accuracy ?? null,
-        altitude: pos.coords.altitude ?? null,
-        speed: pos.coords.speed ?? null,
-        heading: pos.coords.heading ?? null
+  // ---------- LIVE / STORED SCOPE ----------
+  function scopeLabel(){
+    if(isLiveMode) return "Live radar";
+    if(scope === "day") return `Day ${toYMD(anchorDate)}`;
+    if(scope === "week"){
+      const m = mondayOfWeek(anchorDate);
+      const s = addDays(m, 6);
+      return `Week ${toYMD(m)} → ${toYMD(s)}`;
+    }
+    const first = firstOfMonth(anchorDate);
+    return `Month ${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,"0")}`;
+  }
+
+  function recordsForScope(){
+    if(isLiveMode){
+      if(!liveSessionStartedAt) return [];
+      const t0 = new Date(liveSessionStartedAt).getTime();
+      return records.filter(r => {
+        const t = r.timestamp ? new Date(r.timestamp).getTime() : new Date(r.createdAt || 0).getTime();
+        return t >= t0 && r.date === todayYMD();
       });
-      routeStateText.textContent = `${routeState.points.length} pts · ${routeDistanceKm(routeState.points).toFixed(3)} km`;
-      drawCanvas();
-    } catch (err) {
-      setStatus(`Route sample failed: ${err.message || err}`);
     }
-  }
 
-  async function startRoute() {
-    if (routeState.active) return setStatus("Route already active.");
-    routeState.active = true;
-    routeState.paused = false;
-    routeState.routeId = uid("route");
-    routeState.points = [];
-    routeState.pauseEvents = [];
-    routeState.resumeEvents = [];
-    routeState.startedAt = new Date().toISOString();
-    routeState.startAddress = "";
-    routeState.endAddress = "";
-    const sec = Math.max(1, safeNum(routeIntervalSec.value, 5));
-    await dbSetSetting("routeIntervalSec", sec);
-    const ev = await addRouteEvent("start");
-    if (ev) routeState.startAddress = ev.address || "";
-    await captureRouteSample();
-    routeState.timer = setInterval(captureRouteSample, sec * 1000);
-    routeStateText.textContent = "Recording…";
-    setStatus("Route started.");
-  }
-
-  async function pauseRoute() {
-    if (!routeState.active || routeState.paused) return;
-    if (routeState.timer) clearInterval(routeState.timer);
-    routeState.timer = null;
-    routeState.paused = true;
-    const ev = await addRouteEvent("pause");
-    if (ev) routeState.pauseEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
-    routeStateText.textContent = `Paused · ${routeState.points.length} pts`;
-    setStatus("Route paused.");
-  }
-
-  async function resumeRoute() {
-    if (!routeState.active || !routeState.paused) return;
-    routeState.paused = false;
-    const sec = Math.max(1, safeNum(routeIntervalSec.value, 5));
-    await dbSetSetting("routeIntervalSec", sec);
-    const ev = await addRouteEvent("resume");
-    if (ev) routeState.resumeEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
-    routeState.timer = setInterval(captureRouteSample, sec * 1000);
-    routeStateText.textContent = `Recording · ${routeState.points.length} pts`;
-    setStatus("Route resumed.");
-  }
-
-  async function endRoute() {
-    if (!routeState.active) return setStatus("No route is active.");
-    if (routeState.timer) clearInterval(routeState.timer);
-    routeState.timer = null;
-    const ev = await addRouteEvent("end");
-    if (ev) routeState.endAddress = ev.address || "";
-
-    const distanceKm = routeDistanceKm(routeState.points);
-    const rec = {
-      ...baseRecord("route"),
-      date: toYMD(routeState.startedAt || new Date()),
-      timestamp: routeState.startedAt || "",
-      routeId: routeState.routeId,
-      distanceKm,
-      points: routeState.points,
-      meta: {
-        startAddress: routeState.startAddress,
-        pauseEvents: routeState.pauseEvents,
-        resumeEvents: routeState.resumeEvents,
-        endAddress: routeState.endAddress
-      }
-    };
-    await dbAdd("records", rec);
-
-    routeState.active = false;
-    routeState.paused = false;
-    routeState.routeId = null;
-    routeState.points = [];
-    routeStateText.textContent = "Not recording";
-    await refreshRecords();
-    drawCanvas();
-    setStatus(`Route saved (${distanceKm.toFixed(3)} km).`);
-  }
-
-  // ---------- AREA ----------
-  function beginArea() {
-    if (areaState.active) return setStatus("Area already active.");
-    areaState.active = true;
-    areaState.areaId = uid("area");
-    areaState.points = [];
-    areaState.startAddress = "";
-    areaState.color = prompt("Area color (hex or CSS color)", areaState.color || "#2e7d91") || "#2e7d91";
-    areaStateText.textContent = "0 points";
-    setStatus("Area started. Add vertices by long press/right click or Add GPS vertex.");
-    drawCanvas();
-  }
-
-  function cancelArea() {
-    areaState.active = false;
-    areaState.areaId = null;
-    areaState.points = [];
-    areaState.startAddress = "";
-    areaStateText.textContent = "No open area";
-    setStatus("Area canceled.");
-    drawCanvas();
-  }
-
-  async function addAreaVertexAt(lat, lng) {
-    if (!areaState.active) beginArea();
-    areaState.points.push({lat, lng});
-    areaStateText.textContent = `${areaState.points.length} points`;
-    if (areaState.points.length === 1 && !areaState.startAddress && isOnline()) {
-      areaState.startAddress = await reverseGeocode(lat, lng);
+    const ymd = toYMD(anchorDate);
+    if(scope === "day"){
+      return records.filter(r => r.date === ymd);
     }
-    drawCanvas();
-    setStatus(`Area vertex added (${areaState.points.length}).`);
-  }
-
-  async function addAreaVertexFromGPS() {
-    try {
-      const pos = await getPosition();
-      await addAreaVertexAt(pos.coords.latitude, pos.coords.longitude);
-    } catch (err) {
-      setStatus(`GPS vertex failed: ${err.message || err}`);
+    if(scope === "week"){
+      const monday = mondayOfWeek(anchorDate);
+      const sunday = addDays(monday, 6);
+      const a = toYMD(monday), b = toYMD(sunday);
+      return records.filter(r => r.date >= a && r.date <= b);
     }
+    const first = firstOfMonth(anchorDate);
+    const next = new Date(first.getFullYear(), first.getMonth()+1, 1);
+    const a = toYMD(first), b = toYMD(addDays(next, -1));
+    return records.filter(r => r.date >= a && r.date <= b);
   }
 
-  async function closeArea() {
-    if (!areaState.active || areaState.points.length < 3) return setStatus("Need at least 3 area points.");
-    const areaSqM = polygonAreaSqM(areaState.points);
-    const rec = {
-      ...baseRecord("area"),
-      areaId: areaState.areaId,
-      points: areaState.points,
-      areaSqM,
-      color: areaState.color,
-      address: areaState.startAddress,
-      meta: {startAddress: areaState.startAddress}
-    };
-    await dbAdd("records", rec);
-    areaState.active = false;
-    areaStateText.textContent = "No open area";
-    areaState.areaId = null;
-    areaState.points = [];
-    areaState.startAddress = "";
-    await refreshRecords();
-    autoFit();
-    setStatus(`Area saved (${areaSqM.toFixed(2)} m²).`);
+  function weeklyRecords(){
+    const monday = mondayOfWeek(anchorDate);
+    const sunday = addDays(monday, 6);
+    const a = toYMD(monday), b = toYMD(sunday);
+    return records.filter(r => r.date >= a && r.date <= b);
   }
 
-  // ---------- FILTERING ----------
-  function canvasRecords() {
-    const day = appMode === "history" ? selectedHistoryDate : todayYMD();
-    return records.filter(r => r.date === day);
-  }
-
-  function dbFilteredRecords() {
-    return records.filter(r => {
-      if (dbFilterDate.value && r.date !== dbFilterDate.value) return false;
-      if (dbFilterType.value && r.type !== dbFilterType.value) return false;
-      return true;
-    });
-  }
-
-  // ---------- CANVAS GEOMETRY ----------
-  function collectRenderablePoints() {
+  // ---------- FIT / PIN ----------
+  function collectPointsFromRecords(sourceRecords){
     const pts = [];
-    for (const r of canvasRecords()) {
-      if ((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null) {
-        pts.push({lat:r.lat, lng:r.lng, ref:r});
-      } else if ((r.type === "route" || r.type === "area") && Array.isArray(r.points)) {
-        r.points.forEach(p => pts.push({lat:p.lat, lng:p.lng, ref:r}));
+    sourceRecords.forEach(r => {
+      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
+        pts.push(llToXY(r.lat, r.lng));
       }
-    }
-    if (routeState.active) routeState.points.forEach(p => pts.push({lat:p.lat, lng:p.lng, ref:{type:"live-route"}}));
-    if (areaState.active) areaState.points.forEach(p => pts.push({lat:p.lat, lng:p.lng, ref:{type:"live-area"}}));
-    if (livePosition) pts.push({lat:livePosition.lat, lng:livePosition.lng, ref:{type:"live-position"}});
+      if((r.type === "route" || r.type === "area") && Array.isArray(r.points)){
+        r.points.forEach(p => pts.push(llToXY(p.lat, p.lng)));
+      }
+    });
     return pts;
   }
 
-  function boundsForCanvas() {
-    const pts = collectRenderablePoints();
-    if (!pts.length) return {minLat:-1,maxLat:1,minLng:-1,maxLng:1};
-    let minLat=Infinity,maxLat=-Infinity,minLng=Infinity,maxLng=-Infinity;
-    pts.forEach(p => {
-      minLat = Math.min(minLat, p.lat); maxLat = Math.max(maxLat, p.lat);
-      minLng = Math.min(minLng, p.lng); maxLng = Math.max(maxLng, p.lng);
+  function fitWorldPoints(points, paddingPx = 40){
+    const w = canvas.getBoundingClientRect().width || 1;
+    const h = canvas.getBoundingClientRect().height || 1;
+    if(!points.length) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    points.forEach(p => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
     });
-    if (minLat === maxLat) { minLat -= 0.0005; maxLat += 0.0005; }
-    if (minLng === maxLng) { minLng -= 0.0005; maxLng += 0.0005; }
-    return {minLat,maxLat,minLng,maxLng};
-  }
 
-  function worldToScreen(lat, lng) {
-    const b = boundsForCanvas();
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width || 1, h = rect.height || 1;
-    let x = ((lng - b.minLng) / (b.maxLng - b.minLng)) * w;
-    let y = ((b.maxLat - lat) / (b.maxLat - b.minLat)) * h;
-    x = x * view.scale + view.offsetX;
-    y = y * view.scale + view.offsetY;
-    return {x,y};
-  }
-
-  function screenToWorld(x, y) {
-    const b = boundsForCanvas();
-    const rect = canvas.getBoundingClientRect();
-    const w = rect.width || 1, h = rect.height || 1;
-    const nx = (x - view.offsetX) / view.scale;
-    const ny = (y - view.offsetY) / view.scale;
-    const lng = b.minLng + (nx / w) * (b.maxLng - b.minLng);
-    const lat = b.maxLat - (ny / h) * (b.maxLat - b.minLat);
-    return {lat, lng};
-  }
-
-  function resizeCanvas() {
-    const ratio = Math.max(1, window.devicePixelRatio || 1);
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.floor(rect.width * ratio);
-    canvas.height = Math.floor(rect.height * ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0);
+    const width = Math.max(1, maxX - minX);
+    const height = Math.max(1, maxY - minY);
+    const zoomX = (w - paddingPx*2) / width;
+    const zoomY = (h - paddingPx*2) / height;
+    camera.zoom = Math.max(0.02, Math.min(5, Math.min(zoomX, zoomY)));
+    camera.centerX = (minX + maxX) / 2;
+    camera.centerY = (minY + maxY) / 2;
+    cameraDefault = {...camera};
     drawCanvas();
   }
 
-  function autoFit() {
-    const pts = collectRenderablePoints();
-    const rect = canvas.getBoundingClientRect();
-    if (!pts.length || !rect.width || !rect.height) return;
-    const b = boundsForCanvas();
-    const spreadLat = b.maxLat - b.minLat;
-    const spreadLng = b.maxLng - b.minLng;
-    const spread = Math.max(spreadLat, spreadLng);
-    view.scale = spread > 0 ? Math.min(50, Math.max(0.8, 0.01 / spread)) : 1;
-    const centerLat = (b.minLat + b.maxLat) / 2;
-    const centerLng = (b.minLng + b.maxLng) / 2;
-    const c = worldToScreen(centerLat, centerLng);
-    view.offsetX += rect.width / 2 - c.x;
-    view.offsetY += rect.height / 2 - c.y;
+  function fitScope(){
+    const pts = collectPointsFromRecords(recordsForScope());
+    if(!isLiveMode && livePosition){
+      // do not include live position in fit by default for stored scopes
+    }
+    if(isLiveMode){
+      const livePts = [];
+      if(route.active && route.points.length){
+        route.points.forEach(p => livePts.push(llToXY(p.lat, p.lng)));
+      }
+      if(area.active && area.points.length){
+        area.points.forEach(p => livePts.push(llToXY(p.lat, p.lng)));
+      }
+      if(livePosition){
+        livePts.push(llToXY(livePosition.lat, livePosition.lng));
+      }
+      if(livePts.length){
+        fitWorldPoints(livePts);
+        return;
+      }
+    }
+    if(pts.length){
+      fitWorldPoints(pts);
+    }
+  }
+
+  function pinToMe(){
+    if(!livePosition) return setStatus("No live position available.");
+    const p = llToXY(livePosition.lat, livePosition.lng);
+    camera.centerX = p.x;
+    camera.centerY = p.y;
     drawCanvas();
   }
 
-  // ---------- DRAW ----------
-  function hexToRgba(color, alpha) {
-    if (!color) return `rgba(46,125,145,${alpha})`;
-    if (color.startsWith("#")) {
-      let c = color.slice(1);
-      if (c.length === 3) c = c.split("").map(x => x+x).join("");
-      if (c.length === 6) {
-        const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
-        return `rgba(${r},${g},${b},${alpha})`;
-      }
-    }
-    return color;
+  function selectedRecord(){
+    return records.find(r => r.id === selectedRecordId) || null;
   }
 
-  function drawGrid() {
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle = "rgba(35,49,58,.07)";
-    ctx.lineWidth = 1;
-    for (let x=0; x<w; x+=40) {
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-    }
-    for (let y=0; y<h; y+=40) {
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+  function pinToSelected(tight=true){
+    const r = selectedRecord();
+    if(!r) return setStatus("No selected record.");
+    const pts = collectPointsFromRecords([r]);
+    if(!pts.length) return;
+    if(tight){
+      fitWorldPoints(pts, 80);
+      camera.zoom = Math.min(8, camera.zoom * 1.3);
+      drawCanvas();
+    }else{
+      camera.centerX = pts[0].x;
+      camera.centerY = pts[0].y;
+      drawCanvas();
     }
   }
 
-  function drawPoint(x, y, color, r=5) {
-    ctx.beginPath();
-    ctx.arc(x,y,r,0,Math.PI*2);
-    ctx.fillStyle = color;
-    ctx.fill();
+  function focusRecordFromWeekly(id){
+    selectedRecordId = id;
+    const r = selectedRecord();
+    if(!r) return;
+    isLiveMode = false;
+    setLiveModeButtons();
+    scope = "week";
+    setScopeButtons();
+    anchorDate = new Date(`${r.date}T12:00:00`);
+    scopeDate.value = toYMD(anchorDate);
+    closeAllPanels();
+    pinToSelected(true);
+    updateHeaderTexts();
+    drawCanvas();
+    setStatus("Focused record in week scope.");
   }
 
-  function drawLabel(x, y, text, color="#23313a") {
-    ctx.save();
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillStyle = color;
-    ctx.fillText(text, x+8, y-8);
-    ctx.restore();
+  // ---------- PANELS ----------
+  function closeAllPanels(){
+    weeklyPanel.classList.remove("active");
+    databasePanel.classList.remove("active");
+    settingsPanel.classList.remove("active");
   }
 
-  function drawPolyline(points, color, width=2.5) {
-    if (!points || points.length < 1) return;
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-    ctx.beginPath();
-    points.forEach((p, i) => {
-      const q = worldToScreen(p.lat, p.lng);
-      if (i===0) ctx.moveTo(q.x,q.y); else ctx.lineTo(q.x,q.y);
-    });
-    ctx.stroke();
-    ctx.restore();
+  function togglePanel(panelEl){
+    const willOpen = !panelEl.classList.contains("active");
+    closeAllPanels();
+    if(willOpen) panelEl.classList.add("active");
   }
-
-  function drawPolygon(points, color) {
-    if (!points || points.length < 2) return;
-    ctx.save();
-    ctx.strokeStyle = color;
-    ctx.fillStyle = hexToRgba(color, .18);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    points.forEach((p, i) => {
-      const q = worldToScreen(p.lat, p.lng);
-      if (i===0) ctx.moveTo(q.x,q.y); else ctx.lineTo(q.x,q.y);
-    });
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawCompass() {
-    const w = canvas.getBoundingClientRect().width;
-    const x = w - 54, y = 54, r = 22;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI*2);
-    ctx.fillStyle = "rgba(255,255,255,.88)";
-    ctx.fill();
-    ctx.strokeStyle = "rgba(35,49,58,.15)";
-    ctx.stroke();
-
-    // north mark
-    ctx.fillStyle = "#23313a";
-    ctx.font = "12px system-ui, sans-serif";
-    ctx.fillText("N", x - 4, y - 28);
-
-    if (compassHeading != null) {
-      const ang = (compassHeading - 90) * Math.PI/180;
-      ctx.translate(x, y);
-      ctx.rotate(ang);
-      ctx.beginPath();
-      ctx.moveTo(16, 0);
-      ctx.lineTo(-8, -6);
-      ctx.lineTo(-2, 0);
-      ctx.lineTo(-8, 6);
-      ctx.closePath();
-      ctx.fillStyle = "#1f5f78";
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  function drawLiveMarker() {
-    if (!livePosition || appMode !== "live") return;
-    const p = worldToScreen(livePosition.lat, livePosition.lng);
-
-    if (livePosition.accuracy != null) {
-      const b = boundsForCanvas();
-      const metersPerLatDeg = 111320;
-      const latDeg = livePosition.accuracy / metersPerLatDeg;
-      const pxA = worldToScreen(livePosition.lat + latDeg, livePosition.lng);
-      const radius = Math.abs(pxA.y - p.y);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, Math.max(radius, 8), 0, Math.PI*2);
-      ctx.fillStyle = "rgba(31,95,120,.08)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(31,95,120,.18)";
-      ctx.stroke();
-    }
-
-    if (liveBlink) {
-      drawPoint(p.x, p.y, "#1f5f78", 7);
-      drawLabel(p.x, p.y, "You", "#1f5f78");
-    }
-
-    const heading = livePosition.heading != null ? livePosition.heading : compassHeading;
-    if (heading != null) {
-      const ang = (heading - 90) * Math.PI/180;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(ang);
-      ctx.beginPath();
-      ctx.moveTo(14,0);
-      ctx.lineTo(-6,-5);
-      ctx.lineTo(-1,0);
-      ctx.lineTo(-6,5);
-      ctx.closePath();
-      ctx.fillStyle = "#1f5f78";
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  function drawCanvas() {
-    drawGrid();
-    hitCache = [];
-
-    const dayRecords = canvasRecords();
-
-    // base records
-    dayRecords.forEach(r => {
-      if (r.type === "route" && Array.isArray(r.points)) {
-        drawPolyline(r.points, "#c9774f", 2.7);
-        if (r.points[0]) {
-          const q = worldToScreen(r.points[0].lat, r.points[0].lng);
-          drawLabel(q.x, q.y, `${(r.distanceKm || 0).toFixed(2)} km`, "#9b5a38");
-        }
-      } else if (r.type === "area" && Array.isArray(r.points)) {
-        drawPolygon(r.points, r.color || "#2e7d91");
-        if (r.points[0]) {
-          const q = worldToScreen(r.points[0].lat, r.points[0].lng);
-          drawLabel(q.x, q.y, `${(r.areaSqM || 0).toFixed(1)} m²`, "#2e7d91");
-        }
-      } else if ((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null) {
-        const color = r.type === "habit" ? "#6f8a54" : r.type === "note" ? "#d95f5f" : "#c9774f";
-        const q = worldToScreen(r.lat, r.lng);
-        drawPoint(q.x, q.y, color, r.type === "route-event" ? 4 : 5);
-        if (r.type === "habit") drawLabel(q.x, q.y, r.name || "Habit", "#556b43");
-        if (r.type === "note") drawLabel(q.x, q.y, "Note", "#b24b4b");
-        if (r.type === "route-event") drawLabel(q.x, q.y, r.name || "Event", "#9b5a38");
-        hitCache.push({x:q.x, y:q.y, r, radius:12});
-      }
-    });
-
-    // live route
-    if (routeState.active && routeState.points.length) {
-      drawPolyline(routeState.points, "#c9774f", 2.7);
-      routeState.points.forEach((p,i) => {
-        const q = worldToScreen(p.lat, p.lng);
-        drawPoint(q.x, q.y, "#c9774f", i === routeState.points.length - 1 ? 4.5 : 3);
-      });
-    }
-
-    // live area
-    if (areaState.active && areaState.points.length) {
-      drawPolygon(areaState.points, areaState.color || "#2e7d91");
-      areaState.points.forEach(p => {
-        const q = worldToScreen(p.lat, p.lng);
-        drawPoint(q.x, q.y, areaState.color || "#2e7d91", 4);
-      });
-    }
-
-    drawLiveMarker();
-    drawCompass();
-
-    selectedDayText.textContent = appMode === "history" ? selectedHistoryDate : todayYMD();
-  }
-
-  // ---------- HIT TEST ----------
-  function nearestHit(x, y) {
-    let best = null, bestD = Infinity;
-    hitCache.forEach(h => {
-      const d = Math.hypot(h.x - x, h.y - y);
-      if (d < h.radius && d < bestD) { best = h; bestD = d; }
-    });
-    return best;
-  }
-
-  function showRecordInfo(rec) {
-    pointInfoBody.innerHTML = `
-      <div class="small muted">Type</div><div>${esc(rec.type || "")}</div>
-      <div class="small muted" style="margin-top:8px">Date</div><div>${esc(rec.date || "")}</div>
-      <div class="small muted" style="margin-top:8px">Time</div><div>${esc(rec.timestamp ? toTimeHM(rec.timestamp) : "-")}</div>
-      <div class="small muted" style="margin-top:8px">Name</div><div>${esc(rec.name || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${esc(rec.text || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat ?? "-"}, ${rec.lng ?? "-"}</div>
-      <div class="small muted" style="margin-top:8px">Accuracy</div><div>${rec.accuracy ?? "-"}</div>
-      <div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Distance km</div><div>${rec.distanceKm != null ? Number(rec.distanceKm).toFixed(3) : "-"}</div>
-      <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM != null ? Number(rec.areaSqM).toFixed(2) : "-"}</div>
-    `;
-    pointInfoDialog.showModal();
-  }
-
-  // ---------- MENUS ----------
-  function openActionMenuAt(x, y) {
-    pendingActionPoint = screenToWorld(x, y);
-    actionMenuDialog.showModal();
-  }
-
-  actionMenuDialog.querySelectorAll("button[data-action]").forEach(btn => {
-    btn.onclick = async () => {
-      const action = btn.dataset.action;
-      actionMenuDialog.close();
-
-      if (action === "habit") {
-        const choice = prompt("Choose habit number 1-10:\n" + habits.map((h,i)=>`${i+1}. ${h}`).join("\n"), "1");
-        const idx = Math.min(10, Math.max(1, Number(choice || 1))) - 1;
-        await addManualPointRecord("habit", pendingActionPoint.lat, pendingActionPoint.lng, {name: habits[idx] || "Habit"});
-      } else if (action === "note") {
-        const txt = prompt("Write note:");
-        if (!txt) return;
-        await addManualPointRecord("note", pendingActionPoint.lat, pendingActionPoint.lng, {text: txt});
-      } else if (action === "area-vertex") {
-        await addAreaVertexAt(pendingActionPoint.lat, pendingActionPoint.lng);
-      } else if (action === "area-gps") {
-        await addAreaVertexFromGPS();
-      } else if (action === "route-point") {
-        await addManualPointRecord("route-event", pendingActionPoint.lat, pendingActionPoint.lng, {name: "manual-marker"});
-      } else if (action === "view") {
-        const q = worldToScreen(pendingActionPoint.lat, pendingActionPoint.lng);
-        const hit = nearestHit(q.x, q.y);
-        if (hit) showRecordInfo(hit.r);
-      }
-    };
-  });
 
   // ---------- WEEKLY ----------
-  function recordsForWeek(startDate) {
-    const monday = mondayOfWeek(startDate);
-    const sunday = addDays(monday, 6);
-    const startY = toYMD(monday), endY = toYMD(sunday);
-    return records.filter(r => r.date >= startY && r.date <= endY);
-  }
-
-  function renderWeekly() {
-    const monday = mondayOfWeek(weekAnchorDate);
+  function renderWeeklyPanel(){
+    const monday = mondayOfWeek(anchorDate);
     const weekDays = Array.from({length:7}, (_,i)=>addDays(monday, i));
     const ymds = weekDays.map(toYMD);
-    weekRangeLabel.textContent = `${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
-    const weekRecs = recordsForWeek(monday);
+    weekRangeText.textContent = `${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
 
-    let html = `<div style="overflow:auto"><table class="weekly-table"><thead><tr><th>Habit</th>`;
-    ymds.forEach(ymd => html += `<th>${esc(formatDateLabel(ymd))}</th>`);
-    html += `</tr></thead><tbody>`;
+    const weekRecs = weeklyRecords();
+
+    let table = `<div style="overflow:auto"><table class="weeklyTable"><thead><tr><th>Habit</th>`;
+    ymds.forEach(ymd => table += `<th>${escapeHtml(formatDateLabel(ymd))}</th>`);
+    table += `</tr></thead><tbody>`;
 
     habits.forEach(h => {
-      html += `<tr><td>${esc(h)}</td>`;
+      table += `<tr><td>${escapeHtml(h)}</td>`;
       ymds.forEach(ymd => {
         const count = weekRecs.filter(r => r.type === "habit" && r.name === h && r.date === ymd).length;
-        html += `<td>${count}</td>`;
+        table += `<td>${count}</td>`;
       });
-      html += `</tr>`;
+      table += `</tr>`;
     });
 
-    html += `<tr><td><strong>Route km</strong></td>`;
+    table += `<tr><td><strong>Route km</strong></td>`;
     ymds.forEach(ymd => {
       const km = weekRecs.filter(r => r.type === "route" && r.date === ymd).reduce((s,r)=>s+safeNum(r.distanceKm,0),0);
-      html += `<td>${km ? km.toFixed(2) : ""}</td>`;
+      table += `<td>${km ? km.toFixed(2) : ""}</td>`;
     });
-    html += `</tr>`;
+    table += `</tr>`;
 
-    html += `<tr><td><strong>Areas m²</strong></td>`;
+    table += `<tr><td><strong>Areas m²</strong></td>`;
     ymds.forEach(ymd => {
       const sqm = weekRecs.filter(r => r.type === "area" && r.date === ymd).reduce((s,r)=>s+safeNum(r.areaSqM,0),0);
-      html += `<td>${sqm ? sqm.toFixed(1) : ""}</td>`;
+      table += `<td>${sqm ? sqm.toFixed(1) : ""}</td>`;
     });
-    html += `</tr></tbody></table></div>`;
-    weeklyTableWrap.innerHTML = html;
+    table += `</tr></tbody></table></div>`;
+    weeklySummaryWrap.innerHTML = table;
 
-    const notesByDay = Object.fromEntries(ymds.map(y=>[y,[]]));
-    weekRecs.filter(r => r.type === "note").forEach(r => notesByDay[r.date]?.push(r));
-
-    let notesHtml = "";
+    let html = "";
     ymds.forEach(ymd => {
-      const notes = notesByDay[ymd] || [];
-      notesHtml += `<div class="note-card"><div><strong>${esc(formatDateLabel(ymd))}</strong></div>`;
-      if (!notes.length) {
-        notesHtml += `<div class="hint" style="margin-top:8px">No notes.</div>`;
-      } else {
-        notes.forEach(n => {
-          const short = (n.text || "").length > 160 ? `${esc(n.text.slice(0,160))}…` : esc(n.text || "");
-          notesHtml += `
-            <details style="margin-top:8px">
-              <summary>${esc(n.timestamp ? toTimeHM(n.timestamp) : "--:--")} · ${short || "Note"}</summary>
-              <div style="margin-top:8px;white-space:pre-wrap">${esc(n.text || "")}</div>
-              ${n.address ? `<div class="hint" style="margin-top:6px">${esc(n.address)}</div>` : ""}
-            </details>
+      const dayRecords = weekRecs.filter(r => r.date === ymd);
+      html += `<div class="recordCard"><div class="row"><strong>${escapeHtml(formatDateLabel(ymd))}</strong><span class="pill">${dayRecords.length} records</span></div>`;
+      if(!dayRecords.length){
+        html += `<div class="hint" style="margin-top:8px">No records.</div>`;
+      }else{
+        dayRecords.forEach(r => {
+          const selectedClass = r.id === selectedRecordId ? "selected" : "";
+          html += `
+            <div class="recordCard ${selectedClass}" data-week-record-id="${r.id}">
+              <div class="row">
+                <span class="pill">${escapeHtml(r.type)}</span>
+                ${r.name ? `<span class="pill">${escapeHtml(r.name)}</span>` : ""}
+                ${r.timestamp ? `<span class="pill">${escapeHtml(toTimeHM(r.timestamp))}</span>` : ""}
+                <div class="spacer"></div>
+                <button data-show-on-map="${r.id}">Show on map</button>
+              </div>
+              ${r.text ? `<div style="margin-top:8px;white-space:pre-wrap">${escapeHtml(r.text)}</div>` : ""}
+              <div class="small muted" style="margin-top:8px">
+                ${r.lat != null && r.lng != null ? `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}` : ""}
+                ${r.address ? ` · ${escapeHtml(r.address)}` : ""}
+                ${r.distanceKm != null ? ` · ${Number(r.distanceKm).toFixed(3)} km` : ""}
+                ${r.areaSqM != null ? ` · ${Number(r.areaSqM).toFixed(2)} m²` : ""}
+              </div>
+            </div>
           `;
         });
       }
-      notesHtml += `</div>`;
+      html += `</div>`;
     });
-    weeklyNotesWrap.innerHTML = notesHtml;
+    weeklyRecordsWrap.innerHTML = html;
+
+    weeklyRecordsWrap.querySelectorAll("button[data-show-on-map]").forEach(btn => {
+      btn.onclick = () => focusRecordFromWeekly(Number(btn.dataset.showOnMap));
+    });
+
+    weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card => {
+      const id = Number(card.dataset.weekRecordId);
+      card.oncontextmenu = (e) => {
+        e.preventDefault();
+        focusRecordFromWeekly(id);
+      };
+      let timer = null;
+      card.addEventListener("pointerdown", () => {
+        timer = setTimeout(() => focusRecordFromWeekly(id), 450);
+      });
+      card.addEventListener("pointerup", () => clearTimeout(timer));
+      card.addEventListener("pointermove", () => clearTimeout(timer));
+      card.addEventListener("pointercancel", () => clearTimeout(timer));
+      card.addEventListener("click", () => {
+        selectedRecordId = id;
+        updateHeaderTexts();
+        renderWeeklyPanel();
+        drawCanvas();
+      });
+    });
   }
 
-  // ---------- DB VIEW ----------
-  function renderDB() {
-    const rows = dbFilteredRecords();
-    dbCount.textContent = `${rows.length} records`;
+  // ---------- DATABASE ----------
+  function renderDatabasePanel(){
+    const rows = records.filter(r => {
+      if(dbFilterDate.value && r.date !== dbFilterDate.value) return false;
+      if(dbFilterType.value && r.type !== dbFilterType.value) return false;
+      return true;
+    });
+    dbCountText.textContent = `${rows.length} records`;
+
     dbTableBody.innerHTML = rows.map(r => `
       <tr>
         <td>${r.id ?? ""}</td>
-        <td>${esc(r.type || "")}</td>
-        <td>${esc(r.date || "")}</td>
-        <td>${esc(r.timestamp ? toTimeHM(r.timestamp) : "")}</td>
-        <td>${esc(r.name || "")}</td>
-        <td>${esc(r.text || "")}</td>
+        <td>${escapeHtml(r.type || "")}</td>
+        <td>${escapeHtml(r.date || "")}</td>
+        <td>${escapeHtml(r.timestamp ? toTimeHM(r.timestamp) : "")}</td>
+        <td>${escapeHtml(r.name || "")}</td>
+        <td>${escapeHtml(r.text || "")}</td>
         <td>${r.lat ?? ""}</td>
         <td>${r.lng ?? ""}</td>
-        <td>${esc(r.address || (r.meta?.startAddress || "") || "")}</td>
+        <td>${escapeHtml(r.address || (r.meta?.startAddress || "") || "")}</td>
         <td>${r.distanceKm != null ? Number(r.distanceKm).toFixed(3) : ""}</td>
         <td>${r.areaSqM != null ? Number(r.areaSqM).toFixed(2) : ""}</td>
-        <td><button data-id="${r.id}" class="danger">Delete</button></td>
+        <td><button data-del-id="${r.id}" class="danger">Delete</button></td>
       </tr>
     `).join("");
-    dbTableBody.querySelectorAll("button[data-id]").forEach(btn => {
+
+    dbTableBody.querySelectorAll("button[data-del-id]").forEach(btn => {
       btn.onclick = async () => {
-        const id = Number(btn.dataset.id);
-        if (!confirm(`Delete record ${id}?`)) return;
+        const id = Number(btn.dataset.delId);
+        if(!confirm(`Delete record ${id}?`)) return;
         await dbDelete("records", id);
         await refreshRecords();
         setStatus(`Deleted record ${id}.`);
@@ -1402,41 +1254,522 @@
     });
   }
 
-  // ---------- ADDRESS REFRESH ----------
-  async function refreshMissingAddresses() {
-    if (!isOnline()) {
-      setStatus("You are offline. Address refresh needs internet.");
-      return;
+  // ---------- DRAW ----------
+  function drawGrid(){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle = "rgba(36,51,59,.06)";
+    ctx.lineWidth = 1;
+    for(let x=0;x<w;x+=40){
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
     }
+    for(let y=0;y<h;y+=40){
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+  }
+
+  function drawPoint(px, py, color, radius=5){
+    ctx.beginPath();
+    ctx.arc(px, py, radius, 0, Math.PI*2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+
+  function drawLabel(px, py, text, color= "#24333b"){
+    ctx.save();
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillStyle = color;
+    ctx.fillText(text, px + 8, py - 8);
+    ctx.restore();
+  }
+
+  function drawPolyline(points, color, width=2.5){
+    if(!points || points.length < 1) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const s = latLngToScreen(p.lat, p.lng);
+      if(i===0) ctx.moveTo(s.x, s.y);
+      else ctx.lineTo(s.x, s.y);
+    });
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawPolygon(points, color){
+    if(!points || points.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = hexToRgba(color, 0.18);
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const s = latLngToScreen(p.lat, p.lng);
+      if(i===0) ctx.moveTo(s.x, s.y);
+      else ctx.lineTo(s.x, s.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawCompass(){
+    const w = canvas.getBoundingClientRect().width;
+    const x = w - 54, y = 54, r = 22;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = "rgba(255,255,255,.86)";
+    ctx.fill();
+    ctx.strokeStyle = "rgba(36,51,59,.14)";
+    ctx.stroke();
+    ctx.fillStyle = "#24333b";
+    ctx.font = "12px system-ui, sans-serif";
+    ctx.fillText("N", x-4, y-28);
+
+    if(compassHeading != null){
+      const ang = (compassHeading - 90) * Math.PI/180;
+      ctx.translate(x, y);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.moveTo(16,0);
+      ctx.lineTo(-7,-6);
+      ctx.lineTo(-1,0);
+      ctx.lineTo(-7,6);
+      ctx.closePath();
+      ctx.fillStyle = "#2f6f7e";
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawLiveMarker(){
+    if(!livePosition) return;
+    if(!isLiveMode){
+      // show in non-live only if it currently falls inside view
+      const p = latLngToScreen(livePosition.lat, livePosition.lng);
+      const w = canvas.getBoundingClientRect().width;
+      const h = canvas.getBoundingClientRect().height;
+      if(p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
+    }
+    const p = latLngToScreen(livePosition.lat, livePosition.lng);
+
+    if(livePosition.accuracy != null){
+      const accuracyMeters = livePosition.accuracy;
+      const top = llToXY(livePosition.lat + accuracyMeters/111320, livePosition.lng);
+      const center = llToXY(livePosition.lat, livePosition.lng);
+      const radius = Math.abs((top.y - center.y) * camera.zoom);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(8, radius), 0, Math.PI*2);
+      ctx.fillStyle = "rgba(47,111,126,.08)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(47,111,126,.18)";
+      ctx.stroke();
+    }
+
+    if(liveBlink){
+      drawPoint(p.x, p.y, "#2f6f7e", 7);
+      drawLabel(p.x, p.y, "You", "#2f6f7e");
+    }
+
+    const heading = livePosition.heading != null ? livePosition.heading : compassHeading;
+    if(heading != null){
+      const ang = (heading - 90) * Math.PI/180;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(ang);
+      ctx.beginPath();
+      ctx.moveTo(15,0);
+      ctx.lineTo(-6,-5);
+      ctx.lineTo(-1,0);
+      ctx.lineTo(-6,5);
+      ctx.closePath();
+      ctx.fillStyle = "#2f6f7e";
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function drawSelectedHalo(rec){
+    const pts = [];
+    if((rec.type === "habit" || rec.type === "note" || rec.type === "route-event") && rec.lat != null && rec.lng != null){
+      pts.push(latLngToScreen(rec.lat, rec.lng));
+    }else if((rec.type === "route" || rec.type === "area") && Array.isArray(rec.points) && rec.points.length){
+      rec.points.forEach(p => pts.push(latLngToScreen(p.lat, p.lng)));
+    }
+    if(!pts.length) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    pts.forEach(p => {
+      minX = Math.min(minX, p.x);
+      minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x);
+      maxY = Math.max(maxY, p.y);
+    });
+    ctx.save();
+    ctx.strokeStyle = "rgba(77,140,149,.9)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([7,5]);
+    ctx.strokeRect(minX - 10, minY - 10, (maxX-minX)+20, (maxY-minY)+20);
+    ctx.restore();
+  }
+
+  function drawCanvas(){
+    drawGrid();
+    hitCache = [];
+
+    const scoped = recordsForScope();
+
+    scoped.forEach(r => {
+      if(r.type === "route" && Array.isArray(r.points)){
+        drawPolyline(r.points, "#c57449", 2.8);
+        if(r.points[0]){
+          const s = latLngToScreen(r.points[0].lat, r.points[0].lng);
+          drawLabel(s.x, s.y, `${(r.distanceKm || 0).toFixed(2)} km`, "#9e5e3b");
+        }
+      }else if(r.type === "area" && Array.isArray(r.points)){
+        drawPolygon(r.points, r.color || "#4d8c95");
+        if(r.points[0]){
+          const s = latLngToScreen(r.points[0].lat, r.points[0].lng);
+          drawLabel(s.x, s.y, `${(r.areaSqM || 0).toFixed(1)} m²`, "#2f6f7e");
+        }
+      }else if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
+        const s = latLngToScreen(r.lat, r.lng);
+        const color = r.type === "habit" ? "#718455" : r.type === "note" ? "#d95d5d" : "#c57449";
+        drawPoint(s.x, s.y, color, r.type === "route-event" ? 4 : 5);
+        if(r.type === "habit") drawLabel(s.x, s.y, r.name || "Habit", "#5f7247");
+        if(r.type === "note") drawLabel(s.x, s.y, "Note", "#b54a4a");
+        if(r.type === "route-event") drawLabel(s.x, s.y, r.name || "Route", "#9e5e3b");
+        hitCache.push({x:s.x, y:s.y, r, radius:12});
+      }
+    });
+
+    // live route
+    if(isLiveMode && route.active && route.points.length){
+      drawPolyline(route.points, "#c57449", 2.8);
+      route.points.forEach((p, i) => {
+        const s = latLngToScreen(p.lat, p.lng);
+        drawPoint(s.x, s.y, "#c57449", i === route.points.length - 1 ? 4.5 : 3);
+      });
+    }
+
+    // live area
+    if(area.active && area.points.length){
+      drawPolygon(area.points, area.color);
+      area.points.forEach(p => {
+        const s = latLngToScreen(p.lat, p.lng);
+        drawPoint(s.x, s.y, area.color, 4);
+      });
+    }
+
+    const sel = selectedRecord();
+    if(sel) drawSelectedHalo(sel);
+
+    drawLiveMarker();
+    drawCompass();
+  }
+
+  function nearestHit(px, py){
+    let best = null, bestD = Infinity;
+    hitCache.forEach(h => {
+      const d = Math.hypot(h.x - px, h.y - py);
+      if(d < h.radius && d < bestD){
+        best = h;
+        bestD = d;
+      }
+    });
+    return best;
+  }
+
+  function showRecordInfo(rec){
+    const meta = rec.meta || {};
+    infoBody.innerHTML = `
+      <div class="small muted">Type</div><div>${escapeHtml(rec.type || "")}</div>
+      <div class="small muted" style="margin-top:8px">Date</div><div>${escapeHtml(rec.date || "")}</div>
+      <div class="small muted" style="margin-top:8px">Time</div><div>${escapeHtml(rec.timestamp ? toTimeHM(rec.timestamp) : "-")}</div>
+      <div class="small muted" style="margin-top:8px">Name</div><div>${escapeHtml(rec.name || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${escapeHtml(rec.text || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat ?? "-"}, ${rec.lng ?? "-"}</div>
+      <div class="small muted" style="margin-top:8px">Address</div><div>${escapeHtml(rec.address || meta.startAddress || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm != null ? Number(rec.distanceKm).toFixed(3) : "-"}</div>
+      <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM != null ? Number(rec.areaSqM).toFixed(2) : "-"}</div>
+      ${meta.endAddress ? `<div class="small muted" style="margin-top:8px">Route end address</div><div>${escapeHtml(meta.endAddress)}</div>` : ""}
+    `;
+    infoDialog.showModal();
+  }
+
+  // ---------- ROUTE ----------
+  async function captureRouteSample(){
+    if(!route.active || route.paused) return;
+    try{
+      const pos = await getPosition();
+      const p = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        timestamp: new Date().toISOString(),
+        accuracy: pos.coords.accuracy ?? null,
+        altitude: pos.coords.altitude ?? null,
+        speed: pos.coords.speed ?? null,
+        heading: pos.coords.heading ?? null
+      };
+      setProjectionOriginIfMissing(p.lat, p.lng);
+      route.points.push(p);
+      routeStateText.textContent = `Route: ${route.points.length} pts · ${routeDistanceKm(route.points).toFixed(3)} km`;
+      drawCanvas();
+    }catch(err){
+      setStatus(`Route sample failed: ${err.message || err}`);
+    }
+  }
+
+  async function routeStart(){
+    if(route.active) return setStatus("Route already active.");
+    route.active = true;
+    route.paused = false;
+    route.routeId = uid("route");
+    route.startedAt = new Date().toISOString();
+    route.points = [];
+    route.pauseEvents = [];
+    route.resumeEvents = [];
+    route.startAddress = "";
+    route.endAddress = "";
+    isLiveMode = true;
+    setLiveModeButtons();
+    liveSessionStartedAt = route.startedAt;
+
+    const ev = await addRouteEvent("start");
+    if(ev) route.startAddress = ev.address || "";
+
+    const sec = Math.max(1, safeNum(await dbGetSetting("routeIntervalSec"), 5));
+    route.timer = setInterval(captureRouteSample, sec * 1000);
+    await captureRouteSample();
+    routeStateText.textContent = "Route: recording";
+    setStatus("Route started.");
+  }
+
+  async function routePause(){
+    if(!route.active || route.paused) return;
+    if(route.timer) clearInterval(route.timer);
+    route.timer = null;
+    route.paused = true;
+    const ev = await addRouteEvent("pause");
+    if(ev) route.pauseEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
+    routeStateText.textContent = `Route: paused`;
+    setStatus("Route paused.");
+  }
+
+  async function routeResume(){
+    if(!route.active || !route.paused) return;
+    route.paused = false;
+    const ev = await addRouteEvent("resume");
+    if(ev) route.resumeEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
+    const sec = Math.max(1, safeNum(await dbGetSetting("routeIntervalSec"), 5));
+    route.timer = setInterval(captureRouteSample, sec * 1000);
+    routeStateText.textContent = `Route: recording`;
+    setStatus("Route resumed.");
+  }
+
+  async function routeEnd(){
+    if(!route.active) return setStatus("No active route.");
+    if(route.timer) clearInterval(route.timer);
+    route.timer = null;
+
+    const ev = await addRouteEvent("end");
+    if(ev) route.endAddress = ev.address || "";
+
+    const distanceKm = routeDistanceKm(route.points);
+    const rec = {
+      ...baseRecord("route"),
+      date: toYMD(route.startedAt || new Date()),
+      timestamp: route.startedAt || "",
+      routeId: route.routeId,
+      distanceKm,
+      points: route.points,
+      meta: {
+        startAddress: route.startAddress,
+        pauseEvents: route.pauseEvents,
+        resumeEvents: route.resumeEvents,
+        endAddress: route.endAddress
+      }
+    };
+    await dbAdd("records", rec);
+
+    route.active = false;
+    route.paused = false;
+    route.routeId = null;
+    route.points = [];
+    route.startAddress = "";
+    route.endAddress = "";
+    route.pauseEvents = [];
+    route.resumeEvents = [];
+    routeStateText.textContent = "Route: idle";
+    liveSessionStartedAt = null;
+
+    await refreshRecords();
+    drawCanvas();
+    setStatus(`Route saved (${distanceKm.toFixed(3)} km).`);
+  }
+
+  // ---------- AREA ----------
+  function areaBegin(){
+    if(area.active) return setStatus("Area already active.");
+    area.active = true;
+    area.areaId = uid("area");
+    area.points = [];
+    area.color = prompt("Area color (hex or CSS color)", area.color || "#4d8c95") || "#4d8c95";
+    area.startAddress = "";
+    setStatus("Area started.");
+    updateHeaderTexts();
+  }
+
+  async function areaAddVertexAt(lat, lng){
+    if(!area.active) areaBegin();
+    setProjectionOriginIfMissing(lat, lng);
+    area.points.push({lat, lng});
+    if(area.points.length === 1 && !area.startAddress){
+      area.startAddress = await reverseGeocode(lat, lng);
+    }
+    updateHeaderTexts();
+    drawCanvas();
+    setStatus(`Area vertex added (${area.points.length}).`);
+  }
+
+  async function areaAddGPSVertex(){
+    try{
+      const pos = await getPosition();
+      await areaAddVertexAt(pos.coords.latitude, pos.coords.longitude);
+    }catch(err){
+      setStatus(`GPS area vertex failed: ${err.message || err}`);
+    }
+  }
+
+  async function areaClose(){
+    if(!area.active || area.points.length < 3) return setStatus("Need at least 3 area points.");
+    const rec = {
+      ...baseRecord("area"),
+      areaId: area.areaId,
+      points: area.points,
+      areaSqM: polygonAreaSqM(area.points),
+      color: area.color,
+      address: area.startAddress,
+      meta: {startAddress: area.startAddress}
+    };
+    await dbAdd("records", rec);
+    area.active = false;
+    area.areaId = null;
+    area.points = [];
+    area.startAddress = "";
+    await refreshRecords();
+    setStatus("Area saved.");
+    updateHeaderTexts();
+  }
+
+  // ---------- ACTION MENU ----------
+  function openActionDialogAtWorld(world){
+    pendingCanvasWorld = world;
+    actionDialog.showModal();
+  }
+
+  actionDialog.querySelectorAll("button[data-action]").forEach(btn => {
+    btn.onclick = async () => {
+      const action = btn.dataset.action;
+      actionDialog.close();
+
+      if(action === "add-habit"){
+        habitDialog.showModal();
+        return;
+      }
+
+      if(action === "add-note"){
+        noteInput.value = "";
+        noteDialog.showModal();
+        return;
+      }
+
+      if(action === "route-start"){ await routeStart(); return; }
+      if(action === "route-pause"){ await routePause(); return; }
+      if(action === "route-resume"){ await routeResume(); return; }
+      if(action === "route-end"){ await routeEnd(); return; }
+
+      if(action === "area-start"){ areaBegin(); return; }
+      if(action === "area-vertex"){
+        if(!pendingCanvasWorld) return;
+        const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
+        await areaAddVertexAt(ll.lat, ll.lng);
+        return;
+      }
+      if(action === "area-gps"){ await areaAddGPSVertex(); return; }
+      if(action === "area-close"){ await areaClose(); return; }
+
+      if(action === "symbol"){
+        if(!pendingCanvasWorld) return;
+        const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
+        await addManualRecord("note", ll.lat, ll.lng, {text:"[Symbol placeholder]"});
+        return;
+      }
+
+      if(action === "inspect"){
+        if(!pendingCanvasWorld) return;
+        const s = worldToScreen(pendingCanvasWorld.x, pendingCanvasWorld.y);
+        const hit = nearestHit(s.x, s.y);
+        if(hit){
+          selectedRecordId = hit.r.id;
+          updateHeaderTexts();
+          showRecordInfo(hit.r);
+          drawCanvas();
+        }
+      }
+    };
+  });
+
+  saveNote.onclick = async () => {
+    const txt = noteInput.value.trim();
+    if(!txt) return;
+    noteDialog.close();
+    if(pendingCanvasWorld){
+      const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
+      await addManualRecord("note", ll.lat, ll.lng, {text: txt});
+      pendingCanvasWorld = null;
+    }else{
+      await addGPSRecord("note", {text: txt});
+    }
+  };
+
+  // ---------- ADDRESS REFRESH ----------
+  async function refreshMissingAddresses(){
+    if(!isOnline()) return setStatus("You are offline.");
     setStatus("Refreshing missing addresses…");
     let updated = 0;
 
-    for (const r of records) {
+    for(const r of records){
       let changed = false;
 
-      if ((r.type === "habit" || r.type === "note" || r.type === "route-event") && !r.address && r.lat != null && r.lng != null) {
+      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && !r.address && r.lat != null && r.lng != null){
         r.address = await reverseGeocode(r.lat, r.lng);
-        changed = !!r.address;
+        changed = changed || !!r.address;
       }
 
-      if (r.type === "area" && !r.address && Array.isArray(r.points) && r.points.length) {
+      if(r.type === "area" && !r.address && Array.isArray(r.points) && r.points.length){
         r.address = await reverseGeocode(r.points[0].lat, r.points[0].lng);
-        changed = !!r.address;
+        changed = changed || !!r.address;
       }
 
-      if (r.type === "route" && r.meta) {
-        if (!r.meta.startAddress && Array.isArray(r.points) && r.points.length) {
+      if(r.type === "route" && r.meta){
+        if(!r.meta.startAddress && Array.isArray(r.points) && r.points.length){
           r.meta.startAddress = await reverseGeocode(r.points[0].lat, r.points[0].lng);
           changed = changed || !!r.meta.startAddress;
         }
-        if (!r.meta.endAddress && Array.isArray(r.points) && r.points.length) {
-          const last = r.points[r.points.length - 1];
-          r.meta.endAddress = await reverseGeocode(last.lat, last.lng);
+        if(!r.meta.endAddress && Array.isArray(r.points) && r.points.length){
+          const p = r.points[r.points.length - 1];
+          r.meta.endAddress = await reverseGeocode(p.lat, p.lng);
           changed = changed || !!r.meta.endAddress;
         }
       }
 
-      if (changed) {
+      if(changed){
         await dbPut("records", r);
         updated++;
       }
@@ -1446,289 +1779,360 @@
     setStatus(`Address refresh finished. Updated ${updated} records.`);
   }
 
+  // ---------- INFO ----------
+  function updateHeaderTexts(){
+    selectedPeriodText.textContent = scopeLabel();
+    routeStateText.textContent = route.active
+      ? `Route: ${route.paused ? "paused" : "recording"}`
+      : "Route: idle";
+    const sel = selectedRecord();
+    selectedItemText.textContent = sel
+      ? `Selected: ${sel.type}${sel.name ? ` · ${sel.name}` : ""}`
+      : "Selected: none";
+
+    const mapLabel = isLiveMode ? "Live radar" : `${scope[0].toUpperCase()+scope.slice(1)} scope`;
+    mapStateText.textContent = mapLabel + (isLiveMode && liveSessionStartedAt ? " · active session" : "");
+  }
+
+  function setLiveModeButtons(){
+    btnLiveMode.classList.toggle("active", isLiveMode);
+    btnLiveMode.classList.toggle("primary", isLiveMode);
+    $("scopeDateWrap").classList.toggle("hidden", isLiveMode);
+  }
+
+  function setScopeButtons(){
+    btnDayScope.classList.toggle("active", !isLiveMode && scope === "day");
+    btnWeekScope.classList.toggle("active", !isLiveMode && scope === "week");
+    btnMonthScope.classList.toggle("active", !isLiveMode && scope === "month");
+  }
+
+  function renderAll(){
+    updateHeaderTexts();
+    renderWeeklyPanel();
+    renderDatabasePanel();
+    drawCanvas();
+  }
+
   // ---------- EXPORT / IMPORT ----------
-  function downloadBlob(blob, filename) {
+  function downloadBlob(blob, filename){
     const a = document.createElement("a");
     const url = URL.createObjectURL(blob);
     a.href = url;
     a.download = filename;
     a.click();
-    setTimeout(()=>URL.revokeObjectURL(url), 2500);
+    setTimeout(() => URL.revokeObjectURL(url), 2500);
   }
 
-  function exportJSON() {
-    const payload = {version:1, exportedAt:new Date().toISOString(), habits, records};
-    downloadBlob(new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"}), "personal-spatial-journal.json");
+  function doExportJSON(){
+    downloadBlob(
+      new Blob([JSON.stringify({version:1, habits, records}, null, 2)], {type:"application/json"}),
+      "personal-spatial-journal.json"
+    );
   }
 
-  function exportCSV() {
+  function doExportCSV(){
     const headers = ["id","type","date","timestamp","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];
     const lines = [headers.join(",")];
     records.forEach(r => {
       const row = headers.map(h => {
         let v = r[h] ?? "";
-        if (typeof v === "object") v = JSON.stringify(v);
-        return `"${String(v).replace(/"/g,'""')}"`;
+        if(typeof v === "object") v = JSON.stringify(v);
+        return `"${String(v).replace(/"/g, '""')}"`;
       });
       lines.push(row.join(","));
     });
     downloadBlob(new Blob([lines.join("\n")], {type:"text/csv"}), "personal-spatial-journal.csv");
   }
 
-  async function importJSON(file) {
+  async function doImportJSON(file){
     const txt = await file.text();
     const payload = JSON.parse(txt);
-    if (!payload || !Array.isArray(payload.records)) throw new Error("Invalid JSON");
-    if (Array.isArray(payload.habits) && payload.habits.length === 10) {
+    if(Array.isArray(payload.habits) && payload.habits.length === 10){
       habits = payload.habits;
       await dbSetSetting("habits", habits);
+      renderHabitSettings();
+      renderHabitPicker();
     }
-    for (const rec of payload.records) {
-      const copy = {...rec};
+    if(!payload.records || !Array.isArray(payload.records)) throw new Error("Invalid JSON");
+    for(const r of payload.records){
+      const copy = {...r};
       delete copy.id;
       await dbAdd("records", copy);
     }
-    await loadSettings();
     await refreshRecords();
   }
 
-  // ---------- SCREENS ----------
-  function setNavActive(btn) {
-    [navCanvas, navWeekly, navDB, navSettings].forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-  }
-
-  function showScreen(name) {
-    currentScreen = name;
-    screenCanvas.classList.toggle("active", name === "canvas");
-    screenWeekly.classList.toggle("active", name === "weekly");
-    screenDB.classList.toggle("active", name === "db");
-    screenSettings.classList.toggle("active", name === "settings");
-
-    if (name === "canvas") setNavActive(navCanvas);
-    if (name === "weekly") setNavActive(navWeekly);
-    if (name === "db") setNavActive(navDB);
-    if (name === "settings") setNavActive(navSettings);
-
-    if (name === "weekly") renderWeekly();
-    if (name === "db") renderDB();
-    if (name === "canvas") {
-      requestAnimationFrame(resizeCanvas);
-      drawCanvas();
-    }
-  }
-
-  function renderAll() {
-    renderWeekly();
-    renderDB();
-    drawCanvas();
-  }
-
   // ---------- EVENTS ----------
-  navCanvas.onclick = () => showScreen("canvas");
-  navWeekly.onclick = () => showScreen("weekly");
-  navDB.onclick = () => showScreen("db");
-  navSettings.onclick = () => showScreen("settings");
+  btnLiveMode.onclick = () => {
+    isLiveMode = true;
+    setLiveModeButtons();
+    setScopeButtons();
+    updateHeaderTexts();
+    drawCanvas();
+    setStatus("Live mode.");
+  };
 
-  modeSelect.onchange = () => {
-    appMode = modeSelect.value;
-    historyDateWrap.classList.toggle("hidden", appMode !== "history");
-    drawCanvas();
-    setStatus(appMode === "history" ? `History mode: ${selectedHistoryDate}` : "Live mode.");
+  btnDayScope.onclick = () => {
+    isLiveMode = false;
+    scope = "day";
+    anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
+    setLiveModeButtons();
+    setScopeButtons();
+    fitScope();
+    updateHeaderTexts();
+    setStatus("Day scope.");
   };
-  historyDate.onchange = () => {
-    selectedHistoryDate = historyDate.value || todayYMD();
-    drawCanvas();
+
+  btnWeekScope.onclick = () => {
+    isLiveMode = false;
+    scope = "week";
+    anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
+    setLiveModeButtons();
+    setScopeButtons();
+    fitScope();
+    updateHeaderTexts();
+    setStatus("Week scope.");
   };
-  canvasModeSelect.onchange = () => {
-    canvasMode = canvasModeSelect.value;
+
+  btnMonthScope.onclick = () => {
+    isLiveMode = false;
+    scope = "month";
+    anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
+    setLiveModeButtons();
+    setScopeButtons();
+    fitScope();
+    updateHeaderTexts();
+    setStatus("Month scope.");
+  };
+
+  scopeDate.onchange = () => {
+    anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
+    renderWeeklyPanel();
+    if(!isLiveMode) fitScope();
+    updateHeaderTexts();
   };
 
   btnRecord.onclick = () => {
-    habitPickerDialog.showModal();
+    pendingCanvasWorld = null;
+    habitDialog.showModal();
   };
 
   btnRoute.onclick = async () => {
-    const action = prompt("Route action: start / pause / resume / end", routeState.active ? (routeState.paused ? "resume" : "pause") : "start");
-    if (!action) return;
+    const action = prompt("Route action: start / pause / resume / end", route.active ? (route.paused ? "resume" : "pause") : "start");
+    if(!action) return;
     const a = action.trim().toLowerCase();
-    if (a === "start") await startRoute();
-    else if (a === "pause") await pauseRoute();
-    else if (a === "resume") await resumeRoute();
-    else if (a === "end") await endRoute();
+    if(a === "start") await routeStart();
+    if(a === "pause") await routePause();
+    if(a === "resume") await routeResume();
+    if(a === "end") await routeEnd();
   };
 
   btnArea.onclick = async () => {
-    const action = prompt("Area action: start / gps / close / cancel", areaState.active ? "gps" : "start");
-    if (!action) return;
+    const action = prompt("Area action: start / gps / close / cancel", area.active ? "gps" : "start");
+    if(!action) return;
     const a = action.trim().toLowerCase();
-    if (a === "start") beginArea();
-    else if (a === "gps") await addAreaVertexFromGPS();
-    else if (a === "close") await closeArea();
-    else if (a === "cancel") cancelArea();
+    if(a === "start") areaBegin();
+    if(a === "gps") await areaAddGPSVertex();
+    if(a === "close") await areaClose();
+    if(a === "cancel"){
+      area.active = false;
+      area.areaId = null;
+      area.points = [];
+      area.startAddress = "";
+      setStatus("Area canceled.");
+      updateHeaderTexts();
+      drawCanvas();
+    }
   };
 
+  btnPinMe.onclick = pinToMe;
+  btnPinSelected.onclick = () => pinToSelected(true);
+  btnFitScope.onclick = fitScope;
   btnRefreshAddresses.onclick = refreshMissingAddresses;
-  btnZoomIn.onclick = () => { view.scale = Math.min(50, view.scale * 1.15); drawCanvas(); };
-  btnZoomOut.onclick = () => { view.scale = Math.max(0.2, view.scale / 1.15); drawCanvas(); };
-  btnFit.onclick = autoFit;
 
-  saveNoteBtn.onclick = async () => {
-    const txt = noteText.value.trim();
-    if (!txt) return;
-    noteDialog.close();
-    await addGPSPointRecord("note", {text: txt});
-  };
+  btnZoomIn.onclick = () => { camera.zoom = Math.min(10, camera.zoom * 1.18); drawCanvas(); };
+  btnZoomOut.onclick = () => { camera.zoom = Math.max(0.002, camera.zoom / 1.18); drawCanvas(); };
+  btnResetView.onclick = () => { camera = {...cameraDefault}; drawCanvas(); };
 
-  weekPrev.onclick = () => { weekAnchorDate = addDays(mondayOfWeek(weekAnchorDate), -7); renderWeekly(); };
-  weekToday.onclick = () => { weekAnchorDate = new Date(); renderWeekly(); };
-  weekNext.onclick = () => { weekAnchorDate = addDays(mondayOfWeek(weekAnchorDate), 7); renderWeekly(); };
+  toggleWeekly.onclick = () => togglePanel(weeklyPanel);
+  toggleDatabase.onclick = () => togglePanel(databasePanel);
+  toggleSettings.onclick = () => togglePanel(settingsPanel);
 
-  dbApplyFilters.onclick = renderDB;
-  dbClearFilters.onclick = () => {
-    dbFilterDate.value = "";
-    dbFilterType.value = "";
-    renderDB();
-  };
+  document.querySelectorAll("[data-close-panel]").forEach(btn => {
+    btn.onclick = () => btn.closest(".panel").classList.remove("active");
+  });
 
-  saveHabitSettings.onclick = async () => {
-    const inputs = habitSettingsWrap.querySelectorAll("input[data-habit-index]");
-    habits = Array.from(inputs).map((el,i)=>el.value.trim() || `Habit ${i+1}`);
+  weekPrev.onclick = () => { anchorDate = addDays(mondayOfWeek(anchorDate), -7); scopeDate.value = toYMD(anchorDate); renderWeeklyPanel(); };
+  weekToday.onclick = () => { anchorDate = new Date(); scopeDate.value = toYMD(anchorDate); renderWeeklyPanel(); };
+  weekNext.onclick = () => { anchorDate = addDays(mondayOfWeek(anchorDate), 7); scopeDate.value = toYMD(anchorDate); renderWeeklyPanel(); };
+
+  dbApply.onclick = renderDatabasePanel;
+  dbClear.onclick = () => { dbFilterDate.value = ""; dbFilterType.value = ""; renderDatabasePanel(); };
+
+  saveHabitNames.onclick = async () => {
+    const inputs = habitSettingsWrap.querySelectorAll("input[data-idx]");
+    habits = Array.from(inputs).map((el, i) => el.value.trim() || `Habit ${i+1}`);
     await dbSetSetting("habits", habits);
     renderHabitPicker();
-    renderWeekly();
+    renderWeeklyPanel();
     setStatus("Habit names saved.");
   };
-  resetHabitSettings.onclick = async () => {
+  resetHabitNames.onclick = async () => {
     habits = [...DEFAULT_HABITS];
     await dbSetSetting("habits", habits);
     renderHabitSettings();
     renderHabitPicker();
-    renderWeekly();
+    renderWeeklyPanel();
     setStatus("Habit names reset.");
   };
 
-  btnExportJSON.onclick = exportJSON;
-  btnExportCSV.onclick = exportCSV;
-  btnImportJSON.onclick = () => importJSONInput.click();
-  importJSONInput.onchange = async (e) => {
+  exportJSON.onclick = doExportJSON;
+  exportCSV.onclick = doExportCSV;
+  importJSONBtn.onclick = () => importJSONInput.click();
+  importJSONInput.onchange = async e => {
     const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    try {
-      await importJSON(file);
-      setStatus("Import finished.");
-    } catch (err) {
+    if(!file) return;
+    try{
+      await doImportJSON(file);
+      setStatus("Import completed.");
+    }catch(err){
       setStatus(`Import failed: ${err.message || err}`);
-    } finally {
+    }finally{
       importJSONInput.value = "";
     }
   };
 
+  // ---------- HABIT / NOTE DIALOGS ----------
+  // habit dialog built dynamically
+  noteInput.value = "";
+
   // ---------- CANVAS INTERACTION ----------
-  function startLongPress(clientX, clientY) {
-    clearLongPress();
-    longPressTimer = setTimeout(() => {
-      const rect = canvas.getBoundingClientRect();
-      openActionMenuAt(clientX - rect.left, clientY - rect.top);
-      longPressTimer = null;
-    }, 500);
+  function resizeCanvas(){
+    const ratio = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * ratio);
+    canvas.height = Math.floor(rect.height * ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    drawCanvas();
   }
-  function clearLongPress() {
-    if (longPressTimer) clearTimeout(longPressTimer);
+  window.addEventListener("resize", resizeCanvas);
+
+  function clearLongPress(){
+    if(longPressTimer) clearTimeout(longPressTimer);
     longPressTimer = null;
   }
 
-  canvas.addEventListener("pointerdown", (e) => {
+  canvas.addEventListener("pointerdown", e => {
     canvas.setPointerCapture(e.pointerId);
     pan.active = true;
     pan.startX = e.clientX;
     pan.startY = e.clientY;
-    pan.startOffsetX = view.offsetX;
-    pan.startOffsetY = view.offsetY;
-    if (canvasMode === "edit") startLongPress(e.clientX, e.clientY);
+    pan.startCenterX = camera.centerX;
+    pan.startCenterY = camera.centerY;
+
+    clearLongPress();
+    longPressTimer = setTimeout(() => {
+      const rect = canvas.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+      pendingCanvasWorld = screenToWorld(localX, localY);
+      actionDialog.showModal();
+      longPressTimer = null;
+    }, 500);
   });
 
-  canvas.addEventListener("pointermove", (e) => {
-    if (!pan.active) return;
+  canvas.addEventListener("pointermove", e => {
+    if(!pan.active) return;
     const dx = e.clientX - pan.startX;
     const dy = e.clientY - pan.startY;
-    if (Math.hypot(dx,dy) > 6) clearLongPress();
-    view.offsetX = pan.startOffsetX + dx;
-    view.offsetY = pan.startOffsetY + dy;
+    if(Math.hypot(dx, dy) > 6) clearLongPress();
+
+    camera.centerX = pan.startCenterX - dx / camera.zoom;
+    camera.centerY = pan.startCenterY + dy / camera.zoom;
     drawCanvas();
   });
 
-  canvas.addEventListener("pointerup", async (e) => {
+  canvas.addEventListener("pointerup", e => {
     const dx = e.clientX - pan.startX;
     const dy = e.clientY - pan.startY;
-    const moved = Math.hypot(dx,dy);
+    const moved = Math.hypot(dx, dy);
     pan.active = false;
     clearLongPress();
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (moved < 5) {
-      if (canvasMode === "view") {
-        const hit = nearestHit(x,y);
-        if (hit) showRecordInfo(hit.r);
+    if(moved < 5){
+      const rect = canvas.getBoundingClientRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+      const hit = nearestHit(localX, localY);
+      if(hit){
+        selectedRecordId = hit.r.id;
+        updateHeaderTexts();
+        showRecordInfo(hit.r);
+        if(weeklyPanel.classList.contains("active")) renderWeeklyPanel();
+        drawCanvas();
       }
     }
   });
 
-  canvas.addEventListener("contextmenu", (e) => {
+  canvas.addEventListener("contextmenu", e => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    openActionMenuAt(e.clientX - rect.left, e.clientY - rect.top);
+    pendingCanvasWorld = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+    actionDialog.showModal();
   });
 
-  canvas.addEventListener("wheel", (e) => {
+  canvas.addEventListener("wheel", e => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    const before = screenToWorld(mouseX, mouseY);
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    const before = screenToWorld(px, py);
     const factor = e.deltaY < 0 ? 1.12 : 0.89;
-    view.scale = Math.min(50, Math.max(0.2, view.scale * factor));
-    const after = worldToScreen(before.lat, before.lng);
-    view.offsetX += mouseX - after.x;
-    view.offsetY += mouseY - after.y;
+    camera.zoom = Math.max(0.002, Math.min(12, camera.zoom * factor));
+    const after = worldToScreen(before.x, before.y);
+    const dx = px - after.x;
+    const dy = py - after.y;
+    camera.centerX -= dx / camera.zoom;
+    camera.centerY += dy / camera.zoom;
     drawCanvas();
   }, {passive:false});
 
-  // ---------- LIVE POSITION LOOP ----------
+  // ---------- LIVE TIMERS ----------
   setInterval(() => {
     liveBlink = !liveBlink;
-    if (currentScreen === "canvas") drawCanvas();
+    drawCanvas();
   }, 700);
 
   setInterval(() => {
-    if (appMode === "live") updateLivePosition();
+    refreshLivePosition();
   }, 4000);
 
-  // ---------- BOOT ----------
-  async function boot() {
-    updateNetworkPill();
-    window.addEventListener("online", updateNetworkPill);
-    window.addEventListener("offline", updateNetworkPill);
+  // ---------- FORMAT ----------
+  function formatDateLabel(ymd){
+    return new Date(`${ymd}T12:00:00`).toLocaleDateString([], {weekday:"short", day:"2-digit", month:"2-digit"});
+  }
 
-    historyDate.value = todayYMD();
-    selectedHistoryDate = historyDate.value;
+  // ---------- BOOT ----------
+  async function boot(){
+    updateNetPill();
+    window.addEventListener("online", updateNetPill);
+    window.addEventListener("offline", updateNetPill);
 
     await openDB();
     await loadSettings();
     await refreshRecords();
     await initCompass();
 
-    renderWeekly();
-    renderDB();
+    routeStateText.textContent = "Route: idle";
+    updateHeaderTexts();
 
     requestAnimationFrame(() => {
       resizeCanvas();
-      autoFit();
+      fitScope();
       setStatus("Ready.");
     });
+
+    await refreshLivePosition();
   }
 
   boot().catch(err => {
