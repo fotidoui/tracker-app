@@ -3,154 +3,466 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Personal Spatial Journal</title>
+  <title>Personal Spatial Journal — Clean Menu Version</title>
   <style>
     :root{
-      --sea:#2f6f7e; --sea2:#4d8c95; --cream:#fbf6ea; --olive:#718455;
-      --terracotta:#c57449; --coral:#d95d5d; --ink:#24333b; --muted:#6f7b82;
-      --line:#d8ccb2; --panel:#fffaf0; --glass:rgba(255,250,240,.9);
-      --shadow:0 14px 34px rgba(36,51,59,.14);
+      --sea:#2f6f7e;
+      --sea2:#4d8c95;
+      --cream:#fbf6ea;
+      --panel:#fffaf0;
+      --ink:#24333b;
+      --muted:#6f7b82;
+      --line:#d8ccb2;
+      --olive:#718455;
+      --terracotta:#c57449;
+      --coral:#d95d5d;
+      --shadow:0 16px 38px rgba(36,51,59,.16);
+      --glass:rgba(255,250,240,.92);
+      --radius:18px;
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-    body{min-height:100dvh;overflow:hidden}
-    button,input,select,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;outline:none}
+    html,body{
+      margin:0;
+      padding:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:var(--cream);
+      color:var(--ink);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    button,input,select,textarea{
+      font:inherit;
+      color:var(--ink);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+    }
     button{cursor:pointer;touch-action:manipulation}
-    button.primary{background:var(--sea);color:#fff;border-color:var(--sea)}
+    button.primary{background:var(--sea);border-color:var(--sea);color:#fff}
     button.soft{background:#fff}
     button.warn{background:#fff1e7;border-color:#efc59e}
     button.good{background:#eff5e8;border-color:#bfd1ac}
     button.danger{background:#fff0ef;border-color:#e3b1aa}
     button.active{outline:2px solid var(--sea2);outline-offset:1px}
-    .app{position:relative;width:100vw;height:100dvh;overflow:hidden;background:linear-gradient(180deg,#f8f1e3,#f3eadb)}
-    #mapWrap{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#fffaf2,#f6efdf);touch-action:none}
-    canvas{display:block;width:100%;height:100%}
-    .overlay{position:absolute;z-index:20;background:var(--glass);backdrop-filter:blur(8px);border:1px solid rgba(216,204,178,.95);box-shadow:var(--shadow);border-radius:18px}
-    .topBar{top:10px;left:10px;right:10px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .statusBar{top:84px;left:10px;right:10px;padding:10px 12px}
-    .toolsBar{bottom:12px;left:12px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;max-width:min(96vw,980px)}
-    .zoomBar{right:12px;bottom:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
-    .panelToggleBar{top:140px;left:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
-    .sideInfo{top:140px;right:12px;padding:10px;width:min(92vw,320px)}
-    .panel{position:absolute;z-index:30;top:130px;left:76px;width:min(94vw,660px);max-height:calc(100dvh - 150px);overflow:auto;display:none;padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
-    .panel.active{display:block}
-    .panelHeader{display:flex;gap:8px;align-items:center;margin-bottom:10px;position:sticky;top:0;background:var(--panel);padding-bottom:10px;z-index:3}
-    .spacer{flex:1 1 auto}.small{font-size:12px}.muted{color:var(--muted)}
-    .pill{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);padding:5px 10px;background:#fff;font-size:12px}
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.grid{display:grid;gap:10px}.grid.two{grid-template-columns:1fr 1fr}
-    @media (max-width:700px){.grid.two{grid-template-columns:1fr}.statusBar{top:96px}.panel{left:12px;width:min(94vw,660px)}.sideInfo{top:180px}}
-    table{width:100%;border-collapse:collapse} th,td{border:1px solid var(--line);padding:8px;vertical-align:top} th{background:#f8f0df}
-    .weeklyTable td,.weeklyTable th{text-align:center}.weeklyTable td:first-child,.weeklyTable th:first-child{text-align:left;position:sticky;left:0;background:#f8f0df;z-index:1}
-    .recordCard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}.recordCard.selected{outline:2px solid var(--sea2);outline-offset:1px}
-    .dbWrap{max-height:56dvh;overflow:auto;border:1px solid var(--line);border-radius:14px}
-    dialog{width:min(92vw,760px);border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);padding:0;box-shadow:var(--shadow)}
-    dialog::backdrop{background:rgba(36,51,59,.22)} .modalHead,.modalBody,.modalFoot{padding:14px;border-bottom:1px solid var(--line)}
-    .modalFoot{border-bottom:0;display:flex;gap:8px;justify-content:flex-end}.menuGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .app{
+      position:relative;
+      width:100vw;
+      height:100dvh;
+      overflow:hidden;
+      background:linear-gradient(180deg,#fff9ee,#f2eadb);
+    }
+    #mapWrap{
+      position:absolute;
+      inset:0;
+      overflow:hidden;
+      background:linear-gradient(180deg,#fffaf2,#f6efdf);
+      touch-action:none;
+    }
+    canvas{
+      display:block;
+      width:100%;
+      height:100%;
+    }
+    .topHud{
+      position:absolute;
+      z-index:30;
+      top:10px;
+      left:10px;
+      right:10px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:10px;
+      border-radius:18px;
+      background:var(--glass);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+    }
+    .statusLine{
+      flex:1 1 420px;
+      min-width:220px;
+      font-size:13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .modeGroup{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .bottomDeck{
+      position:absolute;
+      z-index:30;
+      left:10px;
+      right:10px;
+      bottom:10px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      padding:10px;
+      border-radius:18px;
+      background:var(--glass);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(8px);
+    }
+    .spacer{flex:1 1 auto}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#fff;
+      padding:5px 10px;
+      font-size:12px;
+    }
+    .small{font-size:12px}
+    .muted{color:var(--muted)}
+    .hint{font-size:13px;color:var(--muted)}
+
+    .sideDock{
+      position:absolute;
+      z-index:80;
+      left:6px;
+      top:50%;
+      transform:translateY(-50%);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      pointer-events:auto;
+    }
+    .dockTab{
+      display:none;
+      border-radius:0 14px 14px 0;
+      padding:10px 8px;
+      background:var(--sea);
+      color:#fff;
+      border:1px solid var(--sea);
+      box-shadow:var(--shadow);
+      writing-mode:vertical-rl;
+      text-orientation:mixed;
+    }
+    .dockTab.show{display:block}
+    .windowChrome{
+      touch-action:none;
+      user-select:none;
+    }
+    .chromeControls{
+      display:inline-flex;
+      gap:5px;
+      align-items:center;
+      margin-left:4px;
+    }
+    .chromeControls button{
+      padding:5px 8px;
+      border-radius:9px;
+      font-size:12px;
+      line-height:1;
+    }
+    .dragHandle{
+      cursor:grab;
+      user-select:none;
+      padding:4px 8px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid var(--line);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .dragHandle:active{cursor:grabbing}
+    .resizeHandle{
+      position:absolute;
+      right:4px;
+      bottom:4px;
+      width:18px;
+      height:18px;
+      cursor:nwse-resize;
+      border-right:3px solid rgba(36,51,59,.35);
+      border-bottom:3px solid rgba(36,51,59,.35);
+      border-radius:2px;
+      display:none;
+    }
+    .resizableChrome .resizeHandle{display:block}
+    .topHud.minimized,
+    .bottomDeck.minimized{
+      display:none;
+    }
+    .topHud,.bottomDeck{
+      max-width:calc(100vw - 20px);
+    }
+
+    .hidden{display:none!important}
+    .menuTab{
+      position:absolute;
+      z-index:45;
+      right:0;
+      top:45%;
+      transform:translateY(-50%);
+      writing-mode:vertical-rl;
+      text-orientation:mixed;
+      border-radius:14px 0 0 14px;
+      padding:14px 8px;
+      background:var(--sea);
+      color:#fff;
+      border:1px solid var(--sea);
+      box-shadow:var(--shadow);
+    }
+    .menuDrawer{
+      position:absolute;
+      z-index:50;
+      top:0;
+      right:0;
+      height:100dvh;
+      width:min(92vw,520px);
+      background:var(--panel);
+      border-left:1px solid var(--line);
+      box-shadow:var(--shadow);
+      transform:translateX(105%);
+      transition:transform .22s ease;
+      display:flex;
+      flex-direction:column;
+    }
+    .menuDrawer.open{transform:translateX(0)}
+    .menuHead{
+      padding:12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background:var(--panel);
+    }
+    .menuTabs{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+    }
+    .menuBody{
+      overflow:auto;
+      padding:12px;
+      flex:1 1 auto;
+    }
+    .section{display:none}
+    .section.active{display:block}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;gap:10px}
+    .grid.two{grid-template-columns:1fr 1fr}
+    @media (max-width:700px){
+      .grid.two{grid-template-columns:1fr}
+      .topHud{font-size:13px}
+      .bottomDeck button{padding:9px 10px}
+      .modeGroup button{padding:8px 9px}
+      .statusLine{flex-basis:100%}
+    }
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--line);padding:8px;vertical-align:top}
+    th{background:#f8f0df}
+    .scrollTable{overflow:auto;border:1px solid var(--line);border-radius:14px;max-height:56dvh}
+    .weeklyTable td,.weeklyTable th{text-align:center}
+    .weeklyTable td:first-child,.weeklyTable th:first-child{
+      text-align:left;
+      position:sticky;
+      left:0;
+      background:#f8f0df;
+      z-index:1;
+    }
+    .card{
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
+    }
+    .card.selected{
+      outline:2px solid var(--sea2);
+      outline-offset:1px;
+    }
+    dialog{
+      width:min(92vw,760px);
+      border:1px solid var(--line);
+      border-radius:18px;
+      background:var(--panel);
+      color:var(--ink);
+      padding:0;
+      box-shadow:var(--shadow);
+    }
+    dialog::backdrop{background:rgba(36,51,59,.24)}
+    .modalHead,.modalBody,.modalFoot{
+      padding:14px;
+      border-bottom:1px solid var(--line);
+    }
+    .modalFoot{
+      border-bottom:0;
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .menuGrid{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+    }
     @media (max-width:640px){.menuGrid{grid-template-columns:1fr}}
-    .hint{font-size:13px;color:var(--muted)}.hidden{display:none!important}
   </style>
 </head>
 <body>
 <div class="app">
   <div id="mapWrap"><canvas id="mapCanvas"></canvas></div>
+  <div id="sideDock" class="sideDock">
+    <button id="dockStatus" class="dockTab" data-restore-window="topHud">Status</button>
+    <button id="dockTools" class="dockTab" data-restore-window="bottomDeck">Tools</button>
+  </div>
 
-  <div class="overlay topBar">
-    <strong style="color:var(--sea)">Personal Spatial Journal</strong>
-    <button id="btnLiveMode" class="primary active">Live</button>
-    <button id="btnDayScope" class="soft">Day</button>
-    <button id="btnWeekScope" class="soft">Week</button>
-    <button id="btnMonthScope" class="soft">Month</button>
-    <label id="scopeDateWrap" class="hidden"><input id="scopeDate" type="date"></label>
-    <div class="spacer"></div>
+  <div id="topHud" class="topHud windowChrome resizableChrome" data-window-name="Status">
+    <span class="dragHandle" data-drag-window="topHud">move</span>
+    <strong style="color:var(--sea)">Spatial Journal</strong>
+    <span class="chromeControls">
+      <button id="minTopHud" title="Minimize status">−</button>
+      <button id="resetTopHud" title="Reset status position">↺</button>
+    </span>
+    <div class="modeGroup">
+      <button id="btnLiveMode" class="primary active">Live</button>
+      <button id="btnDayScope" class="soft">Day</button>
+      <button id="btnWeekScope" class="soft">Week</button>
+      <button id="btnMonthScope" class="soft">Month</button>
+      <label id="scopeDateWrap" class="hidden"><input id="scopeDate" type="date"></label>
+    </div>
+    <div id="statusLine" class="statusLine">Live · today · route idle · selected none · live position unavailable</div>
     <span id="netPill" class="pill">Checking…</span>
     <span id="compassPill" class="pill">Compass --</span>
+    <span class="resizeHandle" data-resize-window="topHud"></span>
   </div>
 
-  <div class="overlay statusBar">
-    <div id="statusLine">Live · today · route idle · selected none · live position unavailable</div>
-    <div id="statusText" class="small muted" style="margin-top:6px">Ready.</div>
+  <button id="menuTab" class="menuTab">Menu</button>
+
+  <div id="menuDrawer" class="menuDrawer">
+    <div class="menuHead">
+      <strong>Menu</strong>
+      <div class="spacer"></div>
+      <button id="closeMenu">Close</button>
+    </div>
+    <div class="menuTabs">
+      <button data-section="weeklySection" class="active">Weekly</button>
+      <button data-section="databaseSection">Database</button>
+      <button data-section="settingsSection">Settings</button>
+      <button data-section="backupSection">Backup / Export</button>
+    </div>
+    <div class="menuBody">
+      <section id="weeklySection" class="section active">
+        <div class="row" style="margin-bottom:10px">
+          <h3 style="margin:0">Weekly</h3>
+          <div class="spacer"></div>
+          <button id="weekPrev">←</button>
+          <button id="weekToday">This Week</button>
+          <button id="weekNext">→</button>
+        </div>
+        <div class="row" style="margin-bottom:10px"><span id="weekRangeText" class="pill"></span></div>
+        <div id="weeklySummaryWrap"></div>
+        <div id="weeklyRecordsWrap" style="margin-top:12px"></div>
+      </section>
+
+      <section id="databaseSection" class="section">
+        <div class="row" style="margin-bottom:10px">
+          <h3 style="margin:0">Database</h3>
+          <div class="spacer"></div>
+        </div>
+        <div class="row" style="margin-bottom:10px">
+          <label>Day <input id="dbFilterDate" type="date"></label>
+          <label>Type
+            <select id="dbFilterType">
+              <option value="">All</option>
+              <option value="habit">Habit</option>
+              <option value="note">Note</option>
+              <option value="route">Route</option>
+              <option value="route-event">Route Event</option>
+              <option value="area">Area</option>
+            </select>
+          </label>
+          <button id="dbApply">Apply</button>
+          <button id="dbClear">Clear</button>
+          <span id="dbCountText" class="pill"></span>
+        </div>
+        <div class="scrollTable">
+          <table id="dbTable">
+            <thead>
+              <tr>
+                <th>Code</th><th>Type</th><th>Event</th><th>Captured</th><th>Source</th>
+                <th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th>
+                <th>Route km</th><th>Area m²</th><th>Delete</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="settingsSection" class="section">
+        <h3 style="margin-top:0">Settings</h3>
+        <div class="grid two" id="habitSettingsWrap"></div>
+        <div class="row" style="margin-top:10px">
+          <button id="saveHabitNames" class="primary">Save Habit Names</button>
+          <button id="resetHabitNames">Reset</button>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <label>Default route seconds
+            <input id="defaultRouteSeconds" type="number" min="1" value="5" style="width:90px">
+          </label>
+        </div>
+        <div class="hint" style="margin-top:12px">
+          Time model: <strong>calcTimestamp</strong> is used for views/calculations. <strong>capturedAt</strong> is the real creation time.
+        </div>
+      </section>
+
+      <section id="backupSection" class="section">
+        <h3 style="margin-top:0">Backup / Export</h3>
+        <div class="card">
+          <strong>Backup database</strong>
+          <div class="hint" style="margin:6px 0 10px">Backup contains records only. Restore replaces current records to avoid duplicates.</div>
+          <div class="row">
+            <button id="backupAllBtn" class="primary">Backup All</button>
+            <button id="restoreBackupBtn">Restore Backup</button>
+            <input id="restoreBackupInput" type="file" accept=".json,application/json" class="hidden">
+          </div>
+        </div>
+        <div class="card">
+          <strong>Export current map view</strong>
+          <div class="hint" style="margin:6px 0 10px">Exports only what is currently visible by Live / Day / Week / Month scope.</div>
+          <div class="row">
+            <button id="exportCurrentCSV">CSV</button>
+            <button id="exportCurrentKML">KML</button>
+            <button id="exportCurrentDXF">DXF</button>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
-  <div class="overlay panelToggleBar">
-    <button id="toggleWeekly" class="soft">Weekly</button>
-    <button id="toggleDatabase" class="soft">Database</button>
-    <button id="toggleSettings" class="soft">Settings</button>
-  </div>
-
-  <div class="overlay sideInfo">
-    <div class="small muted">Selected</div>
-    <div id="selectedInfoText">None</div>
-    <div style="margin-top:10px" class="small muted">Hint</div>
-    <div class="hint">Tap to inspect. Long press/right click for toolbox. Manual entries use calcTimestamp.</div>
-  </div>
-
-  <div class="overlay toolsBar">
+  <div id="bottomDeck" class="bottomDeck windowChrome resizableChrome" data-window-name="Tools">
     <button id="btnRecord" class="primary">Record GPS</button>
-    <button id="btnRoute" class="warn">Route</button>
-    <button id="btnArea" class="good">Area</button>
+    <button id="btnToolbox" class="soft">Toolbox</button>
+    <button id="btnRoute" class="warn">Route GPS</button>
+    <button id="btnArea" class="good">Area GPS</button>
     <button id="btnPinMe" class="soft">Pin Me</button>
     <button id="btnPinSelected" class="soft">Pin Selected</button>
-    <button id="btnFitScope" class="soft">Fit Scope</button>
+    <button id="btnFitScope" class="soft">Fit</button>
     <button id="btnRefreshLive" class="soft">Refresh</button>
-    <button id="btnRefreshAddresses" class="soft">Refresh Addresses</button>
-  </div>
-
-  <div class="overlay zoomBar">
+    <button id="btnRefreshAddresses" class="soft">Addresses</button>
+    <div class="spacer"></div>
     <button id="btnZoomIn">+</button>
     <button id="btnZoomOut">−</button>
     <button id="btnResetView">Reset</button>
-  </div>
-
-  <div id="weeklyPanel" class="panel">
-    <div class="panelHeader">
-      <h3>Weekly</h3><div class="spacer"></div>
-      <button id="weekPrev">←</button><button id="weekToday">This Week</button><button id="weekNext">→</button>
-      <button data-close-panel="weeklyPanel">Close</button>
-    </div>
-    <div class="row" style="margin-bottom:10px"><span id="weekRangeText" class="pill"></span></div>
-    <div id="weeklySummaryWrap"></div>
-    <div id="weeklyRecordsWrap" style="margin-top:12px"></div>
-  </div>
-
-  <div id="databasePanel" class="panel">
-    <div class="panelHeader">
-      <h3>Database</h3><div class="spacer"></div>
-      <label>Day <input id="dbFilterDate" type="date"></label>
-      <label>Type
-        <select id="dbFilterType">
-          <option value="">All</option><option value="habit">Habit</option><option value="note">Note</option>
-          <option value="route">Route</option><option value="route-event">Route Event</option><option value="area">Area</option>
-        </select>
-      </label>
-      <button id="dbApply">Apply</button><button id="dbClear">Clear</button><button data-close-panel="databasePanel">Close</button>
-    </div>
-    <div class="row" style="margin-bottom:10px"><span id="dbCountText" class="pill"></span></div>
-    <div class="dbWrap">
-      <table id="dbTable">
-        <thead><tr>
-          <th>Code</th><th>Type</th><th>Event</th><th>Captured</th><th>Source</th><th>Name</th><th>Text</th>
-          <th>Lat</th><th>Lng</th><th>Address</th><th>Route km</th><th>Area m²</th><th>Delete</th>
-        </tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div id="settingsPanel" class="panel">
-    <div class="panelHeader"><h3>Settings</h3><div class="spacer"></div><button data-close-panel="settingsPanel">Close</button></div>
-    <div class="grid two" id="habitSettingsWrap"></div>
-    <div class="row" style="margin-top:10px"><button id="saveHabitNames" class="primary">Save Habit Names</button><button id="resetHabitNames">Reset</button></div>
-    <div class="row" style="margin-top:16px"><label>Default route seconds <input id="defaultRouteSeconds" type="number" min="1" value="5" style="width:90px"></label></div>
-    <div class="row" style="margin-top:16px">
-      <button id="backupAllBtn" class="primary">Backup All</button>
-      <button id="restoreBackupBtn">Restore Backup</button>
-      <input id="restoreBackupInput" type="file" accept=".json,application/json" class="hidden">
-    </div>
-    <div class="row" style="margin-top:16px">
-      <button id="exportCurrentCSV">Export Current CSV</button>
-      <button id="exportCurrentKML">Export Current KML</button>
-      <button id="exportCurrentDXF">Export Current DXF</button>
-    </div>
+    <span class="resizeHandle" data-resize-window="bottomDeck"></span>
   </div>
 </div>
 
@@ -188,12 +500,21 @@
   <div class="modalFoot"><button onclick="document.getElementById('recordDialog').close()">Close</button></div>
 </dialog>
 
-<dialog id="habitDialog"><div class="modalHead"><strong>Choose Habit</strong></div><div id="habitDialogBody" class="modalBody"></div><div class="modalFoot"><button onclick="document.getElementById('habitDialog').close()">Close</button></div></dialog>
+<dialog id="habitDialog">
+  <div class="modalHead"><strong>Choose Habit</strong></div>
+  <div id="habitDialogBody" class="modalBody"></div>
+  <div class="modalFoot"><button onclick="document.getElementById('habitDialog').close()">Close</button></div>
+</dialog>
 
 <dialog id="noteDialog">
   <div class="modalHead"><strong>Add Note</strong></div>
-  <div class="modalBody"><textarea id="noteInput" rows="5" style="width:100%" placeholder="Write your note..."></textarea></div>
-  <div class="modalFoot"><button onclick="document.getElementById('noteDialog').close()">Cancel</button><button id="saveNote" class="primary">Save</button></div>
+  <div class="modalBody">
+    <textarea id="noteInput" rows="5" style="width:100%" placeholder="Write your note..."></textarea>
+  </div>
+  <div class="modalFoot">
+    <button onclick="document.getElementById('noteDialog').close()">Cancel</button>
+    <button id="saveNote" class="primary">Save</button>
+  </div>
 </dialog>
 
 <dialog id="timeDialog">
@@ -204,221 +525,1698 @@
       <label>Start time <input id="timeStart" type="time"></label>
       <label>End time <input id="timeEnd" type="time"></label>
       <label>Confidence
-        <select id="timeConfidence"><option value="exact">exact</option><option value="estimated">estimated</option><option value="unknown">unknown</option></select>
+        <select id="timeConfidence">
+          <option value="exact">exact</option>
+          <option value="estimated">estimated</option>
+          <option value="unknown">unknown</option>
+        </select>
       </label>
     </div>
-    <div class="hint" style="margin-top:10px">This builds calcTimestamp, the timestamp used for weekly views and calculations. CapturedAt is kept separately.</div>
+    <div class="hint" style="margin-top:10px">This creates calcTimestamp for views and calculations. capturedAt remains the real creation time.</div>
   </div>
-  <div class="modalFoot"><button id="cancelTime">Cancel</button><button id="saveTime" class="primary">Use time</button></div>
+  <div class="modalFoot">
+    <button id="cancelTime">Cancel</button>
+    <button id="saveTime" class="primary">Use time</button>
+  </div>
 </dialog>
 
-<dialog id="chooserDialog"><div class="modalHead"><strong>Choose Element</strong></div><div id="chooserBody" class="modalBody"></div><div class="modalFoot"><button onclick="document.getElementById('chooserDialog').close()">Close</button></div></dialog>
-<dialog id="infoDialog"><div class="modalHead"><strong>Record Details</strong></div><div id="infoBody" class="modalBody"></div><div class="modalFoot"><button onclick="document.getElementById('infoDialog').close()">Close</button></div></dialog>
+<dialog id="chooserDialog">
+  <div class="modalHead"><strong>Choose Element</strong></div>
+  <div id="chooserBody" class="modalBody"></div>
+  <div class="modalFoot"><button onclick="document.getElementById('chooserDialog').close()">Close</button></div>
+</dialog>
+
+<dialog id="infoDialog">
+  <div class="modalHead"><strong>Record Details</strong></div>
+  <div id="infoBody" class="modalBody"></div>
+  <div class="modalFoot"><button onclick="document.getElementById('infoDialog').close()">Close</button></div>
+</dialog>
 
 <script>
 (() => {
 "use strict";
-const $=id=>document.getElementById(id), canvas=$("mapCanvas"), ctx=canvas.getContext("2d");
-const DEFAULT_HABITS=Array.from({length:10},(_,i)=>`Habit ${i+1}`);
-let habits=[...DEFAULT_HABITS], db, records=[], isLiveMode=true, scope="week", anchorDate=new Date(), projectionOrigin=null;
-let camera={centerX:0,centerY:0,zoom:1}, cameraDefault={centerX:0,centerY:0,zoom:1};
-let livePosition=null, liveBlink=true, compassHeading=null, selectedRecordId=null, pendingCanvasWorld=null, pendingNoteMode=null, hitCache=[], longPressTimer=null;
-let pan={active:false,startX:0,startY:0,startCenterX:0,startCenterY:0};
-let liveSessionStartedAt=new Date().toISOString();
-let manualRoute={active:false, points:[], routeId:null};
-let route={active:false,paused:false,routeId:null,startedAt:null,points:[],timer:null,startAddress:"",endAddress:"",pauseEvents:[],resumeEvents:[],intervalSec:5};
-let area={active:false,areaId:null,points:[],color:"#4d8c95",startAddress:""};
 
-const els = {
- btnLiveMode:$("btnLiveMode"), btnDayScope:$("btnDayScope"), btnWeekScope:$("btnWeekScope"), btnMonthScope:$("btnMonthScope"),
- scopeDate:$("scopeDate"), scopeDateWrap:$("scopeDateWrap"), statusLine:$("statusLine"), statusText:$("statusText"),
- selectedInfoText:$("selectedInfoText"), netPill:$("netPill"), compassPill:$("compassPill"), btnRecord:$("btnRecord"),
- btnRoute:$("btnRoute"), btnArea:$("btnArea"), btnPinMe:$("btnPinMe"), btnPinSelected:$("btnPinSelected"), btnFitScope:$("btnFitScope"),
- btnRefreshLive:$("btnRefreshLive"), btnRefreshAddresses:$("btnRefreshAddresses"), btnZoomIn:$("btnZoomIn"), btnZoomOut:$("btnZoomOut"),
- btnResetView:$("btnResetView"), toggleWeekly:$("toggleWeekly"), toggleDatabase:$("toggleDatabase"), toggleSettings:$("toggleSettings"),
- weeklyPanel:$("weeklyPanel"), databasePanel:$("databasePanel"), settingsPanel:$("settingsPanel"), weekPrev:$("weekPrev"),
- weekToday:$("weekToday"), weekNext:$("weekNext"), weekRangeText:$("weekRangeText"), weeklySummaryWrap:$("weeklySummaryWrap"),
- weeklyRecordsWrap:$("weeklyRecordsWrap"), dbFilterDate:$("dbFilterDate"), dbFilterType:$("dbFilterType"), dbApply:$("dbApply"),
- dbClear:$("dbClear"), dbCountText:$("dbCountText"), dbTableBody:document.querySelector("#dbTable tbody"),
- habitSettingsWrap:$("habitSettingsWrap"), saveHabitNames:$("saveHabitNames"), resetHabitNames:$("resetHabitNames"),
- defaultRouteSeconds:$("defaultRouteSeconds"), backupAllBtn:$("backupAllBtn"), restoreBackupBtn:$("restoreBackupBtn"),
- restoreBackupInput:$("restoreBackupInput"), exportCurrentCSV:$("exportCurrentCSV"), exportCurrentKML:$("exportCurrentKML"),
- exportCurrentDXF:$("exportCurrentDXF"), actionDialog:$("actionDialog"), recordDialog:$("recordDialog"), habitDialog:$("habitDialog"),
- habitDialogBody:$("habitDialogBody"), noteDialog:$("noteDialog"), noteInput:$("noteInput"), saveNote:$("saveNote"),
- timeDialog:$("timeDialog"), timeEventDate:$("timeEventDate"), timeStart:$("timeStart"), timeEnd:$("timeEnd"),
- timeConfidence:$("timeConfidence"), cancelTime:$("cancelTime"), saveTime:$("saveTime"), chooserDialog:$("chooserDialog"),
- chooserBody:$("chooserBody"), infoDialog:$("infoDialog"), infoBody:$("infoBody")
+const $ = id => document.getElementById(id);
+const canvas = $("mapCanvas");
+const ctx = canvas.getContext("2d");
+
+const DEFAULT_HABITS = Array.from({length:10}, (_,i)=>`Habit ${i+1}`);
+let habits = [...DEFAULT_HABITS];
+
+let db;
+let records = [];
+let isLiveMode = true;
+let scope = "week";
+let anchorDate = new Date();
+
+let projectionOrigin = null;
+let camera = {centerX:0, centerY:0, zoom:1};
+let cameraDefault = {centerX:0, centerY:0, zoom:1};
+
+let livePosition = null;
+let liveBlink = true;
+let compassHeading = null;
+let selectedRecordId = null;
+
+let pendingCanvasWorld = null;
+let pendingNoteMode = null;
+let hitCache = [];
+let longPressTimer = null;
+let pan = {active:false,startX:0,startY:0,startCenterX:0,startCenterY:0};
+
+let liveSessionStartedAt = new Date().toISOString();
+
+let manualRoute = {active:false, points:[], routeId:null};
+
+let route = {
+  active:false,
+  paused:false,
+  routeId:null,
+  startedAt:null,
+  points:[],
+  timer:null,
+  startAddress:"",
+  endAddress:"",
+  pauseEvents:[],
+  resumeEvents:[],
+  intervalSec:5
 };
 
-function setStatus(m){els.statusText.textContent=m}
-function todayYMD(){return toYMD(new Date())}
-function toYMD(d){const x=new Date(d);return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`}
-function toTimeHM(d){return d?new Date(d).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):""}
-function esc(s=""){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
-function uid(p="id"){return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`}
-function safeNum(v,fb=0){const n=Number(v);return Number.isFinite(n)?n:fb}
-function isOnline(){return navigator.onLine}
-function updateNetPill(){els.netPill.textContent=isOnline()?"Online":"Offline"}
-function mondayOfWeek(d){const x=new Date(d), day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x}
-function firstOfMonth(d){const x=new Date(d);x.setDate(1);x.setHours(0,0,0,0);return x}
-function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
-function formatDateLabel(ymd){return new Date(`${ymd}T12:00:00`).toLocaleDateString([],{weekday:"short",day:"2-digit",month:"2-digit"})}
-function dateFromCalc(r){return (r.calcTimestamp||r.timestamp||r.capturedAt||"").slice(0,10)||r.date||todayYMD()}
-function eventTimeLabel(r){return r.calcTimestamp?toTimeHM(r.calcTimestamp):(r.eventStartTime||"")}
-function setProjectionOriginIfMissing(lat,lng){if(!projectionOrigin&&lat!=null&&lng!=null)projectionOrigin={lat,lng}}
-function llToXY(lat,lng){if(!projectionOrigin)setProjectionOriginIfMissing(lat,lng);const o=projectionOrigin||{lat:0,lng:0},R=6378137;return {x:R*(lng-o.lng)*Math.PI/180*Math.cos(o.lat*Math.PI/180), y:R*(lat-o.lat)*Math.PI/180}}
-function xyToLL(x,y){const o=projectionOrigin||{lat:0,lng:0},R=6378137;return {lat:o.lat+(y/R)*180/Math.PI, lng:o.lng+(x/(R*Math.cos(o.lat*Math.PI/180)))*180/Math.PI}}
-function worldToScreen(x,y){const w=canvas.getBoundingClientRect().width||1,h=canvas.getBoundingClientRect().height||1;return {x:(x-camera.centerX)*camera.zoom+w/2,y:h/2-(y-camera.centerY)*camera.zoom}}
-function screenToWorld(px,py){const w=canvas.getBoundingClientRect().width||1,h=canvas.getBoundingClientRect().height||1;return {x:camera.centerX+(px-w/2)/camera.zoom,y:camera.centerY+(h/2-py)/camera.zoom}}
-function latLngToScreen(lat,lng){const p=llToXY(lat,lng);return worldToScreen(p.x,p.y)}
-function hexToRgba(c,a){if(!c)return`rgba(77,140,149,${a})`;if(c.startsWith("#")){let x=c.slice(1);if(x.length===3)x=x.split("").map(ch=>ch+ch).join("");if(x.length===6)return`rgba(${parseInt(x.slice(0,2),16)},${parseInt(x.slice(2,4),16)},${parseInt(x.slice(4,6),16)},${a})`}return c}
-function haversineKm(a,b,c,d){const R=6371,rad=x=>x*Math.PI/180,dLat=rad(c-a),dLng=rad(d-b),q=Math.sin(dLat/2)**2+Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
-function routeDistanceKm(points=[]){let km=0;for(let i=1;i<points.length;i++)km+=haversineKm(points[i-1].lat,points[i-1].lng,points[i].lat,points[i].lng);return km}
-function polygonAreaSqM(points=[]){if(points.length<3)return 0;const lat0=points.reduce((s,p)=>s+p.lat,0)/points.length,lng0=points.reduce((s,p)=>s+p.lng,0)/points.length,R=6378137,lr=lat0*Math.PI/180;const xy=points.map(p=>({x:R*(p.lng-lng0)*Math.PI/180*Math.cos(lr),y:R*(p.lat-lat0)*Math.PI/180}));let a=0;for(let i=0;i<xy.length;i++){const j=(i+1)%xy.length;a+=xy[i].x*xy[j].y-xy[j].x*xy[i].y}return Math.abs(a/2)}
-function pointSegmentDistance(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay;if(dx===0&&dy===0)return Math.hypot(px-ax,py-ay);let t=((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy);t=Math.max(0,Math.min(1,t));return Math.hypot(px-(ax+t*dx),py-(ay+t*dy))}
-function pointInPolygon(px,py,pts){let inside=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const xi=pts[i].x,yi=pts[i].y,xj=pts[j].x,yj=pts[j].y;if(((yi>py)!==(yj>py))&&(px<(xj-xi)*(py-yi)/((yj-yi)||1e-9)+xi))inside=!inside}return inside}
-function escapeXml(s=""){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;")}
+let area = {
+  active:false,
+  areaId:null,
+  points:[],
+  color:"#4d8c95",
+  startAddress:""
+};
 
-function openDB(){return new Promise((res,rej)=>{const req=indexedDB.open("spatialJournalTimeModelDB",1);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains("records")){const st=d.createObjectStore("records",{keyPath:"id",autoIncrement:true});st.createIndex("calcTimestamp","calcTimestamp",{unique:false});st.createIndex("type","type",{unique:false})}if(!d.objectStoreNames.contains("settings"))d.createObjectStore("settings",{keyPath:"key"})};req.onsuccess=()=>{db=req.result;res()};req.onerror=()=>rej(req.error)})}
-function txStore(name,mode){return db.transaction(name,mode).objectStore(name)}
-function dbAdd(n,v){return new Promise((res,rej)=>{const r=txStore(n,"readwrite").add(v);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function dbPut(n,v){return new Promise((res,rej)=>{const r=txStore(n,"readwrite").put(v);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
-function dbDelete(n,id){return new Promise((res,rej)=>{const r=txStore(n,"readwrite").delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-function dbGetAll(n){return new Promise((res,rej)=>{const r=txStore(n,"readonly").getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
-function dbGetSetting(k){return new Promise((res,rej)=>{const r=txStore("settings","readonly").get(k);r.onsuccess=()=>res(r.result?r.result.value:undefined);r.onerror=()=>rej(r.error)})}
-function dbSetSetting(k,v){return new Promise((res,rej)=>{const r=txStore("settings","readwrite").put({key:k,value:v});r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-function clearRecordStore(){return new Promise((res,rej)=>{const r=txStore("records","readwrite").clear();r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})}
-async function refreshRecords(){records=await dbGetAll("records");records.sort((a,b)=>String(a.calcTimestamp||a.capturedAt||"").localeCompare(String(b.calcTimestamp||b.capturedAt||"")));projectionOrigin=null;for(const r of records){if(r.lat!=null&&r.lng!=null)setProjectionOriginIfMissing(r.lat,r.lng);if(Array.isArray(r.points))r.points.forEach(p=>setProjectionOriginIfMissing(p.lat,p.lng))}renderAll()}
+const els = {
+  btnLiveMode:$("btnLiveMode"),
+  btnDayScope:$("btnDayScope"),
+  btnWeekScope:$("btnWeekScope"),
+  btnMonthScope:$("btnMonthScope"),
+  scopeDate:$("scopeDate"),
+  scopeDateWrap:$("scopeDateWrap"),
+  statusLine:$("statusLine"),
+  netPill:$("netPill"),
+  compassPill:$("compassPill"),
+  menuTab:$("menuTab"),
+  menuDrawer:$("menuDrawer"),
+  closeMenu:$("closeMenu"),
+  topHud:$("topHud"),
+  bottomDeck:$("bottomDeck"),
+  dockStatus:$("dockStatus"),
+  dockTools:$("dockTools"),
+  minTopHud:$("minTopHud"),
+  resetTopHud:$("resetTopHud"),
+  minBottomDeck:$("minBottomDeck"),
+  resetBottomDeck:$("resetBottomDeck"),
+  btnRecord:$("btnRecord"),
+  btnToolbox:$("btnToolbox"),
+  btnRoute:$("btnRoute"),
+  btnArea:$("btnArea"),
+  btnPinMe:$("btnPinMe"),
+  btnPinSelected:$("btnPinSelected"),
+  btnFitScope:$("btnFitScope"),
+  btnRefreshLive:$("btnRefreshLive"),
+  btnRefreshAddresses:$("btnRefreshAddresses"),
+  btnZoomIn:$("btnZoomIn"),
+  btnZoomOut:$("btnZoomOut"),
+  btnResetView:$("btnResetView"),
+  weekPrev:$("weekPrev"),
+  weekToday:$("weekToday"),
+  weekNext:$("weekNext"),
+  weekRangeText:$("weekRangeText"),
+  weeklySummaryWrap:$("weeklySummaryWrap"),
+  weeklyRecordsWrap:$("weeklyRecordsWrap"),
+  dbFilterDate:$("dbFilterDate"),
+  dbFilterType:$("dbFilterType"),
+  dbApply:$("dbApply"),
+  dbClear:$("dbClear"),
+  dbCountText:$("dbCountText"),
+  dbTableBody:document.querySelector("#dbTable tbody"),
+  habitSettingsWrap:$("habitSettingsWrap"),
+  saveHabitNames:$("saveHabitNames"),
+  resetHabitNames:$("resetHabitNames"),
+  defaultRouteSeconds:$("defaultRouteSeconds"),
+  backupAllBtn:$("backupAllBtn"),
+  restoreBackupBtn:$("restoreBackupBtn"),
+  restoreBackupInput:$("restoreBackupInput"),
+  exportCurrentCSV:$("exportCurrentCSV"),
+  exportCurrentKML:$("exportCurrentKML"),
+  exportCurrentDXF:$("exportCurrentDXF"),
+  actionDialog:$("actionDialog"),
+  recordDialog:$("recordDialog"),
+  habitDialog:$("habitDialog"),
+  habitDialogBody:$("habitDialogBody"),
+  noteDialog:$("noteDialog"),
+  noteInput:$("noteInput"),
+  saveNote:$("saveNote"),
+  timeDialog:$("timeDialog"),
+  timeEventDate:$("timeEventDate"),
+  timeStart:$("timeStart"),
+  timeEnd:$("timeEnd"),
+  timeConfidence:$("timeConfidence"),
+  cancelTime:$("cancelTime"),
+  saveTime:$("saveTime"),
+  chooserDialog:$("chooserDialog"),
+  chooserBody:$("chooserBody"),
+  infoDialog:$("infoDialog"),
+  infoBody:$("infoBody")
+};
 
-async function loadSettings(){const h=await dbGetSetting("habits");if(Array.isArray(h)&&h.length===10)habits=h;const sec=await dbGetSetting("defaultRouteSeconds");if(safeNum(sec,0)>0)els.defaultRouteSeconds.value=String(sec);renderHabitSettings();renderHabitPicker()}
-function renderHabitSettings(){els.habitSettingsWrap.innerHTML="";habits.forEach((h,i)=>{const lab=document.createElement("label");lab.innerHTML=`<div class="small muted">Habit ${i+1}</div><input data-idx="${i}" type="text" value="${esc(h)}">`;els.habitSettingsWrap.appendChild(lab)})}
-function renderHabitPicker(){els.habitDialogBody.innerHTML=`<div class="menuGrid">${habits.map((h,i)=>`<button data-habit-index="${i}">${esc(h)}</button>`).join("")}</div>`;els.habitDialogBody.querySelectorAll("[data-habit-index]").forEach(b=>{b.onclick=async()=>{const idx=Number(b.dataset.habitIndex);els.habitDialog.close();if(pendingCanvasWorld){await createManualAtWorld("habit",{name:habits[idx]})}else{await addGPSRecord("habit",{name:habits[idx]})}}})}
+function setStatus(msg){ els.statusLine.dataset.message = msg; }
+function todayYMD(){ return toYMD(new Date()); }
+function toYMD(d){
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+}
+function toTimeHM(d){
+  if(!d) return "";
+  return new Date(d).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+function esc(s=""){
+  return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function uid(p="id"){ return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
+function safeNum(v, fb=0){ const n=Number(v); return Number.isFinite(n)?n:fb; }
+function isOnline(){ return navigator.onLine; }
+function updateNetPill(){ els.netPill.textContent = isOnline() ? "Online" : "Offline"; }
+function mondayOfWeek(d){
+  const x = new Date(d);
+  const day = (x.getDay()+6)%7;
+  x.setDate(x.getDate()-day);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function firstOfMonth(d){
+  const x = new Date(d);
+  x.setDate(1);
+  x.setHours(0,0,0,0);
+  return x;
+}
+function addDays(d,n){
+  const x = new Date(d);
+  x.setDate(x.getDate()+n);
+  return x;
+}
+function formatDateLabel(ymd){
+  return new Date(`${ymd}T12:00:00`).toLocaleDateString([], {weekday:"short", day:"2-digit", month:"2-digit"});
+}
+function dateFromCalc(r){
+  return (r.calcTimestamp || r.timestamp || r.capturedAt || "").slice(0,10) || r.date || todayYMD();
+}
+function eventTimeLabel(r){
+  return r.calcTimestamp ? toTimeHM(r.calcTimestamp) : (r.eventStartTime || "");
+}
 
-async function getPosition(){return new Promise((res,rej)=>{if(!navigator.geolocation)return rej(new Error("Geolocation not supported"));navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,maximumAge:0,timeout:15000})})}
-async function reverseGeocode(lat,lng){if(!isOnline())return "";try{const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`,{headers:{Accept:"application/json"}});if(!res.ok)return "";const j=await res.json();return j.display_name||""}catch{return ""}}
-async function initCompass(){try{if(typeof DeviceOrientationEvent!=="undefined"&&typeof DeviceOrientationEvent.requestPermission==="function"){const g=await DeviceOrientationEvent.requestPermission();if(g!=="granted"){els.compassPill.textContent="Compass denied";return}}window.addEventListener("deviceorientationabsolute",onOrientation,true);window.addEventListener("deviceorientation",onOrientation,true)}catch{els.compassPill.textContent="Compass unavailable"}}
-function onOrientation(e){let h=null;if(typeof e.webkitCompassHeading==="number")h=e.webkitCompassHeading;else if(typeof e.alpha==="number")h=360-e.alpha;if(h!=null&&Number.isFinite(h)){compassHeading=(h+360)%360;els.compassPill.textContent=`Compass ${Math.round(compassHeading)}°`;drawCanvas()}}
-async function refreshLivePosition(){try{const pos=await getPosition();livePosition={lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:pos.coords.accuracy??null,heading:pos.coords.heading??null,timestamp:new Date().toISOString()};setProjectionOriginIfMissing(livePosition.lat,livePosition.lng);updateStatusLine();drawCanvas()}catch{}}
+function setProjectionOriginIfMissing(lat,lng){
+  if(!projectionOrigin && lat!=null && lng!=null) projectionOrigin = {lat,lng};
+}
+function llToXY(lat,lng){
+  if(!projectionOrigin) setProjectionOriginIfMissing(lat,lng);
+  const o = projectionOrigin || {lat:0,lng:0};
+  const R = 6378137;
+  return {
+    x: R * (lng-o.lng) * Math.PI/180 * Math.cos(o.lat*Math.PI/180),
+    y: R * (lat-o.lat) * Math.PI/180
+  };
+}
+function xyToLL(x,y){
+  const o = projectionOrigin || {lat:0,lng:0};
+  const R = 6378137;
+  return {
+    lat: o.lat + (y/R)*180/Math.PI,
+    lng: o.lng + (x/(R*Math.cos(o.lat*Math.PI/180)))*180/Math.PI
+  };
+}
+function worldToScreen(x,y){
+  const w = canvas.getBoundingClientRect().width || 1;
+  const h = canvas.getBoundingClientRect().height || 1;
+  return {
+    x: (x-camera.centerX)*camera.zoom + w/2,
+    y: h/2 - (y-camera.centerY)*camera.zoom
+  };
+}
+function screenToWorld(px,py){
+  const w = canvas.getBoundingClientRect().width || 1;
+  const h = canvas.getBoundingClientRect().height || 1;
+  return {
+    x: camera.centerX + (px-w/2)/camera.zoom,
+    y: camera.centerY + (h/2-py)/camera.zoom
+  };
+}
+function latLngToScreen(lat,lng){
+  const p = llToXY(lat,lng);
+  return worldToScreen(p.x,p.y);
+}
+function hexToRgba(c,a){
+  if(!c) return `rgba(77,140,149,${a})`;
+  if(c.startsWith("#")){
+    let x = c.slice(1);
+    if(x.length===3) x = x.split("").map(ch=>ch+ch).join("");
+    if(x.length===6){
+      return `rgba(${parseInt(x.slice(0,2),16)},${parseInt(x.slice(2,4),16)},${parseInt(x.slice(4,6),16)},${a})`;
+    }
+  }
+  return c;
+}
+function haversineKm(a,b,c,d){
+  const R=6371, rad=x=>x*Math.PI/180;
+  const dLat=rad(c-a), dLng=rad(d-b);
+  const q=Math.sin(dLat/2)**2 + Math.cos(rad(a))*Math.cos(rad(c))*Math.sin(dLng/2)**2;
+  return 2*R*Math.asin(Math.sqrt(q));
+}
+function routeDistanceKm(points=[]){
+  let km=0;
+  for(let i=1;i<points.length;i++) km += haversineKm(points[i-1].lat,points[i-1].lng,points[i].lat,points[i].lng);
+  return km;
+}
+function polygonAreaSqM(points=[]){
+  if(points.length<3) return 0;
+  const lat0 = points.reduce((s,p)=>s+p.lat,0)/points.length;
+  const lng0 = points.reduce((s,p)=>s+p.lng,0)/points.length;
+  const R=6378137, lr=lat0*Math.PI/180;
+  const xy = points.map(p=>({
+    x:R*(p.lng-lng0)*Math.PI/180*Math.cos(lr),
+    y:R*(p.lat-lat0)*Math.PI/180
+  }));
+  let a=0;
+  for(let i=0;i<xy.length;i++){
+    const j=(i+1)%xy.length;
+    a += xy[i].x*xy[j].y - xy[j].x*xy[i].y;
+  }
+  return Math.abs(a/2);
+}
+function pointSegmentDistance(px,py,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay;
+  if(dx===0 && dy===0) return Math.hypot(px-ax,py-ay);
+  let t=((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy);
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(ax+t*dx), py-(ay+t*dy));
+}
+function pointInPolygon(px,py,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i].x, yi=pts[i].y, xj=pts[j].x, yj=pts[j].y;
+    if(((yi>py)!==(yj>py)) && (px < (xj-xi)*(py-yi)/((yj-yi)||1e-9)+xi)) inside=!inside;
+  }
+  return inside;
+}
+function escapeXml(s=""){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+}
 
-const CAT_CODE={habit:"01",note:"02",route:"03",area:"04","route-event":"05"};
-function nextRecordCode(type, calcTs){const ymd=(calcTs||new Date().toISOString()).slice(0,10),cc=CAT_CODE[type]||"99",dd=ymd.slice(8,10),mm=ymd.slice(5,7);const same=records.filter(r=>r.type===type&&dateFromCalc(r)===ymd);return `${cc}${String(same.length+1).padStart(3,"0")}${dd}${mm}`}
-function isoFromParts(date,time){if(!date)return ""; if(!time)return `${date}T00:00:00`; return `${date}T${time}:00`}
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open("spatialJournalCleanMenuDB",1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("records")){
+        const st = d.createObjectStore("records",{keyPath:"id",autoIncrement:true});
+        st.createIndex("calcTimestamp","calcTimestamp",{unique:false});
+        st.createIndex("type","type",{unique:false});
+      }
+      if(!d.objectStoreNames.contains("settings")){
+        d.createObjectStore("settings",{keyPath:"key"});
+      }
+    };
+    req.onsuccess = () => { db=req.result; resolve(); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function txStore(name,mode){ return db.transaction(name,mode).objectStore(name); }
+function dbAdd(n,v){ return new Promise((res,rej)=>{ const r=txStore(n,"readwrite").add(v); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });}
+function dbPut(n,v){ return new Promise((res,rej)=>{ const r=txStore(n,"readwrite").put(v); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });}
+function dbDelete(n,id){ return new Promise((res,rej)=>{ const r=txStore(n,"readwrite").delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });}
+function dbGetAll(n){ return new Promise((res,rej)=>{ const r=txStore(n,"readonly").getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); });}
+function dbGetSetting(k){ return new Promise((res,rej)=>{ const r=txStore("settings","readonly").get(k); r.onsuccess=()=>res(r.result?r.result.value:undefined); r.onerror=()=>rej(r.error); });}
+function dbSetSetting(k,v){ return new Promise((res,rej)=>{ const r=txStore("settings","readwrite").put({key:k,value:v}); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });}
+function clearRecordStore(){ return new Promise((res,rej)=>{ const r=txStore("records","readwrite").clear(); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });}
+
+async function refreshRecords(){
+  records = await dbGetAll("records");
+  records.sort((a,b)=>String(a.calcTimestamp||a.capturedAt||"").localeCompare(String(b.calcTimestamp||b.capturedAt||"")));
+  projectionOrigin = null;
+  for(const r of records){
+    if(r.lat!=null && r.lng!=null) setProjectionOriginIfMissing(r.lat,r.lng);
+    if(Array.isArray(r.points)) r.points.forEach(p=>setProjectionOriginIfMissing(p.lat,p.lng));
+  }
+  renderAll();
+}
+
+async function loadSettings(){
+  const h = await dbGetSetting("habits");
+  if(Array.isArray(h) && h.length===10) habits = h;
+  const sec = await dbGetSetting("defaultRouteSeconds");
+  if(safeNum(sec,0)>0) els.defaultRouteSeconds.value = String(sec);
+  renderHabitSettings();
+  renderHabitPicker();
+}
+function renderHabitSettings(){
+  els.habitSettingsWrap.innerHTML="";
+  habits.forEach((h,i)=>{
+    const lab=document.createElement("label");
+    lab.innerHTML=`<div class="small muted">Habit ${i+1}</div><input data-idx="${i}" type="text" value="${esc(h)}">`;
+    els.habitSettingsWrap.appendChild(lab);
+  });
+}
+function renderHabitPicker(){
+  els.habitDialogBody.innerHTML = `<div class="menuGrid">${habits.map((h,i)=>`<button data-habit-index="${i}">${esc(h)}</button>`).join("")}</div>`;
+  els.habitDialogBody.querySelectorAll("[data-habit-index]").forEach(b=>{
+    b.onclick = async () => {
+      const idx=Number(b.dataset.habitIndex);
+      els.habitDialog.close();
+      if(pendingCanvasWorld){
+        await createManualAtWorld("habit",{name:habits[idx]});
+      }else{
+        await addGPSRecord("habit",{name:habits[idx]});
+      }
+    };
+  });
+}
+
+async function getPosition(){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej(new Error("Geolocation not supported"));
+    navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:true,maximumAge:0,timeout:15000});
+  });
+}
+async function reverseGeocode(lat,lng){
+  if(!isOnline()) return "";
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`,{headers:{Accept:"application/json"}});
+    if(!res.ok) return "";
+    const j = await res.json();
+    return j.display_name || "";
+  }catch{
+    return "";
+  }
+}
+async function initCompass(){
+  try{
+    if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function"){
+      const g = await DeviceOrientationEvent.requestPermission();
+      if(g!=="granted"){
+        els.compassPill.textContent = "Compass denied";
+        return;
+      }
+    }
+    window.addEventListener("deviceorientationabsolute", onOrientation, true);
+    window.addEventListener("deviceorientation", onOrientation, true);
+  }catch{
+    els.compassPill.textContent = "Compass unavailable";
+  }
+}
+function onOrientation(e){
+  let h=null;
+  if(typeof e.webkitCompassHeading==="number") h=e.webkitCompassHeading;
+  else if(typeof e.alpha==="number") h=360-e.alpha;
+  if(h!=null && Number.isFinite(h)){
+    compassHeading=(h+360)%360;
+    els.compassPill.textContent=`Compass ${Math.round(compassHeading)}°`;
+    drawCanvas();
+  }
+}
+async function refreshLivePosition(){
+  try{
+    const pos=await getPosition();
+    livePosition={
+      lat:pos.coords.latitude,
+      lng:pos.coords.longitude,
+      accuracy:pos.coords.accuracy??null,
+      heading:pos.coords.heading??null,
+      timestamp:new Date().toISOString()
+    };
+    setProjectionOriginIfMissing(livePosition.lat, livePosition.lng);
+    updateStatusLine();
+    drawCanvas();
+  }catch{}
+}
+
+const CAT_CODE = {habit:"01", note:"02", route:"03", area:"04", "route-event":"05"};
+
+function nextRecordCode(type, calcTs){
+  const ymd=(calcTs||new Date().toISOString()).slice(0,10);
+  const cc=CAT_CODE[type]||"99";
+  const dd=ymd.slice(8,10);
+  const mm=ymd.slice(5,7);
+  const same=records.filter(r=>r.type===type && dateFromCalc(r)===ymd);
+  return `${cc}${String(same.length+1).padStart(3,"0")}${dd}${mm}`;
+}
+function isoFromParts(date,time){
+  if(!date) return "";
+  if(!time) return `${date}T00:00:00`;
+  return `${date}T${time}:00`;
+}
 async function askTime(defaultDate=todayYMD(), defaultTime="12:00", needEnd=false){
   return new Promise(resolve=>{
-    els.timeEventDate.value=defaultDate; els.timeStart.value=defaultTime; els.timeEnd.value=needEnd?defaultTime:""; els.timeEnd.parentElement.classList.toggle("hidden",!needEnd); els.timeConfidence.value=defaultTime?"estimated":"unknown";
-    els.cancelTime.onclick=()=>{els.timeDialog.close();resolve(null)};
-    els.saveTime.onclick=()=>{const d=els.timeEventDate.value||defaultDate, st=els.timeStart.value||"00:00", en=els.timeEnd.value||"", conf=els.timeConfidence.value;els.timeDialog.close();resolve({eventDate:d,eventStartTime:st,eventEndTime:en,calcTimestamp:isoFromParts(d,st),timeConfidence:conf,timeSource:"manual"})};
+    els.timeEventDate.value=defaultDate;
+    els.timeStart.value=defaultTime;
+    els.timeEnd.value=needEnd?defaultTime:"";
+    els.timeEnd.parentElement.classList.toggle("hidden",!needEnd);
+    els.timeConfidence.value=defaultTime ? "estimated" : "unknown";
+    els.cancelTime.onclick=()=>{ els.timeDialog.close(); resolve(null); };
+    els.saveTime.onclick=()=>{
+      const d=els.timeEventDate.value||defaultDate;
+      const st=els.timeStart.value||"00:00";
+      const en=els.timeEnd.value||"";
+      const conf=els.timeConfidence.value;
+      els.timeDialog.close();
+      resolve({
+        capturedAt:new Date().toISOString(),
+        eventDate:d,
+        eventStartTime:st,
+        eventEndTime:en,
+        calcTimestamp:isoFromParts(d,st),
+        timeConfidence:conf,
+        timeSource:"manual"
+      });
+    };
     els.timeDialog.showModal();
   });
 }
-function liveTimeMeta(){const now=new Date().toISOString();return {capturedAt:now,eventDate:now.slice(0,10),eventStartTime:now.slice(11,16),eventEndTime:"",calcTimestamp:now,timeSource:"live",timeConfidence:"exact"}}
-async function manualTimeMeta(needEnd=false){return await askTime(toYMD(anchorDate), "12:00", needEnd)}
-function makeBaseRecord(type, timeMeta){const tm=timeMeta||liveTimeMeta();return {code:nextRecordCode(type,tm.calcTimestamp),type,capturedAt:tm.capturedAt||new Date().toISOString(),eventDate:tm.eventDate,eventStartTime:tm.eventStartTime||"",eventEndTime:tm.eventEndTime||"",calcTimestamp:tm.calcTimestamp,timeSource:tm.timeSource,timeConfidence:tm.timeConfidence,date:tm.eventDate,timestamp:tm.calcTimestamp,name:"",text:"",lat:null,lng:null,accuracy:null,altitude:null,speed:null,heading:null,address:"",routeId:"",areaId:"",distanceKm:null,areaSqM:null,color:"",points:null,meta:{}}}
-async function addGPSRecord(type, extra={}){try{setStatus(`Getting GPS for ${type}…`);const pos=await getPosition(), lat=pos.coords.latitude,lng=pos.coords.longitude;setProjectionOriginIfMissing(lat,lng);const tm=isLiveMode?liveTimeMeta():await manualTimeMeta(false); if(!tm)return; const rec={...makeBaseRecord(type,tm),...extra,lat,lng,accuracy:pos.coords.accuracy??null,altitude:pos.coords.altitude??null,speed:pos.coords.speed??null,heading:pos.coords.heading??null,address:await reverseGeocode(lat,lng)};await dbAdd("records",rec);await refreshRecords();fitScope();setStatus(`${type} saved.`)}catch(err){setStatus(`Failed: ${err.message||err}`)}}
-async function addManualRecord(type, lat, lng, extra={}, needEnd=false){setProjectionOriginIfMissing(lat,lng);const tm=await manualTimeMeta(needEnd);if(!tm)return;const rec={...makeBaseRecord(type,tm),...extra,lat,lng};await dbAdd("records",rec);await refreshRecords();setStatus(`${type} saved.`)}
-async function createManualAtWorld(type, extra={}){if(!pendingCanvasWorld)return;const ll=xyToLL(pendingCanvasWorld.x,pendingCanvasWorld.y);await addManualRecord(type,ll.lat,ll.lng,extra);pendingCanvasWorld=null}
-async function addRouteEvent(name){try{const pos=await getPosition(),lat=pos.coords.latitude,lng=pos.coords.longitude;setProjectionOriginIfMissing(lat,lng);const tm=liveTimeMeta();const rec={...makeBaseRecord("route-event",tm),name,lat,lng,accuracy:pos.coords.accuracy??null,altitude:pos.coords.altitude??null,speed:pos.coords.speed??null,heading:pos.coords.heading??null,address:await reverseGeocode(lat,lng),routeId:route.routeId||""};await dbAdd("records",rec);return {lat,lng,address:rec.address}}catch(e){setStatus(`Route event failed: ${e.message||e}`);return null}}
+function liveTimeMeta(){
+  const now=new Date().toISOString();
+  return {
+    capturedAt:now,
+    eventDate:now.slice(0,10),
+    eventStartTime:now.slice(11,16),
+    eventEndTime:"",
+    calcTimestamp:now,
+    timeSource:"live",
+    timeConfidence:"exact"
+  };
+}
+async function manualTimeMeta(needEnd=false){
+  return await askTime(toYMD(anchorDate), "12:00", needEnd);
+}
+function makeBaseRecord(type, timeMeta){
+  const tm=timeMeta||liveTimeMeta();
+  return {
+    code:nextRecordCode(type,tm.calcTimestamp),
+    type,
+    capturedAt:tm.capturedAt||new Date().toISOString(),
+    eventDate:tm.eventDate,
+    eventStartTime:tm.eventStartTime||"",
+    eventEndTime:tm.eventEndTime||"",
+    calcTimestamp:tm.calcTimestamp,
+    timeSource:tm.timeSource,
+    timeConfidence:tm.timeConfidence,
+    date:tm.eventDate,
+    timestamp:tm.calcTimestamp,
+    name:"",
+    text:"",
+    lat:null,
+    lng:null,
+    accuracy:null,
+    altitude:null,
+    speed:null,
+    heading:null,
+    address:"",
+    routeId:"",
+    areaId:"",
+    distanceKm:null,
+    areaSqM:null,
+    color:"",
+    points:null,
+    meta:{}
+  };
+}
 
-function recordsForScope(){if(isLiveMode){const start=liveSessionStartedAt?new Date(liveSessionStartedAt).getTime():0;return records.filter(r=>{const t=new Date(r.calcTimestamp||r.capturedAt||0).getTime();return dateFromCalc(r)===todayYMD()&&t>=start})}const ymd=toYMD(anchorDate);if(scope==="day")return records.filter(r=>dateFromCalc(r)===ymd);if(scope==="week"){const m=mondayOfWeek(anchorDate),s=addDays(m,6),a=toYMD(m),b=toYMD(s);return records.filter(r=>dateFromCalc(r)>=a&&dateFromCalc(r)<=b)}const f=firstOfMonth(anchorDate),n=new Date(f.getFullYear(),f.getMonth()+1,1),a=toYMD(f),b=toYMD(addDays(n,-1));return records.filter(r=>dateFromCalc(r)>=a&&dateFromCalc(r)<=b)}
-function weeklyRecords(){const m=mondayOfWeek(anchorDate),s=addDays(m,6),a=toYMD(m),b=toYMD(s);return records.filter(r=>dateFromCalc(r)>=a&&dateFromCalc(r)<=b)}
-function selectedRecord(){return records.find(r=>r.id===selectedRecordId)||null}
-function updateStatusLine(){const mode=isLiveMode?"Live":scope[0].toUpperCase()+scope.slice(1),context=isLiveMode?todayYMD():toYMD(anchorDate),rt=route.active?(route.paused?"route paused":"route recording"):"route idle",sel=selectedRecord(),st=sel?`${sel.type}${sel.name?" "+sel.name:""}`:"none",live=livePosition?`${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy!=null?` ±${Math.round(livePosition.accuracy)}m`:""}`:"live position unavailable";els.statusLine.textContent=`${mode} · ${context} · ${rt} · selected ${st} · ${live}`;els.selectedInfoText.textContent=sel?`${sel.code} · ${sel.type}${sel.name?" · "+sel.name:""}`:"None"}
-function setModeButtons(){els.btnLiveMode.classList.toggle("active",isLiveMode);els.btnLiveMode.classList.toggle("primary",isLiveMode);els.btnDayScope.classList.toggle("active",!isLiveMode&&scope==="day");els.btnWeekScope.classList.toggle("active",!isLiveMode&&scope==="week");els.btnMonthScope.classList.toggle("active",!isLiveMode&&scope==="month");els.scopeDateWrap.classList.toggle("hidden",isLiveMode)}
-function closeAllPanels(){els.weeklyPanel.classList.remove("active");els.databasePanel.classList.remove("active");els.settingsPanel.classList.remove("active")}
-function togglePanel(p){const will=!p.classList.contains("active");closeAllPanels();if(will)p.classList.add("active")}
+async function addGPSRecord(type, extra={}){
+  try{
+    const pos=await getPosition();
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    setProjectionOriginIfMissing(lat,lng);
+    const tm = isLiveMode ? liveTimeMeta() : await manualTimeMeta(false);
+    if(!tm) return;
+    const rec={
+      ...makeBaseRecord(type,tm),
+      ...extra,
+      lat,lng,
+      accuracy:pos.coords.accuracy??null,
+      altitude:pos.coords.altitude??null,
+      speed:pos.coords.speed??null,
+      heading:pos.coords.heading??null,
+      address:await reverseGeocode(lat,lng)
+    };
+    await dbAdd("records",rec);
+    await refreshRecords();
+    fitScope();
+  }catch(err){
+    alert(`Failed to record: ${err.message||err}`);
+  }
+}
+async function addManualRecord(type, lat, lng, extra={}, needEnd=false){
+  setProjectionOriginIfMissing(lat,lng);
+  const tm=await manualTimeMeta(needEnd);
+  if(!tm) return;
+  const rec={...makeBaseRecord(type,tm), ...extra, lat, lng};
+  await dbAdd("records",rec);
+  await refreshRecords();
+}
+async function createManualAtWorld(type, extra={}){
+  if(!pendingCanvasWorld) return;
+  const ll=xyToLL(pendingCanvasWorld.x,pendingCanvasWorld.y);
+  await addManualRecord(type,ll.lat,ll.lng,extra);
+  pendingCanvasWorld=null;
+}
+async function addRouteEvent(name){
+  try{
+    const pos=await getPosition();
+    const lat=pos.coords.latitude, lng=pos.coords.longitude;
+    setProjectionOriginIfMissing(lat,lng);
+    const tm=liveTimeMeta();
+    const rec={
+      ...makeBaseRecord("route-event",tm),
+      name,
+      lat,lng,
+      accuracy:pos.coords.accuracy??null,
+      altitude:pos.coords.altitude??null,
+      speed:pos.coords.speed??null,
+      heading:pos.coords.heading??null,
+      address:await reverseGeocode(lat,lng),
+      routeId:route.routeId||""
+    };
+    await dbAdd("records",rec);
+    return {lat,lng,address:rec.address};
+  }catch{
+    return null;
+  }
+}
 
-function collectPointsFromRecords(src){const pts=[];src.forEach(r=>{if(["habit","note","route-event"].includes(r.type)&&r.lat!=null&&r.lng!=null)pts.push(llToXY(r.lat,r.lng));else if(["route","area"].includes(r.type)&&Array.isArray(r.points))r.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)))});return pts}
-function fitWorldPoints(points,pad=40){const w=canvas.getBoundingClientRect().width||1,h=canvas.getBoundingClientRect().height||1;if(!points.length)return;let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});const width=Math.max(1,maxX-minX),height=Math.max(1,maxY-minY);camera.zoom=Math.max(.002,Math.min(6,Math.min((w-pad*2)/width,(h-pad*2)/height)));camera.centerX=(minX+maxX)/2;camera.centerY=(minY+maxY)/2;cameraDefault={...camera};drawCanvas()}
-function fitScope(){if(isLiveMode){const pts=[];if(route.active)route.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));if(area.active)area.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));if(manualRoute.active)manualRoute.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));if(livePosition)pts.push(llToXY(livePosition.lat,livePosition.lng));if(pts.length)fitWorldPoints(pts);return}const pts=collectPointsFromRecords(recordsForScope());if(pts.length)fitWorldPoints(pts)}
-function pinToMe(){if(!livePosition)return setStatus("No live position available.");const p=llToXY(livePosition.lat,livePosition.lng);camera.centerX=p.x;camera.centerY=p.y;drawCanvas()}
-function pinToSelected(){const r=selectedRecord();if(!r)return setStatus("No selected record.");const pts=collectPointsFromRecords([r]);if(pts.length){fitWorldPoints(pts,80);camera.zoom=Math.min(10,camera.zoom*1.25);drawCanvas()}}
-function focusRecordFromWeekly(id){const r=records.find(x=>x.id===id);if(!r)return;selectedRecordId=id;isLiveMode=false;scope="week";anchorDate=new Date(`${dateFromCalc(r)}T12:00:00`);els.scopeDate.value=toYMD(anchorDate);setModeButtons();closeAllPanels();pinToSelected();updateStatusLine();renderWeeklyPanel();drawCanvas();setStatus("Focused record in week scope.")}
+function recordsForScope(){
+  if(isLiveMode){
+    const start = liveSessionStartedAt ? new Date(liveSessionStartedAt).getTime() : 0;
+    return records.filter(r=>{
+      const t = new Date(r.calcTimestamp||r.capturedAt||0).getTime();
+      return dateFromCalc(r)===todayYMD() && t>=start;
+    });
+  }
+  const ymd=toYMD(anchorDate);
+  if(scope==="day") return records.filter(r=>dateFromCalc(r)===ymd);
+  if(scope==="week"){
+    const m=mondayOfWeek(anchorDate), s=addDays(m,6);
+    const a=toYMD(m), b=toYMD(s);
+    return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+  }
+  const f=firstOfMonth(anchorDate);
+  const n=new Date(f.getFullYear(), f.getMonth()+1, 1);
+  const a=toYMD(f), b=toYMD(addDays(n,-1));
+  return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+}
+function weeklyRecords(){
+  const m=mondayOfWeek(anchorDate), s=addDays(m,6);
+  const a=toYMD(m), b=toYMD(s);
+  return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+}
+function selectedRecord(){
+  return records.find(r=>r.id===selectedRecordId)||null;
+}
+function updateStatusLine(){
+  const mode=isLiveMode ? "Live" : scope[0].toUpperCase()+scope.slice(1);
+  const context=isLiveMode ? todayYMD() : toYMD(anchorDate);
+  const rt=route.active ? (route.paused ? "route paused" : "route recording") : "route idle";
+  const sel=selectedRecord();
+  const st=sel ? `${sel.type}${sel.name ? " "+sel.name : ""}` : "none";
+  const live=livePosition ? `${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy!=null ? ` ±${Math.round(livePosition.accuracy)}m` : ""}` : "live position unavailable";
+  els.statusLine.textContent = `${mode} · ${context} · ${rt} · selected ${st} · ${live}`;
+}
+function setModeButtons(){
+  els.btnLiveMode.classList.toggle("active",isLiveMode);
+  els.btnLiveMode.classList.toggle("primary",isLiveMode);
+  els.btnDayScope.classList.toggle("active",!isLiveMode&&scope==="day");
+  els.btnWeekScope.classList.toggle("active",!isLiveMode&&scope==="week");
+  els.btnMonthScope.classList.toggle("active",!isLiveMode&&scope==="month");
+  els.scopeDateWrap.classList.toggle("hidden",isLiveMode);
+}
 
-function drawPoint(px,py,color,r=5){ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
-function drawLabel(px,py,text,color="#24333b"){ctx.save();ctx.font="12px system-ui, sans-serif";ctx.fillStyle=color;ctx.fillText(text,px+8,py-8);ctx.restore()}
-function drawPolyline(points,color,width=2.5){if(!points||points.length<1)return;ctx.save();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();points.forEach((p,i)=>{const s=latLngToScreen(p.lat,p.lng);if(i===0)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y)});ctx.stroke();ctx.restore()}
-function drawPolygon(points,color){if(!points||points.length<2)return;ctx.save();ctx.strokeStyle=color;ctx.fillStyle=hexToRgba(color,.18);ctx.lineWidth=2;ctx.beginPath();points.forEach((p,i)=>{const s=latLngToScreen(p.lat,p.lng);if(i===0)ctx.moveTo(s.x,s.y);else ctx.lineTo(s.x,s.y)});ctx.closePath();ctx.fill();ctx.stroke();ctx.restore()}
-function drawCompass(){const w=canvas.getBoundingClientRect().width,x=w-54,y=54,r=22;ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,.86)";ctx.fill();ctx.strokeStyle="rgba(36,51,59,.14)";ctx.stroke();ctx.fillStyle="#24333b";ctx.font="12px system-ui, sans-serif";ctx.fillText("N",x-4,y-28);if(compassHeading!=null){const a=(compassHeading-90)*Math.PI/180;ctx.translate(x,y);ctx.rotate(a);ctx.beginPath();ctx.moveTo(16,0);ctx.lineTo(-7,-6);ctx.lineTo(-1,0);ctx.lineTo(-7,6);ctx.closePath();ctx.fillStyle="#2f6f7e";ctx.fill()}ctx.restore()}
-function drawLiveMarker(){if(!livePosition)return;if(!isLiveMode){const p=latLngToScreen(livePosition.lat,livePosition.lng),w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height;if(p.x<0||p.x>w||p.y<0||p.y>h)return}const p=latLngToScreen(livePosition.lat,livePosition.lng);if(livePosition.accuracy!=null){const dxy=llToXY(livePosition.lat+livePosition.accuracy/111320,livePosition.lng),cxy=llToXY(livePosition.lat,livePosition.lng),rad=Math.abs((dxy.y-cxy.y)*camera.zoom);ctx.beginPath();ctx.arc(p.x,p.y,Math.max(8,rad),0,Math.PI*2);ctx.fillStyle="rgba(47,111,126,.08)";ctx.fill();ctx.strokeStyle="rgba(47,111,126,.18)";ctx.stroke()}if(liveBlink){drawPoint(p.x,p.y,"#2f6f7e",7);drawLabel(p.x,p.y,"You","#2f6f7e")}}
-function drawSelectionHalo(rec){const pts=collectPointsFromRecords([rec]).map(p=>worldToScreen(p.x,p.y));if(!pts.length)return;let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;pts.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y)});ctx.save();ctx.strokeStyle="rgba(77,140,149,.95)";ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.strokeRect(minX-10,minY-10,(maxX-minX)+20,(maxY-minY)+20);ctx.restore()}
-function rebuildHitCache(){hitCache=[];recordsForScope().forEach(r=>{if(["habit","note","route-event"].includes(r.type)&&r.lat!=null&&r.lng!=null){const s=latLngToScreen(r.lat,r.lng);hitCache.push({kind:"point",record:r,x:s.x,y:s.y})}else if(r.type==="route"&&Array.isArray(r.points)&&r.points.length>1)hitCache.push({kind:"route",record:r,points:r.points.map(p=>latLngToScreen(p.lat,p.lng))});else if(r.type==="area"&&Array.isArray(r.points)&&r.points.length>2)hitCache.push({kind:"area",record:r,points:r.points.map(p=>latLngToScreen(p.lat,p.lng))})})}
-function pickHits(px,py){const hits=[];hitCache.forEach(h=>{if(h.kind==="point"){const d=Math.hypot(px-h.x,py-h.y);if(d<=14)hits.push({record:h.record,score:d})}else if(h.kind==="route"){let best=Infinity;for(let i=1;i<h.points.length;i++){const a=h.points[i-1],b=h.points[i];best=Math.min(best,pointSegmentDistance(px,py,a.x,a.y,b.x,b.y))}if(best<=10)hits.push({record:h.record,score:best})}else if(h.kind==="area"){if(pointInPolygon(px,py,h.points))hits.push({record:h.record,score:1})}});return hits.sort((a,b)=>a.score-b.score).map(h=>h.record)}
-function openChooser(list){els.chooserBody.innerHTML=`<div class="menuGrid">${list.map(r=>`<button data-choose-id="${r.id}">${esc(r.code)} · ${esc(r.type)}${r.name?" · "+esc(r.name):""}</button>`).join("")}</div>`;els.chooserBody.querySelectorAll("[data-choose-id]").forEach(b=>b.onclick=()=>{const id=Number(b.dataset.chooseId);els.chooserDialog.close();selectedRecordId=id;updateStatusLine();showRecordInfo(selectedRecord());renderWeeklyPanel();drawCanvas()});els.chooserDialog.showModal()}
-function showRecordInfo(rec){if(!rec)return;const m=rec.meta||{};els.infoBody.innerHTML=`
-<div class="small muted">Code</div><div>${esc(rec.code||"")}</div>
-<div class="small muted" style="margin-top:8px">Type</div><div>${esc(rec.type||"")}</div>
-<div class="small muted" style="margin-top:8px">Calc timestamp</div><div>${esc(rec.calcTimestamp||"-")}</div>
-<div class="small muted" style="margin-top:8px">Captured at</div><div>${esc(rec.capturedAt||"-")}</div>
-<div class="small muted" style="margin-top:8px">Time source/confidence</div><div>${esc(rec.timeSource||"-")} / ${esc(rec.timeConfidence||"-")}</div>
-<div class="small muted" style="margin-top:8px">Name</div><div>${esc(rec.name||"-")}</div>
-<div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${esc(rec.text||"-")}</div>
-<div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat??"-"}, ${rec.lng??"-"}</div>
-<div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address||m.startAddress||"-")}</div>
-<div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm!=null?Number(rec.distanceKm).toFixed(3):"-"}</div>
-<div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM!=null?Number(rec.areaSqM).toFixed(2):"-"}</div>`;els.infoDialog.showModal()}
-function drawCanvas(){const w=canvas.getBoundingClientRect().width,h=canvas.getBoundingClientRect().height;ctx.clearRect(0,0,w,h);ctx.strokeStyle="rgba(36,51,59,.06)";ctx.lineWidth=1;for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}recordsForScope().forEach(r=>{if(r.type==="route"&&Array.isArray(r.points)){drawPolyline(r.points,"#c57449",2.8);if(r.points[0]){const s=latLngToScreen(r.points[0].lat,r.points[0].lng);drawLabel(s.x,s.y,`${(r.distanceKm||0).toFixed(2)} km`,"#9e5e3b")}}else if(r.type==="area"&&Array.isArray(r.points)){drawPolygon(r.points,r.color||"#4d8c95");if(r.points[0]){const s=latLngToScreen(r.points[0].lat,r.points[0].lng);drawLabel(s.x,s.y,`${(r.areaSqM||0).toFixed(1)} m²`,"#2f6f7e")}}else if(["habit","note","route-event"].includes(r.type)&&r.lat!=null&&r.lng!=null){const s=latLngToScreen(r.lat,r.lng),color=r.type==="habit"?"#718455":r.type==="note"?"#d95d5d":"#c57449";drawPoint(s.x,s.y,color,r.type==="route-event"?4:5);drawLabel(s.x,s.y,r.type==="habit"?(r.name||"Habit"):r.type==="note"?"Note":(r.name||"Route"),color)}});if(route.active&&route.points.length)drawPolyline(route.points,"#c57449",3.1);if(manualRoute.active&&manualRoute.points.length)drawPolyline(manualRoute.points,"#c57449",3.1);if(area.active&&area.points.length){drawPolygon(area.points,area.color);area.points.forEach(p=>{const s=latLngToScreen(p.lat,p.lng);drawPoint(s.x,s.y,area.color,4)})}const sel=selectedRecord();if(sel)drawSelectionHalo(sel);drawLiveMarker();drawCompass();rebuildHitCache()}
+function collectPointsFromRecords(src){
+  const pts=[];
+  src.forEach(r=>{
+    if(["habit","note","route-event"].includes(r.type) && r.lat!=null && r.lng!=null) pts.push(llToXY(r.lat,r.lng));
+    else if(["route","area"].includes(r.type) && Array.isArray(r.points)) r.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));
+  });
+  return pts;
+}
+function fitWorldPoints(points,pad=40){
+  const w=canvas.getBoundingClientRect().width||1;
+  const h=canvas.getBoundingClientRect().height||1;
+  if(!points.length) return;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  points.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);});
+  const width=Math.max(1,maxX-minX), height=Math.max(1,maxY-minY);
+  camera.zoom=Math.max(.002,Math.min(6,Math.min((w-pad*2)/width,(h-pad*2)/height)));
+  camera.centerX=(minX+maxX)/2;
+  camera.centerY=(minY+maxY)/2;
+  cameraDefault={...camera};
+  drawCanvas();
+}
+function fitScope(){
+  if(isLiveMode){
+    const pts=[];
+    if(route.active) route.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));
+    if(area.active) area.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));
+    if(manualRoute.active) manualRoute.points.forEach(p=>pts.push(llToXY(p.lat,p.lng)));
+    if(livePosition) pts.push(llToXY(livePosition.lat,livePosition.lng));
+    if(pts.length) fitWorldPoints(pts);
+    return;
+  }
+  const pts=collectPointsFromRecords(recordsForScope());
+  if(pts.length) fitWorldPoints(pts);
+}
+function pinToMe(){
+  if(!livePosition) return;
+  const p=llToXY(livePosition.lat,livePosition.lng);
+  camera.centerX=p.x;
+  camera.centerY=p.y;
+  drawCanvas();
+}
+function pinToSelected(){
+  const r=selectedRecord();
+  if(!r) return;
+  const pts=collectPointsFromRecords([r]);
+  if(pts.length){
+    fitWorldPoints(pts,80);
+    camera.zoom=Math.min(10,camera.zoom*1.25);
+    drawCanvas();
+  }
+}
+function focusRecordFromWeekly(id){
+  const r=records.find(x=>x.id===id);
+  if(!r) return;
+  selectedRecordId=id;
+  isLiveMode=false;
+  scope="week";
+  anchorDate=new Date(`${dateFromCalc(r)}T12:00:00`);
+  els.scopeDate.value=toYMD(anchorDate);
+  setModeButtons();
+  els.menuDrawer.classList.remove("open");
+  pinToSelected();
+  updateStatusLine();
+  renderWeeklyPanel();
+  drawCanvas();
+}
 
-async function captureRouteSample(){if(!route.active||route.paused)return;try{const pos=await getPosition();const p={lat:pos.coords.latitude,lng:pos.coords.longitude,timestamp:new Date().toISOString(),accuracy:pos.coords.accuracy??null,altitude:pos.coords.altitude??null,speed:pos.coords.speed??null,heading:pos.coords.heading??null};setProjectionOriginIfMissing(p.lat,p.lng);route.points.push(p);updateStatusLine();drawCanvas()}catch(e){setStatus(`Route sample failed: ${e.message||e}`)}}
-async function routeStart(){if(route.active)return setStatus("Route already active.");const def=safeNum(els.defaultRouteSeconds.value,5), chosen=prompt("Route interval seconds",String(def));if(!chosen)return;route.intervalSec=Math.max(1,safeNum(chosen,def));els.defaultRouteSeconds.value=String(route.intervalSec);await dbSetSetting("defaultRouteSeconds",route.intervalSec);route.active=true;route.paused=false;route.routeId=uid("route");route.startedAt=new Date().toISOString();route.points=[];route.pauseEvents=[];route.resumeEvents=[];route.startAddress="";route.endAddress="";isLiveMode=true;liveSessionStartedAt=route.startedAt;setModeButtons();const ev=await addRouteEvent("start");if(ev)route.startAddress=ev.address||"";await captureRouteSample();route.timer=setInterval(captureRouteSample,route.intervalSec*1000);updateStatusLine();setStatus(`Route started (${route.intervalSec}s).`)}
-async function routePause(){if(!route.active||route.paused)return;if(route.timer)clearInterval(route.timer);route.timer=null;route.paused=true;const ev=await addRouteEvent("pause");if(ev)route.pauseEvents.push({timestamp:new Date().toISOString(),address:ev.address||""});updateStatusLine();setStatus("Route paused.")}
-async function routeResume(){if(!route.active||!route.paused)return;route.paused=false;const ev=await addRouteEvent("resume");if(ev)route.resumeEvents.push({timestamp:new Date().toISOString(),address:ev.address||""});route.timer=setInterval(captureRouteSample,route.intervalSec*1000);updateStatusLine();setStatus("Route resumed.")}
-async function routeEnd(){if(!route.active)return setStatus("No active route.");if(route.timer)clearInterval(route.timer);route.timer=null;const ev=await addRouteEvent("end");if(ev)route.endAddress=ev.address||"";const tm=liveTimeMeta();tm.calcTimestamp=route.startedAt;tm.eventDate=route.startedAt.slice(0,10);tm.eventStartTime=route.startedAt.slice(11,16);tm.eventEndTime=new Date().toISOString().slice(11,16);const rec={...makeBaseRecord("route",tm),routeId:route.routeId,distanceKm:routeDistanceKm(route.points),points:route.points,meta:{startAddress:route.startAddress,pauseEvents:route.pauseEvents,resumeEvents:route.resumeEvents,endAddress:route.endAddress}};await dbAdd("records",rec);route.active=false;route.paused=false;route.routeId=null;route.points=[];liveSessionStartedAt=new Date().toISOString();await refreshRecords();setStatus(`Route saved (${Number(rec.distanceKm).toFixed(3)} km).`)}
-async function manualRouteStartAt(lat,lng){manualRoute.active=true;manualRoute.routeId=uid("manual_route");manualRoute.points=[{lat,lng}];setStatus("Manual route started. Add vertices, then end route.");drawCanvas()}
-async function manualRouteVertexAt(lat,lng){if(!manualRoute.active)await manualRouteStartAt(lat,lng);else{manualRoute.points.push({lat,lng});drawCanvas();setStatus(`Manual route vertex added (${manualRoute.points.length}).`)}}
-async function manualRouteEndAt(lat,lng){if(!manualRoute.active)await manualRouteStartAt(lat,lng);else manualRoute.points.push({lat,lng});if(manualRoute.points.length<2)return setStatus("Need at least 2 route points.");const tm=await manualTimeMeta(true);if(!tm)return;const rec={...makeBaseRecord("route",tm),routeId:manualRoute.routeId,distanceKm:routeDistanceKm(manualRoute.points),points:manualRoute.points,meta:{manual:true}};await dbAdd("records",rec);manualRoute.active=false;manualRoute.routeId=null;manualRoute.points=[];await refreshRecords();setStatus(`Manual route saved (${Number(rec.distanceKm).toFixed(3)} km).`)}
-function areaBegin(){if(area.active)return setStatus("Area already active.");area.active=true;area.areaId=uid("area");area.points=[];area.startAddress="";area.color=prompt("Area color (hex or CSS color)",area.color||"#4d8c95")||"#4d8c95";drawCanvas();setStatus("Area started.")}
-async function areaAddVertexAt(lat,lng){if(!area.active)areaBegin();setProjectionOriginIfMissing(lat,lng);area.points.push({lat,lng});if(area.points.length===1&&!area.startAddress)area.startAddress=await reverseGeocode(lat,lng);drawCanvas();setStatus(`Area vertex added (${area.points.length}).`)}
-async function areaAddGPSVertex(){try{const pos=await getPosition();await areaAddVertexAt(pos.coords.latitude,pos.coords.longitude)}catch(e){setStatus(`GPS area vertex failed: ${e.message||e}`)}}
-async function areaClose(){if(!area.active||area.points.length<3)return setStatus("Need at least 3 area points.");const tm=isLiveMode?liveTimeMeta():await manualTimeMeta(true);if(!tm)return;const rec={...makeBaseRecord("area",tm),areaId:area.areaId,points:area.points,areaSqM:polygonAreaSqM(area.points),color:area.color,address:area.startAddress,meta:{startAddress:area.startAddress}};await dbAdd("records",rec);area.active=false;area.areaId=null;area.points=[];await refreshRecords();setStatus("Area saved.")}
+function drawPoint(px,py,color,r=5){
+  ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2); ctx.fillStyle=color; ctx.fill();
+}
+function drawLabel(px,py,text,color="#24333b"){
+  ctx.save(); ctx.font="12px system-ui, sans-serif"; ctx.fillStyle=color; ctx.fillText(text,px+8,py-8); ctx.restore();
+}
+function drawPolyline(points,color,width=2.5){
+  if(!points||points.length<1) return;
+  ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=width; ctx.beginPath();
+  points.forEach((p,i)=>{
+    const s=latLngToScreen(p.lat,p.lng);
+    if(i===0) ctx.moveTo(s.x,s.y); else ctx.lineTo(s.x,s.y);
+  });
+  ctx.stroke(); ctx.restore();
+}
+function drawPolygon(points,color){
+  if(!points||points.length<2) return;
+  ctx.save();
+  ctx.strokeStyle=color;
+  ctx.fillStyle=hexToRgba(color,.18);
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  points.forEach((p,i)=>{
+    const s=latLngToScreen(p.lat,p.lng);
+    if(i===0) ctx.moveTo(s.x,s.y); else ctx.lineTo(s.x,s.y);
+  });
+  ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+}
+function drawCompass(){
+  const w=canvas.getBoundingClientRect().width;
+  const x=w-54, y=86, r=22;
+  ctx.save();
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle="rgba(255,255,255,.86)";
+  ctx.fill();
+  ctx.strokeStyle="rgba(36,51,59,.14)";
+  ctx.stroke();
+  ctx.fillStyle="#24333b";
+  ctx.font="12px system-ui, sans-serif";
+  ctx.fillText("N",x-4,y-28);
+  if(compassHeading!=null){
+    const a=(compassHeading-90)*Math.PI/180;
+    ctx.translate(x,y); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-7,-6); ctx.lineTo(-1,0); ctx.lineTo(-7,6); ctx.closePath();
+    ctx.fillStyle="#2f6f7e"; ctx.fill();
+  }
+  ctx.restore();
+}
+function drawLiveMarker(){
+  if(!livePosition) return;
+  if(!isLiveMode){
+    const p=latLngToScreen(livePosition.lat,livePosition.lng);
+    const w=canvas.getBoundingClientRect().width, h=canvas.getBoundingClientRect().height;
+    if(p.x<0||p.x>w||p.y<0||p.y>h) return;
+  }
+  const p=latLngToScreen(livePosition.lat,livePosition.lng);
+  if(livePosition.accuracy!=null){
+    const dxy=llToXY(livePosition.lat+livePosition.accuracy/111320,livePosition.lng);
+    const cxy=llToXY(livePosition.lat,livePosition.lng);
+    const rad=Math.abs((dxy.y-cxy.y)*camera.zoom);
+    ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(8,rad),0,Math.PI*2);
+    ctx.fillStyle="rgba(47,111,126,.08)";
+    ctx.fill();
+    ctx.strokeStyle="rgba(47,111,126,.18)";
+    ctx.stroke();
+  }
+  if(liveBlink){
+    drawPoint(p.x,p.y,"#2f6f7e",7);
+    drawLabel(p.x,p.y,"You","#2f6f7e");
+  }
+}
+function drawSelectionHalo(rec){
+  const pts=collectPointsFromRecords([rec]).map(p=>worldToScreen(p.x,p.y));
+  if(!pts.length) return;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  pts.forEach(p=>{minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);});
+  ctx.save();
+  ctx.strokeStyle="rgba(77,140,149,.95)";
+  ctx.lineWidth=2;
+  ctx.setLineDash([7,5]);
+  ctx.strokeRect(minX-10,minY-10,(maxX-minX)+20,(maxY-minY)+20);
+  ctx.restore();
+}
+function rebuildHitCache(){
+  hitCache=[];
+  recordsForScope().forEach(r=>{
+    if(["habit","note","route-event"].includes(r.type) && r.lat!=null && r.lng!=null){
+      const s=latLngToScreen(r.lat,r.lng);
+      hitCache.push({kind:"point",record:r,x:s.x,y:s.y});
+    }else if(r.type==="route" && Array.isArray(r.points) && r.points.length>1){
+      hitCache.push({kind:"route",record:r,points:r.points.map(p=>latLngToScreen(p.lat,p.lng))});
+    }else if(r.type==="area" && Array.isArray(r.points) && r.points.length>2){
+      hitCache.push({kind:"area",record:r,points:r.points.map(p=>latLngToScreen(p.lat,p.lng))});
+    }
+  });
+}
+function pickHits(px,py){
+  const hits=[];
+  hitCache.forEach(h=>{
+    if(h.kind==="point"){
+      const d=Math.hypot(px-h.x,py-h.y);
+      if(d<=14) hits.push({record:h.record,score:d});
+    }else if(h.kind==="route"){
+      let best=Infinity;
+      for(let i=1;i<h.points.length;i++){
+        const a=h.points[i-1], b=h.points[i];
+        best=Math.min(best,pointSegmentDistance(px,py,a.x,a.y,b.x,b.y));
+      }
+      if(best<=10) hits.push({record:h.record,score:best});
+    }else if(h.kind==="area"){
+      if(pointInPolygon(px,py,h.points)) hits.push({record:h.record,score:1});
+    }
+  });
+  return hits.sort((a,b)=>a.score-b.score).map(h=>h.record);
+}
+function openChooser(list){
+  els.chooserBody.innerHTML=`<div class="menuGrid">${list.map(r=>`<button data-choose-id="${r.id}">${esc(r.code)} · ${esc(r.type)}${r.name?" · "+esc(r.name):""}</button>`).join("")}</div>`;
+  els.chooserBody.querySelectorAll("[data-choose-id]").forEach(b=>{
+    b.onclick=()=>{
+      const id=Number(b.dataset.chooseId);
+      els.chooserDialog.close();
+      selectedRecordId=id;
+      updateStatusLine();
+      showRecordInfo(selectedRecord());
+      renderWeeklyPanel();
+      drawCanvas();
+    };
+  });
+  els.chooserDialog.showModal();
+}
+function showRecordInfo(rec){
+  if(!rec) return;
+  const m=rec.meta||{};
+  els.infoBody.innerHTML=`
+    <div class="small muted">Code</div><div>${esc(rec.code||"")}</div>
+    <div class="small muted" style="margin-top:8px">Type</div><div>${esc(rec.type||"")}</div>
+    <div class="small muted" style="margin-top:8px">Calc timestamp</div><div>${esc(rec.calcTimestamp||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Captured at</div><div>${esc(rec.capturedAt||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Time source/confidence</div><div>${esc(rec.timeSource||"-")} / ${esc(rec.timeConfidence||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Name</div><div>${esc(rec.name||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${esc(rec.text||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat??"-"}, ${rec.lng??"-"}</div>
+    <div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address||m.startAddress||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm!=null?Number(rec.distanceKm).toFixed(3):"-"}</div>
+    <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM!=null?Number(rec.areaSqM).toFixed(2):"-"}</div>
+  `;
+  els.infoDialog.showModal();
+}
+function drawCanvas(){
+  const w=canvas.getBoundingClientRect().width;
+  const h=canvas.getBoundingClientRect().height;
+  ctx.clearRect(0,0,w,h);
+  ctx.strokeStyle="rgba(36,51,59,.06)";
+  ctx.lineWidth=1;
+  for(let x=0;x<w;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke();}
+  for(let y=0;y<h;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
 
-els.actionDialog.querySelectorAll("[data-action]").forEach(b=>b.onclick=async()=>{const a=b.dataset.action;els.actionDialog.close();if(a==="add-habit"){els.habitDialog.showModal();return}if(a==="add-note"){pendingNoteMode="manual";els.noteInput.value="";els.noteDialog.showModal();return}if(!pendingCanvasWorld&&a!=="area-close")return;let ll=pendingCanvasWorld?xyToLL(pendingCanvasWorld.x,pendingCanvasWorld.y):null;if(a==="manual-route-start")await manualRouteStartAt(ll.lat,ll.lng);if(a==="manual-route-vertex")await manualRouteVertexAt(ll.lat,ll.lng);if(a==="manual-route-end")await manualRouteEndAt(ll.lat,ll.lng);if(a==="area-vertex")await areaAddVertexAt(ll.lat,ll.lng);if(a==="area-close")await areaClose();if(a==="symbol")await addManualRecord("note",ll.lat,ll.lng,{text:"[Symbol placeholder]"});if(a==="inspect"){const s=worldToScreen(pendingCanvasWorld.x,pendingCanvasWorld.y),hits=pickHits(s.x,s.y);if(hits.length===1){selectedRecordId=hits[0].id;updateStatusLine();showRecordInfo(hits[0]);drawCanvas()}else if(hits.length>1)openChooser(hits)}})
-els.recordDialog.querySelectorAll("[data-record]").forEach(b=>b.onclick=async()=>{const a=b.dataset.record;els.recordDialog.close();if(a==="habit"){pendingCanvasWorld=null;els.habitDialog.showModal()} if(a==="note"){pendingCanvasWorld=null;pendingNoteMode="gps";els.noteInput.value="";els.noteDialog.showModal()} if(a==="area-gps")await areaAddGPSVertex(); if(a==="route-start")await routeStart(); if(a==="route-pause")await routePause(); if(a==="route-resume")await routeResume(); if(a==="route-end")await routeEnd()})
-els.saveNote.onclick=async()=>{const txt=els.noteInput.value.trim();if(!txt)return;els.noteDialog.close();if(pendingNoteMode==="manual"&&pendingCanvasWorld){await createManualAtWorld("note",{text:txt});pendingCanvasWorld=null}else await addGPSRecord("note",{text:txt})}
+  recordsForScope().forEach(r=>{
+    if(r.type==="route" && Array.isArray(r.points)){
+      drawPolyline(r.points,"#c57449",2.8);
+      if(r.points[0]){
+        const s=latLngToScreen(r.points[0].lat,r.points[0].lng);
+        drawLabel(s.x,s.y,`${(r.distanceKm||0).toFixed(2)} km`,"#9e5e3b");
+      }
+    }else if(r.type==="area" && Array.isArray(r.points)){
+      drawPolygon(r.points,r.color||"#4d8c95");
+      if(r.points[0]){
+        const s=latLngToScreen(r.points[0].lat,r.points[0].lng);
+        drawLabel(s.x,s.y,`${(r.areaSqM||0).toFixed(1)} m²`,"#2f6f7e");
+      }
+    }else if(["habit","note","route-event"].includes(r.type) && r.lat!=null && r.lng!=null){
+      const s=latLngToScreen(r.lat,r.lng);
+      const color=r.type==="habit"?"#718455":r.type==="note"?"#d95d5d":"#c57449";
+      drawPoint(s.x,s.y,color,r.type==="route-event"?4:5);
+      drawLabel(s.x,s.y,r.type==="habit"?(r.name||"Habit"):r.type==="note"?"Note":(r.name||"Route"),color);
+    }
+  });
 
-function renderWeeklyPanel(){const m=mondayOfWeek(anchorDate),ymds=Array.from({length:7},(_,i)=>toYMD(addDays(m,i)));els.weekRangeText.textContent=`${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;const wr=weeklyRecords();let table=`<div style="overflow:auto"><table class="weeklyTable"><thead><tr><th>Habit</th>`;ymds.forEach(y=>table+=`<th>${esc(formatDateLabel(y))}</th>`);table+=`</tr></thead><tbody>`;habits.forEach(h=>{table+=`<tr><td>${esc(h)}</td>`;ymds.forEach(y=>{const c=wr.filter(r=>r.type==="habit"&&r.name===h&&dateFromCalc(r)===y).length;table+=`<td>${c||""}</td>`});table+=`</tr>`});table+=`<tr><td><strong>Route km</strong></td>`;ymds.forEach(y=>{const km=wr.filter(r=>r.type==="route"&&dateFromCalc(r)===y).reduce((s,r)=>s+safeNum(r.distanceKm,0),0);table+=`<td>${km?km.toFixed(2):""}</td>`});table+=`</tr><tr><td><strong>Areas m²</strong></td>`;ymds.forEach(y=>{const sqm=wr.filter(r=>r.type==="area"&&dateFromCalc(r)===y).reduce((s,r)=>s+safeNum(r.areaSqM,0),0);table+=`<td>${sqm?sqm.toFixed(1):""}</td>`});table+=`</tr></tbody></table></div>`;els.weeklySummaryWrap.innerHTML=table;let html="";ymds.forEach(y=>{const day=wr.filter(r=>dateFromCalc(r)===y);html+=`<div class="recordCard"><div class="row"><strong>${esc(formatDateLabel(y))}</strong><span class="pill">${day.length} records</span></div>`;if(!day.length)html+=`<div class="hint" style="margin-top:8px">No records.</div>`;else day.forEach(r=>{html+=`<div class="recordCard ${r.id===selectedRecordId?"selected":""}" data-week-record-id="${r.id}"><div class="row"><span class="pill">${esc(r.code||"")}</span><span class="pill">${esc(r.type)}</span>${r.name?`<span class="pill">${esc(r.name)}</span>`:""}<span class="pill">${esc(eventTimeLabel(r)||"--:--")}</span><div class="spacer"></div><button data-show-on-map="${r.id}">Show on map</button></div>${r.text?`<div style="margin-top:8px;white-space:pre-wrap">${esc(r.text)}</div>`:""}<div class="small muted" style="margin-top:8px">${r.lat!=null&&r.lng!=null?`${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`:""}${r.address?` · ${esc(r.address)}`:""}${r.distanceKm!=null?` · ${Number(r.distanceKm).toFixed(3)} km`:""}${r.areaSqM!=null?` · ${Number(r.areaSqM).toFixed(2)} m²`:""} · ${esc(r.timeSource||"")}/${esc(r.timeConfidence||"")}</div></div>`});html+=`</div>`});els.weeklyRecordsWrap.innerHTML=html;els.weeklyRecordsWrap.querySelectorAll("[data-show-on-map]").forEach(b=>b.onclick=()=>focusRecordFromWeekly(Number(b.dataset.showOnMap)));els.weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card=>{const id=Number(card.dataset.weekRecordId);card.onclick=()=>{selectedRecordId=id;updateStatusLine();renderWeeklyPanel();drawCanvas()};card.oncontextmenu=e=>{e.preventDefault();focusRecordFromWeekly(id)}})}
-function renderDatabasePanel(){const rows=records.filter(r=>{if(els.dbFilterDate.value&&dateFromCalc(r)!==els.dbFilterDate.value)return false;if(els.dbFilterType.value&&r.type!==els.dbFilterType.value)return false;return true});els.dbCountText.textContent=`${rows.length} records`;els.dbTableBody.innerHTML=rows.map(r=>`<tr><td>${esc(r.code||"")}</td><td>${esc(r.type||"")}</td><td>${esc(r.calcTimestamp||"")}</td><td>${esc(r.capturedAt||"")}</td><td>${esc(r.timeSource||"")}/${esc(r.timeConfidence||"")}</td><td>${esc(r.name||"")}</td><td>${esc(r.text||"")}</td><td>${r.lat??""}</td><td>${r.lng??""}</td><td>${esc(r.address||(r.meta?.startAddress||"")||"")}</td><td>${r.distanceKm!=null?Number(r.distanceKm).toFixed(3):""}</td><td>${r.areaSqM!=null?Number(r.areaSqM).toFixed(2):""}</td><td><button data-del-id="${r.id}" class="danger">Delete</button></td></tr>`).join("");els.dbTableBody.querySelectorAll("[data-del-id]").forEach(b=>b.onclick=async()=>{const id=Number(b.dataset.delId);if(confirm(`Delete record ${id}?`)){await dbDelete("records",id);await refreshRecords();setStatus(`Deleted record ${id}.`)}})}
-async function refreshMissingAddresses(){if(!isOnline())return setStatus("You are offline.");let updated=0;for(const r of records){let changed=false;if(["habit","note","route-event"].includes(r.type)&&!r.address&&r.lat!=null&&r.lng!=null){r.address=await reverseGeocode(r.lat,r.lng);changed=!!r.address}if(r.type==="area"&&!r.address&&Array.isArray(r.points)&&r.points.length){r.address=await reverseGeocode(r.points[0].lat,r.points[0].lng);changed=changed||!!r.address}if(changed){await dbPut("records",r);updated++}}await refreshRecords();setStatus(`Address refresh finished. Updated ${updated} records.`)}
-function scopeNameForFile(){if(isLiveMode)return"live";if(scope==="day")return`day-${toYMD(anchorDate)}`;if(scope==="week")return`week-${toYMD(mondayOfWeek(anchorDate))}`;const f=firstOfMonth(anchorDate);return`month-${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}`}
-function downloadBlob(blob,name){const a=document.createElement("a"),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2500)}
-function doBackupAll(){downloadBlob(new Blob([JSON.stringify({version:5,exportedAt:new Date().toISOString(),records},null,2)],{type:"application/json"}),`spatial-journal-backup-${todayYMD()}.json`)}
-async function doRestoreBackup(file){const payload=JSON.parse(await file.text());if(!payload||!Array.isArray(payload.records))throw new Error("Invalid backup file.");if(!payload.records.every(r=>r&&typeof r==="object"&&typeof r.type==="string"&&typeof r.code==="string"))throw new Error("Backup records failed validation.");if(!confirm(`Restore ${payload.records.length} records? This REPLACES all current records.`))return;await clearRecordStore();for(const r of payload.records){const c={...r};delete c.id;await dbAdd("records",c)}selectedRecordId=null;route.active=false;area.active=false;manualRoute.active=false;await refreshRecords();fitScope()}
-function exportRecordsToCSV(list){const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];return [headers.join(","),...list.map(r=>headers.map(h=>{let v=r[h]??"";if(typeof v==="object")v=JSON.stringify(v);return `"${String(v).replace(/"/g,'""')}"`}).join(","))].join("\n")}
-function exportRecordsToKML(list){const p=[`<?xml version="1.0" encoding="UTF-8"?>`,`<kml xmlns="http://www.opengis.net/kml/2.2"><Document>`,`<name>${scopeNameForFile()}</name>`];list.forEach(r=>{const name=escapeXml(r.code||r.type),desc=escapeXml([r.type,r.name,r.text,r.address,r.calcTimestamp].filter(Boolean).join(" | "));if(["habit","note","route-event"].includes(r.type)&&r.lat!=null&&r.lng!=null)p.push(`<Placemark><name>${name}</name><description>${desc}</description><Point><coordinates>${r.lng},${r.lat},0</coordinates></Point></Placemark>`);else if(r.type==="route"&&Array.isArray(r.points)){p.push(`<Placemark><name>${name}</name><description>${desc}</description><LineString><coordinates>${r.points.map(q=>`${q.lng},${q.lat},0`).join(" ")}</coordinates></LineString></Placemark>`)}else if(r.type==="area"&&Array.isArray(r.points)&&r.points.length){const coords=[...r.points,r.points[0]].map(q=>`${q.lng},${q.lat},0`).join(" ");p.push(`<Placemark><name>${name}</name><description>${desc}</description><Polygon><outerBoundaryIs><LinearRing><coordinates>${coords}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`)}});p.push(`</Document></kml>`);return p.join("")}
-function exportRecordsToDXF(list){const o=[],push=(...l)=>o.push(...l);push("0","SECTION","2","HEADER","0","ENDSEC","0","SECTION","2","ENTITIES");list.forEach(r=>{if(["habit","note","route-event"].includes(r.type)&&r.lat!=null&&r.lng!=null){const p=llToXY(r.lat,r.lng);push("0","POINT","8","0","10",String(p.x),"20",String(p.y),"30","0")}else if(r.type==="route"&&Array.isArray(r.points)){push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","0");r.points.forEach(q=>{const p=llToXY(q.lat,q.lng);push("10",String(p.x),"20",String(p.y))})}else if(r.type==="area"&&Array.isArray(r.points)){push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","1");r.points.forEach(q=>{const p=llToXY(q.lat,q.lng);push("10",String(p.x),"20",String(p.y))})}});push("0","ENDSEC","0","EOF");return o.join("\n")}
-function renderAll(){updateStatusLine();renderWeeklyPanel();renderDatabasePanel();drawCanvas()}
+  if(route.active && route.points.length) drawPolyline(route.points,"#c57449",3.1);
+  if(manualRoute.active && manualRoute.points.length) drawPolyline(manualRoute.points,"#c57449",3.1);
+  if(area.active && area.points.length){
+    drawPolygon(area.points,area.color);
+    area.points.forEach(p=>{
+      const s=latLngToScreen(p.lat,p.lng);
+      drawPoint(s.x,s.y,area.color,4);
+    });
+  }
 
-els.btnLiveMode.onclick=()=>{isLiveMode=true;setModeButtons();updateStatusLine();drawCanvas();setStatus("Live mode.")};
-els.btnDayScope.onclick=()=>{isLiveMode=false;scope="day";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine()};
-els.btnWeekScope.onclick=()=>{isLiveMode=false;scope="week";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine()};
-els.btnMonthScope.onclick=()=>{isLiveMode=false;scope="month";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine()};
-els.scopeDate.onchange=()=>{anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);if(!isLiveMode)fitScope();renderWeeklyPanel();updateStatusLine()};
+  const sel=selectedRecord();
+  if(sel) drawSelectionHalo(sel);
+  drawLiveMarker();
+  drawCompass();
+  rebuildHitCache();
+}
+
+async function captureRouteSample(){
+  if(!route.active || route.paused) return;
+  try{
+    const pos=await getPosition();
+    const p={
+      lat:pos.coords.latitude,
+      lng:pos.coords.longitude,
+      timestamp:new Date().toISOString(),
+      accuracy:pos.coords.accuracy??null,
+      altitude:pos.coords.altitude??null,
+      speed:pos.coords.speed??null,
+      heading:pos.coords.heading??null
+    };
+    setProjectionOriginIfMissing(p.lat,p.lng);
+    route.points.push(p);
+    updateStatusLine();
+    drawCanvas();
+  }catch{}
+}
+async function routeStart(){
+  if(route.active) return alert("Route already active.");
+  const def=safeNum(els.defaultRouteSeconds.value,5);
+  const chosen=prompt("Route interval seconds",String(def));
+  if(!chosen) return;
+  route.intervalSec=Math.max(1,safeNum(chosen,def));
+  els.defaultRouteSeconds.value=String(route.intervalSec);
+  await dbSetSetting("defaultRouteSeconds",route.intervalSec);
+
+  route.active=true;
+  route.paused=false;
+  route.routeId=uid("route");
+  route.startedAt=new Date().toISOString();
+  route.points=[];
+  route.pauseEvents=[];
+  route.resumeEvents=[];
+  route.startAddress="";
+  route.endAddress="";
+  isLiveMode=true;
+  liveSessionStartedAt=route.startedAt;
+  setModeButtons();
+
+  const ev=await addRouteEvent("start");
+  if(ev) route.startAddress=ev.address||"";
+
+  await captureRouteSample();
+  route.timer=setInterval(captureRouteSample, route.intervalSec*1000);
+  updateStatusLine();
+}
+async function routePause(){
+  if(!route.active || route.paused) return;
+  if(route.timer) clearInterval(route.timer);
+  route.timer=null;
+  route.paused=true;
+  const ev=await addRouteEvent("pause");
+  if(ev) route.pauseEvents.push({timestamp:new Date().toISOString(), address:ev.address||""});
+  updateStatusLine();
+}
+async function routeResume(){
+  if(!route.active || !route.paused) return;
+  route.paused=false;
+  const ev=await addRouteEvent("resume");
+  if(ev) route.resumeEvents.push({timestamp:new Date().toISOString(), address:ev.address||""});
+  route.timer=setInterval(captureRouteSample, route.intervalSec*1000);
+  updateStatusLine();
+}
+async function routeEnd(){
+  if(!route.active) return alert("No active route.");
+  if(route.timer) clearInterval(route.timer);
+  route.timer=null;
+  const ev=await addRouteEvent("end");
+  if(ev) route.endAddress=ev.address||"";
+
+  const tm=liveTimeMeta();
+  tm.calcTimestamp=route.startedAt;
+  tm.eventDate=route.startedAt.slice(0,10);
+  tm.eventStartTime=route.startedAt.slice(11,16);
+  tm.eventEndTime=new Date().toISOString().slice(11,16);
+
+  const rec={
+    ...makeBaseRecord("route",tm),
+    routeId:route.routeId,
+    distanceKm:routeDistanceKm(route.points),
+    points:route.points,
+    meta:{
+      startAddress:route.startAddress,
+      pauseEvents:route.pauseEvents,
+      resumeEvents:route.resumeEvents,
+      endAddress:route.endAddress
+    }
+  };
+  await dbAdd("records",rec);
+
+  route.active=false;
+  route.paused=false;
+  route.routeId=null;
+  route.points=[];
+  liveSessionStartedAt=new Date().toISOString();
+  await refreshRecords();
+}
+
+async function manualRouteStartAt(lat,lng){
+  manualRoute.active=true;
+  manualRoute.routeId=uid("manual_route");
+  manualRoute.points=[{lat,lng}];
+  drawCanvas();
+}
+async function manualRouteVertexAt(lat,lng){
+  if(!manualRoute.active) await manualRouteStartAt(lat,lng);
+  else{
+    manualRoute.points.push({lat,lng});
+    drawCanvas();
+  }
+}
+async function manualRouteEndAt(lat,lng){
+  if(!manualRoute.active) await manualRouteStartAt(lat,lng);
+  else manualRoute.points.push({lat,lng});
+  if(manualRoute.points.length<2) return alert("Need at least 2 route points.");
+  const tm=await manualTimeMeta(true);
+  if(!tm) return;
+  const rec={
+    ...makeBaseRecord("route",tm),
+    routeId:manualRoute.routeId,
+    distanceKm:routeDistanceKm(manualRoute.points),
+    points:manualRoute.points,
+    meta:{manual:true}
+  };
+  await dbAdd("records",rec);
+  manualRoute.active=false;
+  manualRoute.routeId=null;
+  manualRoute.points=[];
+  await refreshRecords();
+}
+function areaBegin(){
+  if(area.active) return;
+  area.active=true;
+  area.areaId=uid("area");
+  area.points=[];
+  area.startAddress="";
+  area.color=prompt("Area color (hex or CSS color)",area.color||"#4d8c95")||"#4d8c95";
+  drawCanvas();
+}
+async function areaAddVertexAt(lat,lng){
+  if(!area.active) areaBegin();
+  setProjectionOriginIfMissing(lat,lng);
+  area.points.push({lat,lng});
+  if(area.points.length===1 && !area.startAddress) area.startAddress=await reverseGeocode(lat,lng);
+  drawCanvas();
+}
+async function areaAddGPSVertex(){
+  try{
+    const pos=await getPosition();
+    await areaAddVertexAt(pos.coords.latitude,pos.coords.longitude);
+  }catch(err){
+    alert(`GPS area vertex failed: ${err.message||err}`);
+  }
+}
+async function areaClose(){
+  if(!area.active || area.points.length<3) return alert("Need at least 3 area points.");
+  const tm=isLiveMode ? liveTimeMeta() : await manualTimeMeta(true);
+  if(!tm) return;
+  const rec={
+    ...makeBaseRecord("area",tm),
+    areaId:area.areaId,
+    points:area.points,
+    areaSqM:polygonAreaSqM(area.points),
+    color:area.color,
+    address:area.startAddress,
+    meta:{startAddress:area.startAddress}
+  };
+  await dbAdd("records",rec);
+  area.active=false;
+  area.areaId=null;
+  area.points=[];
+  await refreshRecords();
+}
+
+els.actionDialog.querySelectorAll("[data-action]").forEach(b=>{
+  b.onclick=async()=>{
+    const a=b.dataset.action;
+    els.actionDialog.close();
+
+    if(a==="add-habit"){
+      els.habitDialog.showModal();
+      return;
+    }
+    if(a==="add-note"){
+      pendingNoteMode="manual";
+      els.noteInput.value="";
+      els.noteDialog.showModal();
+      return;
+    }
+
+    if(!pendingCanvasWorld && a!=="area-close") return;
+    const ll = pendingCanvasWorld ? xyToLL(pendingCanvasWorld.x,pendingCanvasWorld.y) : null;
+
+    if(a==="manual-route-start") await manualRouteStartAt(ll.lat,ll.lng);
+    if(a==="manual-route-vertex") await manualRouteVertexAt(ll.lat,ll.lng);
+    if(a==="manual-route-end") await manualRouteEndAt(ll.lat,ll.lng);
+    if(a==="area-vertex") await areaAddVertexAt(ll.lat,ll.lng);
+    if(a==="area-close") await areaClose();
+    if(a==="symbol") await addManualRecord("note",ll.lat,ll.lng,{text:"[Symbol placeholder]"});
+    if(a==="inspect"){
+      const s=worldToScreen(pendingCanvasWorld.x,pendingCanvasWorld.y);
+      const hits=pickHits(s.x,s.y);
+      if(hits.length===1){
+        selectedRecordId=hits[0].id;
+        updateStatusLine();
+        showRecordInfo(hits[0]);
+        drawCanvas();
+      }else if(hits.length>1){
+        openChooser(hits);
+      }
+    }
+  };
+});
+
+els.recordDialog.querySelectorAll("[data-record]").forEach(b=>{
+  b.onclick=async()=>{
+    const a=b.dataset.record;
+    els.recordDialog.close();
+
+    if(a==="habit"){
+      pendingCanvasWorld=null;
+      els.habitDialog.showModal();
+    }
+    if(a==="note"){
+      pendingCanvasWorld=null;
+      pendingNoteMode="gps";
+      els.noteInput.value="";
+      els.noteDialog.showModal();
+    }
+    if(a==="area-gps") await areaAddGPSVertex();
+    if(a==="route-start") await routeStart();
+    if(a==="route-pause") await routePause();
+    if(a==="route-resume") await routeResume();
+    if(a==="route-end") await routeEnd();
+  };
+});
+
+els.saveNote.onclick=async()=>{
+  const txt=els.noteInput.value.trim();
+  if(!txt) return;
+  els.noteDialog.close();
+  if(pendingNoteMode==="manual" && pendingCanvasWorld){
+    await createManualAtWorld("note",{text:txt});
+    pendingCanvasWorld=null;
+  }else{
+    await addGPSRecord("note",{text:txt});
+  }
+};
+
+function renderWeeklyPanel(){
+  const m=mondayOfWeek(anchorDate);
+  const ymds=Array.from({length:7},(_,i)=>toYMD(addDays(m,i)));
+  els.weekRangeText.textContent=`${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
+
+  const wr=weeklyRecords();
+
+  let table=`<div style="overflow:auto"><table class="weeklyTable"><thead><tr><th>Habit</th>`;
+  ymds.forEach(y=>table+=`<th>${esc(formatDateLabel(y))}</th>`);
+  table+=`</tr></thead><tbody>`;
+  habits.forEach(h=>{
+    table+=`<tr><td>${esc(h)}</td>`;
+    ymds.forEach(y=>{
+      const c=wr.filter(r=>r.type==="habit"&&r.name===h&&dateFromCalc(r)===y).length;
+      table+=`<td>${c||""}</td>`;
+    });
+    table+=`</tr>`;
+  });
+  table+=`<tr><td><strong>Route km</strong></td>`;
+  ymds.forEach(y=>{
+    const km=wr.filter(r=>r.type==="route"&&dateFromCalc(r)===y).reduce((s,r)=>s+safeNum(r.distanceKm,0),0);
+    table+=`<td>${km?km.toFixed(2):""}</td>`;
+  });
+  table+=`</tr><tr><td><strong>Areas m²</strong></td>`;
+  ymds.forEach(y=>{
+    const sqm=wr.filter(r=>r.type==="area"&&dateFromCalc(r)===y).reduce((s,r)=>s+safeNum(r.areaSqM,0),0);
+    table+=`<td>${sqm?sqm.toFixed(1):""}</td>`;
+  });
+  table+=`</tr></tbody></table></div>`;
+  els.weeklySummaryWrap.innerHTML=table;
+
+  let html="";
+  ymds.forEach(y=>{
+    const day=wr.filter(r=>dateFromCalc(r)===y);
+    html+=`<div class="card"><div class="row"><strong>${esc(formatDateLabel(y))}</strong><span class="pill">${day.length} records</span></div>`;
+    if(!day.length){
+      html+=`<div class="hint" style="margin-top:8px">No records.</div>`;
+    }else{
+      day.forEach(r=>{
+        html+=`
+          <div class="card ${r.id===selectedRecordId?"selected":""}" data-week-record-id="${r.id}">
+            <div class="row">
+              <span class="pill">${esc(r.code||"")}</span>
+              <span class="pill">${esc(r.type)}</span>
+              ${r.name?`<span class="pill">${esc(r.name)}</span>`:""}
+              <span class="pill">${esc(eventTimeLabel(r)||"--:--")}</span>
+              <div class="spacer"></div>
+              <button data-show-on-map="${r.id}">Show on map</button>
+            </div>
+            ${r.text?`<div style="margin-top:8px;white-space:pre-wrap">${esc(r.text)}</div>`:""}
+            <div class="small muted" style="margin-top:8px">
+              ${r.lat!=null&&r.lng!=null?`${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`:""}
+              ${r.address?` · ${esc(r.address)}`:""}
+              ${r.distanceKm!=null?` · ${Number(r.distanceKm).toFixed(3)} km`:""}
+              ${r.areaSqM!=null?` · ${Number(r.areaSqM).toFixed(2)} m²`:""}
+              · ${esc(r.timeSource||"")}/${esc(r.timeConfidence||"")}
+            </div>
+          </div>`;
+      });
+    }
+    html+=`</div>`;
+  });
+  els.weeklyRecordsWrap.innerHTML=html;
+
+  els.weeklyRecordsWrap.querySelectorAll("[data-show-on-map]").forEach(b=>{
+    b.onclick=()=>focusRecordFromWeekly(Number(b.dataset.showOnMap));
+  });
+  els.weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card=>{
+    const id=Number(card.dataset.weekRecordId);
+    card.onclick=()=>{
+      selectedRecordId=id;
+      updateStatusLine();
+      renderWeeklyPanel();
+      drawCanvas();
+    };
+    card.oncontextmenu=e=>{
+      e.preventDefault();
+      focusRecordFromWeekly(id);
+    };
+  });
+}
+
+function renderDatabasePanel(){
+  const rows=records.filter(r=>{
+    if(els.dbFilterDate.value && dateFromCalc(r)!==els.dbFilterDate.value) return false;
+    if(els.dbFilterType.value && r.type!==els.dbFilterType.value) return false;
+    return true;
+  });
+  els.dbCountText.textContent=`${rows.length} records`;
+  els.dbTableBody.innerHTML=rows.map(r=>`
+    <tr>
+      <td>${esc(r.code||"")}</td>
+      <td>${esc(r.type||"")}</td>
+      <td>${esc(r.calcTimestamp||"")}</td>
+      <td>${esc(r.capturedAt||"")}</td>
+      <td>${esc(r.timeSource||"")}/${esc(r.timeConfidence||"")}</td>
+      <td>${esc(r.name||"")}</td>
+      <td>${esc(r.text||"")}</td>
+      <td>${r.lat??""}</td>
+      <td>${r.lng??""}</td>
+      <td>${esc(r.address||(r.meta?.startAddress||"")||"")}</td>
+      <td>${r.distanceKm!=null?Number(r.distanceKm).toFixed(3):""}</td>
+      <td>${r.areaSqM!=null?Number(r.areaSqM).toFixed(2):""}</td>
+      <td><button data-del-id="${r.id}" class="danger">Delete</button></td>
+    </tr>
+  `).join("");
+  els.dbTableBody.querySelectorAll("[data-del-id]").forEach(b=>{
+    b.onclick=async()=>{
+      const id=Number(b.dataset.delId);
+      if(confirm(`Delete record ${id}?`)){
+        await dbDelete("records",id);
+        await refreshRecords();
+      }
+    };
+  });
+}
+
+async function refreshMissingAddresses(){
+  if(!isOnline()) return alert("You are offline.");
+  let updated=0;
+  for(const r of records){
+    let changed=false;
+    if(["habit","note","route-event"].includes(r.type) && !r.address && r.lat!=null && r.lng!=null){
+      r.address=await reverseGeocode(r.lat,r.lng);
+      changed=!!r.address;
+    }
+    if(r.type==="area" && !r.address && Array.isArray(r.points) && r.points.length){
+      r.address=await reverseGeocode(r.points[0].lat,r.points[0].lng);
+      changed=changed||!!r.address;
+    }
+    if(changed){
+      await dbPut("records",r);
+      updated++;
+    }
+  }
+  await refreshRecords();
+  alert(`Address refresh finished. Updated ${updated} records.`);
+}
+
+function scopeNameForFile(){
+  if(isLiveMode) return "live";
+  if(scope==="day") return `day-${toYMD(anchorDate)}`;
+  if(scope==="week") return `week-${toYMD(mondayOfWeek(anchorDate))}`;
+  const f=firstOfMonth(anchorDate);
+  return `month-${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}`;
+}
+function downloadBlob(blob,name){
+  const a=document.createElement("a");
+  const url=URL.createObjectURL(blob);
+  a.href=url;
+  a.download=name;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2500);
+}
+function doBackupAll(){
+  downloadBlob(new Blob([JSON.stringify({version:6,exportedAt:new Date().toISOString(),records},null,2)],{type:"application/json"}),`spatial-journal-backup-${todayYMD()}.json`);
+}
+async function doRestoreBackup(file){
+  const payload=JSON.parse(await file.text());
+  if(!payload || !Array.isArray(payload.records)) throw new Error("Invalid backup file.");
+  if(!payload.records.every(r=>r && typeof r==="object" && typeof r.type==="string" && typeof r.code==="string")){
+    throw new Error("Backup records failed validation.");
+  }
+  if(!confirm(`Restore ${payload.records.length} records? This REPLACES all current records.`)) return;
+  await clearRecordStore();
+  for(const r of payload.records){
+    const c={...r};
+    delete c.id;
+    await dbAdd("records",c);
+  }
+  selectedRecordId=null;
+  route.active=false;
+  area.active=false;
+  manualRoute.active=false;
+  await refreshRecords();
+  fitScope();
+}
+function exportRecordsToCSV(list){
+  const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];
+  return [headers.join(","), ...list.map(r=>headers.map(h=>{
+    let v=r[h]??"";
+    if(typeof v==="object") v=JSON.stringify(v);
+    return `"${String(v).replace(/"/g,'""')}"`;
+  }).join(","))].join("\n");
+}
+function exportRecordsToKML(list){
+  const p=[`<?xml version="1.0" encoding="UTF-8"?>`,`<kml xmlns="http://www.opengis.net/kml/2.2"><Document>`,`<name>${scopeNameForFile()}</name>`];
+  list.forEach(r=>{
+    const name=escapeXml(r.code||r.type);
+    const desc=escapeXml([r.type,r.name,r.text,r.address,r.calcTimestamp].filter(Boolean).join(" | "));
+    if(["habit","note","route-event"].includes(r.type) && r.lat!=null && r.lng!=null){
+      p.push(`<Placemark><name>${name}</name><description>${desc}</description><Point><coordinates>${r.lng},${r.lat},0</coordinates></Point></Placemark>`);
+    }else if(r.type==="route" && Array.isArray(r.points)){
+      p.push(`<Placemark><name>${name}</name><description>${desc}</description><LineString><coordinates>${r.points.map(q=>`${q.lng},${q.lat},0`).join(" ")}</coordinates></LineString></Placemark>`);
+    }else if(r.type==="area" && Array.isArray(r.points) && r.points.length){
+      const coords=[...r.points,r.points[0]].map(q=>`${q.lng},${q.lat},0`).join(" ");
+      p.push(`<Placemark><name>${name}</name><description>${desc}</description><Polygon><outerBoundaryIs><LinearRing><coordinates>${coords}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`);
+    }
+  });
+  p.push(`</Document></kml>`);
+  return p.join("");
+}
+function exportRecordsToDXF(list){
+  const o=[], push=(...l)=>o.push(...l);
+  push("0","SECTION","2","HEADER","0","ENDSEC","0","SECTION","2","ENTITIES");
+  list.forEach(r=>{
+    if(["habit","note","route-event"].includes(r.type) && r.lat!=null && r.lng!=null){
+      const p=llToXY(r.lat,r.lng);
+      push("0","POINT","8","0","10",String(p.x),"20",String(p.y),"30","0");
+    }else if(r.type==="route" && Array.isArray(r.points)){
+      push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","0");
+      r.points.forEach(q=>{const p=llToXY(q.lat,q.lng); push("10",String(p.x),"20",String(p.y));});
+    }else if(r.type==="area" && Array.isArray(r.points)){
+      push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","1");
+      r.points.forEach(q=>{const p=llToXY(q.lat,q.lng); push("10",String(p.x),"20",String(p.y));});
+    }
+  });
+  push("0","ENDSEC","0","EOF");
+  return o.join("\n");
+}
+
+
+function px(n){ return `${Math.round(n)}px`; }
+
+function resetChromeWindow(which){
+  const el = $(which);
+  if(!el) return;
+  el.classList.remove("minimized");
+  if(which==="topHud"){
+    el.style.left="10px";
+    el.style.right="10px";
+    el.style.top="10px";
+    el.style.bottom="";
+    el.style.width="";
+    el.style.height="";
+  }
+  if(which==="bottomDeck"){
+    el.style.left="10px";
+    el.style.right="10px";
+    el.style.bottom="10px";
+    el.style.top="";
+    el.style.width="";
+    el.style.height="";
+  }
+  updateDockTabs();
+}
+
+function minimizeChromeWindow(which){
+  const el = $(which);
+  if(!el) return;
+  el.classList.add("minimized");
+  updateDockTabs();
+}
+
+function restoreChromeWindow(which){
+  const el = $(which);
+  if(!el) return;
+  el.classList.remove("minimized");
+  el.style.zIndex = String(90 + Date.now()%1000);
+  updateDockTabs();
+}
+
+function updateDockTabs(){
+  if(els.dockStatus) els.dockStatus.classList.toggle("show", els.topHud && els.topHud.classList.contains("minimized"));
+  if(els.dockTools) els.dockTools.classList.toggle("show", els.bottomDeck && els.bottomDeck.classList.contains("minimized"));
+}
+
+function makeChromeDraggable(){
+  document.querySelectorAll("[data-drag-window]").forEach(handle=>{
+    const id = handle.dataset.dragWindow;
+    const win = $(id);
+    if(!win) return;
+
+    let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+
+    handle.addEventListener("pointerdown", e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      dragging=true;
+      handle.setPointerCapture(e.pointerId);
+      const rect=win.getBoundingClientRect();
+      startX=e.clientX;
+      startY=e.clientY;
+      startLeft=rect.left;
+      startTop=rect.top;
+      win.style.left=px(startLeft);
+      win.style.top=px(startTop);
+      win.style.right="auto";
+      win.style.bottom="auto";
+      win.style.zIndex=String(90 + Date.now()%1000);
+    });
+
+    handle.addEventListener("pointermove", e=>{
+      if(!dragging) return;
+      const dx=e.clientX-startX;
+      const dy=e.clientY-startY;
+      const rect=win.getBoundingClientRect();
+      const maxLeft=window.innerWidth-80;
+      const maxTop=window.innerHeight-50;
+      win.style.left=px(Math.max(-rect.width+80, Math.min(maxLeft, startLeft+dx)));
+      win.style.top=px(Math.max(0, Math.min(maxTop, startTop+dy)));
+    });
+
+    handle.addEventListener("pointerup", e=>{
+      dragging=false;
+      try{handle.releasePointerCapture(e.pointerId)}catch{}
+    });
+    handle.addEventListener("pointercancel", e=>{
+      dragging=false;
+      try{handle.releasePointerCapture(e.pointerId)}catch{}
+    });
+  });
+}
+
+function makeChromeResizable(){
+  document.querySelectorAll("[data-resize-window]").forEach(handle=>{
+    const id=handle.dataset.resizeWindow;
+    const win=$(id);
+    if(!win) return;
+
+    let resizing=false, startX=0, startY=0, startW=0, startH=0;
+
+    handle.addEventListener("pointerdown", e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      resizing=true;
+      handle.setPointerCapture(e.pointerId);
+      const rect=win.getBoundingClientRect();
+      startX=e.clientX;
+      startY=e.clientY;
+      startW=rect.width;
+      startH=rect.height;
+      win.style.width=px(startW);
+      win.style.height=px(startH);
+      win.style.right="auto";
+      win.style.bottom="auto";
+      win.style.zIndex=String(90 + Date.now()%1000);
+    });
+
+    handle.addEventListener("pointermove", e=>{
+      if(!resizing) return;
+      const nw=Math.max(220, Math.min(window.innerWidth-20, startW+(e.clientX-startX)));
+      const nh=Math.max(70, Math.min(window.innerHeight-20, startH+(e.clientY-startY)));
+      win.style.width=px(nw);
+      win.style.height=px(nh);
+      win.style.overflow="auto";
+    });
+
+    handle.addEventListener("pointerup", e=>{
+      resizing=false;
+      try{handle.releasePointerCapture(e.pointerId)}catch{}
+    });
+    handle.addEventListener("pointercancel", e=>{
+      resizing=false;
+      try{handle.releasePointerCapture(e.pointerId)}catch{}
+    });
+  });
+}
+
+function initChromeWindowManager(){
+  if(els.minTopHud) els.minTopHud.onclick = (e)=>{e.stopPropagation(); minimizeChromeWindow("topHud");};
+  if(els.resetTopHud) els.resetTopHud.onclick = (e)=>{e.stopPropagation(); resetChromeWindow("topHud");};
+  if(els.minBottomDeck) els.minBottomDeck.onclick = (e)=>{e.stopPropagation(); minimizeChromeWindow("bottomDeck");};
+  if(els.resetBottomDeck) els.resetBottomDeck.onclick = (e)=>{e.stopPropagation(); resetChromeWindow("bottomDeck");};
+
+  document.querySelectorAll("[data-restore-window]").forEach(tab=>{
+    tab.onclick=()=>restoreChromeWindow(tab.dataset.restoreWindow);
+  });
+
+  makeChromeDraggable();
+  makeChromeResizable();
+  updateDockTabs();
+}
+
+function renderAll(){
+  updateStatusLine();
+  renderWeeklyPanel();
+  renderDatabasePanel();
+  drawCanvas();
+}
+
+els.menuTab.onclick=()=>els.menuDrawer.classList.add("open");
+els.closeMenu.onclick=()=>els.menuDrawer.classList.remove("open");
+document.querySelectorAll(".menuTabs button").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    btn.classList.add("active");
+    $(btn.dataset.section).classList.add("active");
+  };
+});
+
+els.btnLiveMode.onclick=()=>{isLiveMode=true;setModeButtons();updateStatusLine();drawCanvas();};
+els.btnDayScope.onclick=()=>{isLiveMode=false;scope="day";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.btnWeekScope.onclick=()=>{isLiveMode=false;scope="week";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.btnMonthScope.onclick=()=>{isLiveMode=false;scope="month";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.scopeDate.onchange=()=>{anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);if(!isLiveMode)fitScope();renderWeeklyPanel();updateStatusLine();};
+
 els.btnRecord.onclick=()=>els.recordDialog.showModal();
+els.btnToolbox.onclick=()=>els.actionDialog.showModal();
 els.btnRoute.onclick=()=>els.recordDialog.showModal();
 els.btnArea.onclick=()=>els.recordDialog.showModal();
-els.btnPinMe.onclick=pinToMe;els.btnPinSelected.onclick=pinToSelected;els.btnFitScope.onclick=fitScope;els.btnRefreshLive.onclick=async()=>{await refreshLivePosition();drawCanvas();setStatus("Refreshed.")};els.btnRefreshAddresses.onclick=refreshMissingAddresses;
-els.btnZoomIn.onclick=()=>{camera.zoom=Math.min(10,camera.zoom*1.18);drawCanvas()};els.btnZoomOut.onclick=()=>{camera.zoom=Math.max(.002,camera.zoom/1.18);drawCanvas()};els.btnResetView.onclick=()=>{camera={...cameraDefault};drawCanvas()};
-els.toggleWeekly.onclick=()=>togglePanel(els.weeklyPanel);els.toggleDatabase.onclick=()=>togglePanel(els.databasePanel);els.toggleSettings.onclick=()=>togglePanel(els.settingsPanel);document.querySelectorAll("[data-close-panel]").forEach(b=>b.onclick=()=>b.closest(".panel").classList.remove("active"));
-els.weekPrev.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),-7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel()};els.weekToday.onclick=()=>{anchorDate=new Date();els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel()};els.weekNext.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel()};
-els.dbApply.onclick=renderDatabasePanel;els.dbClear.onclick=()=>{els.dbFilterDate.value="";els.dbFilterType.value="";renderDatabasePanel()};
-els.saveHabitNames.onclick=async()=>{habits=Array.from(els.habitSettingsWrap.querySelectorAll("[data-idx]")).map((el,i)=>el.value.trim()||`Habit ${i+1}`);await dbSetSetting("habits",habits);renderHabitPicker();renderWeeklyPanel();setStatus("Habit names saved.")};
-els.resetHabitNames.onclick=async()=>{habits=[...DEFAULT_HABITS];await dbSetSetting("habits",habits);renderHabitSettings();renderHabitPicker();renderWeeklyPanel();setStatus("Habit names reset.")};
-els.defaultRouteSeconds.onchange=async()=>{const sec=Math.max(1,safeNum(els.defaultRouteSeconds.value,5));els.defaultRouteSeconds.value=String(sec);await dbSetSetting("defaultRouteSeconds",sec)};
-els.backupAllBtn.onclick=doBackupAll;els.restoreBackupBtn.onclick=()=>els.restoreBackupInput.click();els.restoreBackupInput.onchange=async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{await doRestoreBackup(f);setStatus("Backup restored. Records replaced.")}catch(err){setStatus(`Restore failed: ${err.message||err}`)}finally{els.restoreBackupInput.value=""}};
+els.btnPinMe.onclick=pinToMe;
+els.btnPinSelected.onclick=pinToSelected;
+els.btnFitScope.onclick=fitScope;
+els.btnRefreshLive.onclick=async()=>{await refreshLivePosition();drawCanvas();};
+els.btnRefreshAddresses.onclick=refreshMissingAddresses;
+els.btnZoomIn.onclick=()=>{camera.zoom=Math.min(10,camera.zoom*1.18);drawCanvas();};
+els.btnZoomOut.onclick=()=>{camera.zoom=Math.max(.002,camera.zoom/1.18);drawCanvas();};
+els.btnResetView.onclick=()=>{camera={...cameraDefault};drawCanvas();};
+
+els.weekPrev.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),-7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+els.weekToday.onclick=()=>{anchorDate=new Date();els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+els.weekNext.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+
+els.dbApply.onclick=renderDatabasePanel;
+els.dbClear.onclick=()=>{els.dbFilterDate.value="";els.dbFilterType.value="";renderDatabasePanel();};
+
+els.saveHabitNames.onclick=async()=>{
+  habits=Array.from(els.habitSettingsWrap.querySelectorAll("[data-idx]")).map((el,i)=>el.value.trim()||`Habit ${i+1}`);
+  await dbSetSetting("habits",habits);
+  renderHabitPicker();
+  renderWeeklyPanel();
+};
+els.resetHabitNames.onclick=async()=>{
+  habits=[...DEFAULT_HABITS];
+  await dbSetSetting("habits",habits);
+  renderHabitSettings();
+  renderHabitPicker();
+  renderWeeklyPanel();
+};
+els.defaultRouteSeconds.onchange=async()=>{
+  const sec=Math.max(1,safeNum(els.defaultRouteSeconds.value,5));
+  els.defaultRouteSeconds.value=String(sec);
+  await dbSetSetting("defaultRouteSeconds",sec);
+};
+
+els.backupAllBtn.onclick=doBackupAll;
+els.restoreBackupBtn.onclick=()=>els.restoreBackupInput.click();
+els.restoreBackupInput.onchange=async e=>{
+  const f=e.target.files && e.target.files[0];
+  if(!f) return;
+  try{ await doRestoreBackup(f); }
+  catch(err){ alert(`Restore failed: ${err.message||err}`); }
+  finally{ els.restoreBackupInput.value=""; }
+};
 els.exportCurrentCSV.onclick=()=>downloadBlob(new Blob([exportRecordsToCSV(recordsForScope())],{type:"text/csv"}),`spatial-journal-${scopeNameForFile()}.csv`);
 els.exportCurrentKML.onclick=()=>downloadBlob(new Blob([exportRecordsToKML(recordsForScope())],{type:"application/vnd.google-earth.kml+xml"}),`spatial-journal-${scopeNameForFile()}.kml`);
 els.exportCurrentDXF.onclick=()=>downloadBlob(new Blob([exportRecordsToDXF(recordsForScope())],{type:"application/dxf"}),`spatial-journal-${scopeNameForFile()}.dxf`);
 
-function clearLongPress(){if(longPressTimer)clearTimeout(longPressTimer);longPressTimer=null}
-canvas.addEventListener("pointerdown",e=>{canvas.setPointerCapture(e.pointerId);pan.active=true;pan.startX=e.clientX;pan.startY=e.clientY;pan.startCenterX=camera.centerX;pan.startCenterY=camera.centerY;clearLongPress();longPressTimer=setTimeout(()=>{const r=canvas.getBoundingClientRect();pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);els.actionDialog.showModal();longPressTimer=null},500)});
-canvas.addEventListener("pointermove",e=>{if(!pan.active)return;const dx=e.clientX-pan.startX,dy=e.clientY-pan.startY;if(Math.hypot(dx,dy)>6)clearLongPress();camera.centerX=pan.startCenterX-dx/camera.zoom;camera.centerY=pan.startCenterY+dy/camera.zoom;drawCanvas()});
-canvas.addEventListener("pointerup",e=>{const dx=e.clientX-pan.startX,dy=e.clientY-pan.startY,moved=Math.hypot(dx,dy);pan.active=false;clearLongPress();if(moved<5){const r=canvas.getBoundingClientRect(),hits=pickHits(e.clientX-r.left,e.clientY-r.top);if(hits.length===1){selectedRecordId=hits[0].id;updateStatusLine();showRecordInfo(hits[0]);drawCanvas()}else if(hits.length>1)openChooser(hits)}});
-canvas.addEventListener("contextmenu",e=>{e.preventDefault();const r=canvas.getBoundingClientRect();pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);els.actionDialog.showModal()});
-canvas.addEventListener("wheel",e=>{e.preventDefault();const r=canvas.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,before=screenToWorld(px,py),factor=e.deltaY<0?1.12:.89;camera.zoom=Math.max(.002,Math.min(12,camera.zoom*factor));const after=worldToScreen(before.x,before.y),dx=px-after.x,dy=py-after.y;camera.centerX-=dx/camera.zoom;camera.centerY+=dy/camera.zoom;drawCanvas()},{passive:false});
+function clearLongPress(){
+  if(longPressTimer) clearTimeout(longPressTimer);
+  longPressTimer=null;
+}
+canvas.addEventListener("pointerdown", e=>{
+  canvas.setPointerCapture(e.pointerId);
+  pan.active=true;
+  pan.startX=e.clientX;
+  pan.startY=e.clientY;
+  pan.startCenterX=camera.centerX;
+  pan.startCenterY=camera.centerY;
+  clearLongPress();
+  longPressTimer=setTimeout(()=>{
+    const r=canvas.getBoundingClientRect();
+    pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);
+    els.actionDialog.showModal();
+    longPressTimer=null;
+  },500);
+});
+canvas.addEventListener("pointermove", e=>{
+  if(!pan.active) return;
+  const dx=e.clientX-pan.startX;
+  const dy=e.clientY-pan.startY;
+  if(Math.hypot(dx,dy)>6) clearLongPress();
+  camera.centerX=pan.startCenterX-dx/camera.zoom;
+  camera.centerY=pan.startCenterY+dy/camera.zoom;
+  drawCanvas();
+});
+canvas.addEventListener("pointerup", e=>{
+  const dx=e.clientX-pan.startX;
+  const dy=e.clientY-pan.startY;
+  const moved=Math.hypot(dx,dy);
+  pan.active=false;
+  clearLongPress();
+  if(moved<5){
+    const r=canvas.getBoundingClientRect();
+    const hits=pickHits(e.clientX-r.left,e.clientY-r.top);
+    if(hits.length===1){
+      selectedRecordId=hits[0].id;
+      updateStatusLine();
+      showRecordInfo(hits[0]);
+      drawCanvas();
+    }else if(hits.length>1){
+      openChooser(hits);
+    }
+  }
+});
+canvas.addEventListener("contextmenu", e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);
+  els.actionDialog.showModal();
+});
+canvas.addEventListener("wheel", e=>{
+  e.preventDefault();
+  const r=canvas.getBoundingClientRect();
+  const px=e.clientX-r.left, py=e.clientY-r.top;
+  const before=screenToWorld(px,py);
+  const factor=e.deltaY<0 ? 1.12 : .89;
+  camera.zoom=Math.max(.002,Math.min(12,camera.zoom*factor));
+  const after=worldToScreen(before.x,before.y);
+  const dx=px-after.x, dy=py-after.y;
+  camera.centerX-=dx/camera.zoom;
+  camera.centerY+=dy/camera.zoom;
+  drawCanvas();
+},{passive:false});
 
-function resizeCanvas(){const ratio=Math.max(1,window.devicePixelRatio||1),r=canvas.getBoundingClientRect();canvas.width=Math.floor(r.width*ratio);canvas.height=Math.floor(r.height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);drawCanvas()}
+function resizeCanvas(){
+  const ratio=Math.max(1,window.devicePixelRatio||1);
+  const r=canvas.getBoundingClientRect();
+  canvas.width=Math.floor(r.width*ratio);
+  canvas.height=Math.floor(r.height*ratio);
+  ctx.setTransform(ratio,0,0,ratio,0,0);
+  drawCanvas();
+}
 window.addEventListener("resize",resizeCanvas);
-async function boot(){updateNetPill();window.addEventListener("online",updateNetPill);window.addEventListener("offline",updateNetPill);els.scopeDate.value=todayYMD();await openDB();await loadSettings();await refreshRecords();await initCompass();setModeButtons();liveSessionStartedAt=new Date().toISOString();requestAnimationFrame(()=>{resizeCanvas();fitScope();setStatus("Ready.")});await refreshLivePosition();setInterval(()=>{liveBlink=!liveBlink;drawCanvas()},700);setInterval(()=>refreshLivePosition(),4000)}
-boot().catch(err=>setStatus(`Startup error: ${err.message||err}`));
+
+async function boot(){
+  initChromeWindowManager();
+  updateNetPill();
+  window.addEventListener("online",updateNetPill);
+  window.addEventListener("offline",updateNetPill);
+  els.scopeDate.value=todayYMD();
+
+  await openDB();
+  await loadSettings();
+  await refreshRecords();
+  await initCompass();
+
+  setModeButtons();
+  liveSessionStartedAt=new Date().toISOString();
+
+  requestAnimationFrame(()=>{
+    resizeCanvas();
+    fitScope();
+  });
+
+  await refreshLivePosition();
+  setInterval(()=>{liveBlink=!liveBlink;drawCanvas();},700);
+  setInterval(()=>refreshLivePosition(),4000);
+}
+boot().catch(err=>alert(`Startup error: ${err.message||err}`));
 })();
 </script>
 </body>
