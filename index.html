@@ -1,200 +1,210 @@
 <!DOCTYPE html>
+
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GIS Tracker Restored</title>
+<title>Tracker V4</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
-body { font-family: Arial; text-align:center; }
-.screen { display:none; }
+body { font-family: Arial; margin:0; background:#f1f5f9; }
 
-#map { height:260px; width:100%; border:1px solid #ccc; }
+#menu {
+  display:flex;
+  background:#111827;
+}
+#menu button {
+  flex:1;
+  padding:12px;
+  border:none;
+  background:#111827;
+  color:#cbd5e1;
+}
+#menu button:hover { background:#1f2937; color:white; }
 
-table { width:100%; border-collapse:collapse; }
-td, th { border:1px solid #ccc; font-size:12px; padding:4px; }
+.screen { display:none; padding:15px; }
 
-.event { font-size:11px; border-bottom:1px solid #eee; padding:3px; }
-textarea { width:90%; height:40px; }
+.card {
+  background:white;
+  padding:12px;
+  margin-bottom:10px;
+  border-radius:10px;
+}
+
+button.action {
+  margin:5px;
+  padding:10px;
+}
+
+#map { height:300px; }
+
+.event {
+  font-size:12px;
+  border-bottom:1px solid #eee;
+  padding:5px;
+}
 </style>
+
 </head>
 
 <body>
 
-<h2>GIS Tracker Restored</h2>
+<div id="menu">
+  <button onclick="show('home')">Home</button>
+  <button onclick="show('weekly')">Weekly</button>
+  <button onclick="show('map');initMap()">Map</button>
+  <button onclick="show('db')">DB</button>
+</div>
+
+<!-- HOME -->
 
 <div id="home" class="screen">
-  <button onclick="show('weekly')">Weekly</button>
-  <button onclick="show('map')">Map</button>
-  <button onclick="show('db')">Database</button>
+  <div class="card">
+    <h3>Record Event</h3>
+
+```
+<button class="action" onclick="recordEvent('start')">Start</button>
+<button class="action" onclick="recordEvent('pause')">Pause</button>
+<button class="action" onclick="recordEvent('resume')">Resume</button>
+<button class="action" onclick="recordEvent('end')">End</button>
+
+<hr>
+
+<button class="action" onclick="recordEvent('habit')">Habit</button>
+<button class="action" onclick="recordEvent('note')">Note</button>
+<button class="action" onclick="recordEvent('skill')">Skill</button>
+
+<p id="status"></p>
+```
+
+  </div>
 </div>
 
 <!-- WEEKLY -->
+
 <div id="weekly" class="screen">
-
-  <button onclick="show('home')">⬅</button><br>
-
-  <input id="weekInput" type="number" placeholder="Week"><br>
-
-  <button onclick="startRoute()">Start</button>
-  <button onclick="pauseRoute()">Pause</button>
-  <button onclick="resumeRoute()">Resume</button>
-  <button onclick="stopRoute()">Stop</button>
-
-  <button onclick="saveWeek()">Save Week</button>
-
-  <div id="weeklyTable"></div>
+  <div class="card">
+    Week: <input id="weekInput" type="number" value="1">
+  </div>
+  <div class="card" id="weeklyList"></div>
 </div>
 
 <!-- MAP -->
+
 <div id="mapScreen" class="screen">
-  <button onclick="show('home')">⬅</button>
+  <div class="card">
+    Week: <input id="mapWeek" type="number" value="1">
+    <button onclick="renderMap()">Show</button>
+  </div>
   <div id="map"></div>
 </div>
 
 <!-- DB -->
+
 <div id="db" class="screen">
-  <button onclick="show('home')">⬅</button>
-  <div id="dbView"></div>
+  <div class="card">
+    <button onclick="clearDB()">Clear DB</button>
+    <div id="dbView"></div>
+  </div>
 </div>
 
 <script>
 
-// ================= STATE =================
-let events = JSON.parse(localStorage.getItem("events") || "[]");
-let database = JSON.parse(localStorage.getItem("database") || "[]");
+// ===== STORAGE =====
+let records = JSON.parse(localStorage.getItem("records") || "[]");
 
-let week = null;
-let route = null;
-let watch = null;
+// ===== SESSION =====
+let currentSession = null;
+let watchId = null;
 
-let map, layer;
-
-const days=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-
-// ================= INIT =================
-window.onload = () => {
-
-  document.getElementById("weekInput").onchange = e=>{
-    week = Number(e.target.value);
-    renderAll();
-  };
-
-  show("home");
-};
-
-// ================= SAVE =================
-function save(){
-  localStorage.setItem("events",JSON.stringify(events));
-  localStorage.setItem("database",JSON.stringify(database));
-}
-
-// ================= NAV =================
+// ===== NAV =====
 function show(id){
-
   document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
 
   if(id==="map"){
     document.getElementById("mapScreen").style.display="block";
-    initMap();
-    renderMap();
     return;
   }
 
   document.getElementById(id).style.display="block";
-  renderAll();
+
+  if(id==="weekly") renderWeekly();
+  if(id==="db") renderDB();
 }
 
-// ================= ROUTE =================
-function startRoute(){
+// ===== SAVE =====
+function save(){
+  localStorage.setItem("records", JSON.stringify(records));
+}
 
-  route = {id:Date.now(),active:true,last:null};
+// ===== WEEK HELPER =====
+function getWeek(ts){
+  let d = new Date(ts);
+  let onejan = new Date(d.getFullYear(),0,1);
+  return Math.ceil((((d - onejan) / 86400000) + onejan.getDay()+1)/7);
+}
 
-  watch = navigator.geolocation.watchPosition(p=>{
+// ===== RECORD EVENT =====
+function recordEvent(type){
 
-    if(!route.active) return;
-
-    let pt = {
-      lat:p.coords.latitude,
-      lng:p.coords.longitude,
-      time:Date.now()
-    };
-
-    events.push({
-      id:Date.now()+Math.random(),
-      type:"route-point",
-      week,
-      routeId:route.id,
-      lat:pt.lat,
-      lng:pt.lng
-    });
-
-    save();
-    renderAll();
+  navigator.geolocation.getCurrentPosition(pos=>{
+    createRecord(type, pos.coords.latitude, pos.coords.longitude);
+  }, ()=>{
+    createRecord(type, null, null);
   });
 }
 
-function pauseRoute(){ if(route) route.active=false; }
-function resumeRoute(){ if(route) route.active=true; }
+function createRecord(type, lat, lng){
 
-function stopRoute(){
-  navigator.geolocation.clearWatch(watch);
-  route=null;
+  if(type==="start") currentSession = Date.now();
+  if(type==="end") currentSession = null;
+
+  let rec = {
+    id: Date.now() + Math.random(),
+    timestamp: Date.now(),
+    lat,
+    lng,
+    type,
+    session_id: currentSession,
+    address: null
+  };
+
+  records.push(rec);
+  save();
+
+  document.getElementById("status").innerText = "Saved: "+type;
 }
 
-// ================= WEEKLY TABLE =================
+// ===== WEEKLY =====
 function renderWeekly(){
 
-  let div=document.getElementById("weeklyTable");
-  div.innerHTML="";
+  let week = Number(document.getElementById("weekInput").value);
+  let div = document.getElementById("weeklyList");
 
-  if(!week) return;
+  let data = records.filter(r => getWeek(r.timestamp) === week);
 
-  let table=document.createElement("table");
+  div.innerHTML = "<b>Total events:</b> "+data.length+"<br><br>";
 
-  let header="<th>Type</th>"+days.map(d=>`<th>${d}</th>`).join("");
-  table.innerHTML="<tr>"+header+"</tr>";
-
-  let evs = events.filter(e=>e.week===week);
-
-  evs.forEach(e=>{
-    let row=document.createElement("tr");
-
-    row.innerHTML = `
-      <td>${e.type}</td>
-      <td colspan="7">${e.lat||""}, ${e.lng||""}</td>
+  data.forEach(r=>{
+    div.innerHTML += `
+      <div class="event">
+        ${new Date(r.timestamp).toLocaleString()} |
+        ${r.type} |
+        ${r.lat ? r.lat.toFixed(4)+","+r.lng.toFixed(4) : "no GPS"}
+      </div>
     `;
-
-    table.appendChild(row);
   });
-
-  div.appendChild(table);
 }
 
-// ================= SAVE WEEK (FIXED - NO DUPLICATES) =================
-function saveWeek(){
+// ===== MAP =====
+let map, layer;
 
-  if(!week) return;
-
-  database = database.filter(w=>w.week!==week);
-
-  database.push({
-    week,
-    data:JSON.parse(JSON.stringify(events.filter(e=>e.week===week)))
-  });
-
-  save();
-  alert("Week saved (deduplicated)");
-}
-
-// ================= MAP =================
 function initMap(){
-
   if(map) return;
 
-  map = L.map("map").setView([52,5],7);
+  map = L.map("map").setView([52.1,5.3],7);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
     .addTo(map);
@@ -204,48 +214,66 @@ function initMap(){
 
 function renderMap(){
 
-  if(!map || !week) return;
+  if(!map) return;
 
   layer.clearLayers();
 
-  let pts = events.filter(e=>e.week===week && e.lat);
+  let week = Number(document.getElementById("mapWeek").value);
+  let data = records.filter(r => getWeek(r.timestamp) === week && r.lat);
 
-  let routes = {};
+  let sessions = {};
 
-  pts.forEach(p=>{
-    if(!routes[p.routeId]) routes[p.routeId]=[];
-    routes[p.routeId].push([p.lat,p.lng]);
+  data.forEach(r=>{
+    if(r.session_id){
+      if(!sessions[r.session_id]) sessions[r.session_id] = [];
+      sessions[r.session_id].push(r);
+    }
   });
 
-  Object.values(routes).forEach(r=>{
-    if(r.length>1)
-      L.polyline(r,{color:"blue"}).addTo(layer);
+  // draw routes
+  Object.values(sessions).forEach(arr=>{
+    arr.sort((a,b)=>a.timestamp-b.timestamp);
+
+    if(arr.length > 1){
+      let coords = arr.map(p=>[p.lat,p.lng]);
+      L.polyline(coords,{color:"blue"}).addTo(layer);
+    }
   });
 
-  pts.forEach(p=>{
-    L.circleMarker([p.lat,p.lng]).addTo(layer);
+  // draw points
+  data.forEach(r=>{
+    L.circleMarker([r.lat,r.lng]).addTo(layer)
+      .bindPopup(r.type);
   });
 }
 
-// ================= DB =================
+// ===== DB =====
 function renderDB(){
 
-  let div=document.getElementById("dbView");
-  div.innerHTML="";
+  let div = document.getElementById("dbView");
+  div.innerHTML = "<b>Total records:</b> "+records.length+"<br><br>";
 
-  database.forEach(w=>{
-    div.innerHTML += `<h3>Week ${w.week}</h3>`;
-    div.innerHTML += `<div>Events: ${w.data.length}</div>`;
+  records.slice().reverse().forEach(r=>{
+    div.innerHTML += `
+      <div class="event">
+        ${r.type} | ${new Date(r.timestamp).toLocaleString()}
+      </div>
+    `;
   });
 }
 
-// ================= MASTER =================
-function renderAll(){
-  renderWeekly();
-  renderDB();
-  renderMap();
+function clearDB(){
+  if(confirm("Delete all data?")){
+    records = [];
+    save();
+    renderDB();
+  }
 }
 
+// ===== INIT =====
+show("home");
+
 </script>
+
 </body>
 </html>
