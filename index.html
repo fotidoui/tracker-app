@@ -129,76 +129,213 @@
     .muted{color:var(--muted)}
     .hint{font-size:13px;color:var(--muted)}
 
-    .sideDock{
+
+    .mainAddButton{
       position:absolute;
-      z-index:80;
-      left:6px;
-      top:50%;
-      transform:translateY(-50%);
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      pointer-events:auto;
-    }
-    .dockTab{
-      display:none;
-      border-radius:0 14px 14px 0;
-      padding:10px 8px;
+      z-index:38;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%);
+      border-radius:999px;
+      padding:13px 22px;
       background:var(--sea);
       color:#fff;
       border:1px solid var(--sea);
       box-shadow:var(--shadow);
+      font-weight:700;
+    }
+    .mainAddButton:active{transform:translateX(-50%) scale(.98)}
+    .draftBadge{
+      background:#fff4d9;
+      border:1px solid #e7c77b;
+      color:#7a5c19;
+    }
+    .draftCard{
+      background:#fffaf0;
+      border:1px dashed #d09a4b;
+    }
+    .floatingEditor{
+      position:absolute;
+      z-index:70;
+      left:18px;
+      top:120px;
+      width:min(92vw,420px);
+      background:var(--panel);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      border-radius:18px;
+      display:none;
+      overflow:hidden;
+      touch-action:none;
+    }
+    .floatingEditor.open{display:block}
+    .floatingEditorHead{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px;
+      background:#fff8e8;
+      border-bottom:1px solid var(--line);
+      cursor:grab;
+      user-select:none;
+    }
+    .floatingEditorBody{
+      padding:10px;
+      max-height:55dvh;
+      overflow:auto;
+      touch-action:auto;
+    }
+    .floatingEditorBody label{display:block;margin-bottom:8px}
+    .floatingEditorBody input,.floatingEditorBody textarea,.floatingEditorBody select{width:100%}
+    .floatingEditorFoot{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      padding:10px;
+      border-top:1px solid var(--line);
+      background:#fffaf0;
+    }
+
+    .mapZoom{
+      position:absolute;
+      z-index:35;
+      right:10px;
+      bottom:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      padding:8px;
+      border-radius:16px;
+      background:rgba(255,250,240,.72);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(6px);
+    }
+    .mapZoom button{padding:10px 13px;font-weight:700}
+    .toolsTab{
+      position:absolute;
+      z-index:44;
+      left:0;
+      top:45%;
+      transform:translateY(-50%);
       writing-mode:vertical-rl;
       text-orientation:mixed;
+      border-radius:0 14px 14px 0;
+      padding:14px 8px;
+      background:var(--terracotta);
+      color:#fff;
+      border:1px solid var(--terracotta);
+      box-shadow:var(--shadow);
     }
-    .dockTab.show{display:block}
-    .windowChrome{
+    .toolsPod{
+      position:absolute;
+      z-index:43;
+      left:12px;
+      top:42%;
+      width:96px;
+      min-height:112px;
+      border-radius:22px;
+      background:rgba(255,250,240,.38);
+      border:1px solid rgba(216,204,178,.75);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(5px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      flex-direction:column;
+      gap:7px;
       touch-action:none;
       user-select:none;
     }
-    .chromeControls{
-      display:inline-flex;
-      gap:5px;
-      align-items:center;
-      margin-left:4px;
-    }
-    .chromeControls button{
-      padding:5px 8px;
-      border-radius:9px;
-      font-size:12px;
-      line-height:1;
-    }
-    .dragHandle{
-      cursor:grab;
-      user-select:none;
-      padding:4px 8px;
+    .toolsPod.open{display:flex}
+    .compassButton{
+      width:62px;
+      height:62px;
       border-radius:999px;
+      display:grid;
+      place-items:center;
+      padding:0;
+      background:rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      position:relative;
+      overflow:hidden;
+    }
+    .compassNeedle{
+      width:0;
+      height:0;
+      border-left:8px solid transparent;
+      border-right:8px solid transparent;
+      border-bottom:28px solid var(--sea);
+      transform-origin:50% 70%;
+      transition:transform .18s linear;
+    }
+    .compassN{
+      position:absolute;
+      top:4px;
+      left:50%;
+      transform:translateX(-50%);
+      font-size:10px;
+      color:var(--ink);
+      font-weight:700;
+    }
+    .podHint{
+      font-size:10px;
+      color:var(--muted);
+      text-align:center;
+      line-height:1.1;
+    }
+    .toolsDrawer{
+      position:absolute;
+      z-index:55;
+      left:0;
+      top:0;
+      height:100dvh;
+      width:min(92vw,500px);
+      background:var(--panel);
+      border-right:1px solid var(--line);
+      box-shadow:var(--shadow);
+      transform:translateX(-105%);
+      transition:transform .22s ease;
+      display:flex;
+      flex-direction:column;
+    }
+    .toolsDrawer.open{transform:translateX(0)}
+    .toolsHead{
+      padding:12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      background:var(--panel);
+    }
+    .toolsBody{
+      overflow:auto;
+      padding:12px;
+      flex:1 1 auto;
+    }
+    .statusCard{
       background:#fff;
       border:1px solid var(--line);
-      font-size:12px;
-      color:var(--muted);
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
     }
-    .dragHandle:active{cursor:grabbing}
-    .resizeHandle{
-      position:absolute;
-      right:4px;
-      bottom:4px;
-      width:18px;
-      height:18px;
-      cursor:nwse-resize;
-      border-right:3px solid rgba(36,51,59,.35);
-      border-bottom:3px solid rgba(36,51,59,.35);
-      border-radius:2px;
-      display:none;
+    .statusGrid{
+      display:grid;
+      grid-template-columns:110px 1fr;
+      gap:6px 10px;
+      font-size:13px;
     }
-    .resizableChrome .resizeHandle{display:block}
-    .topHud.minimized,
-    .bottomDeck.minimized{
-      display:none;
+    .statusGrid .k{color:var(--muted)}
+    .modeRow button{min-width:70px}
+    .addChoice{
+      border:1px solid var(--line);
+      background:#fff;
+      border-radius:14px;
+      padding:10px;
+      margin-bottom:10px;
     }
-    .topHud,.bottomDeck{
-      max-width:calc(100vw - 20px);
-    }
+    .addChoice h4{margin:0 0 8px}
 
     .hidden{display:none!important}
     .menuTab{
@@ -319,29 +456,112 @@
 <body>
 <div class="app">
   <div id="mapWrap"><canvas id="mapCanvas"></canvas></div>
-  <div id="sideDock" class="sideDock">
-    <button id="dockStatus" class="dockTab" data-restore-window="topHud">Status</button>
-    <button id="dockTools" class="dockTab" data-restore-window="bottomDeck">Tools</button>
+
+  <button id="toolsTab" class="toolsTab">Tools</button>
+
+  <div id="toolsPod" class="toolsPod">
+    <button id="compassButton" class="compassButton" title="Open tools">
+      <span class="compassN">N</span>
+      <span id="compassNeedle" class="compassNeedle"></span>
+    </button>
+    <div class="podHint">drag pod<br>tap compass</div>
   </div>
 
-  <div id="topHud" class="topHud windowChrome resizableChrome" data-window-name="Status">
-    <span class="dragHandle" data-drag-window="topHud">move</span>
-    <strong style="color:var(--sea)">Spatial Journal</strong>
-    <span class="chromeControls">
-      <button id="minTopHud" title="Minimize status">−</button>
-      <button id="resetTopHud" title="Reset status position">↺</button>
-    </span>
-    <div class="modeGroup">
-      <button id="btnLiveMode" class="primary active">Live</button>
-      <button id="btnDayScope" class="soft">Day</button>
-      <button id="btnWeekScope" class="soft">Week</button>
-      <button id="btnMonthScope" class="soft">Month</button>
-      <label id="scopeDateWrap" class="hidden"><input id="scopeDate" type="date"></label>
+  <div id="toolsDrawer" class="toolsDrawer">
+    <div class="toolsHead">
+      <strong>Tools</strong>
+      <div class="spacer"></div>
+      <button id="hideCompass">Hide Compass</button>
+      <button id="closeTools">Close</button>
     </div>
-    <div id="statusLine" class="statusLine">Live · today · route idle · selected none · live position unavailable</div>
-    <span id="netPill" class="pill">Checking…</span>
-    <span id="compassPill" class="pill">Compass --</span>
-    <span class="resizeHandle" data-resize-window="topHud"></span>
+    <div class="toolsBody">
+      <div class="statusCard">
+        <strong>Current status</strong>
+        <div id="statusGrid" class="statusGrid" style="margin-top:10px"></div>
+      </div>
+
+      <div class="statusCard">
+        <strong>View mode</strong>
+        <div class="row modeRow" style="margin-top:10px">
+          <button id="btnLiveMode" class="primary active">Live</button>
+          <button id="btnDayScope" class="soft">Day</button>
+          <button id="btnWeekScope" class="soft">Week</button>
+          <button id="btnMonthScope" class="soft">Month</button>
+          <label id="scopeDateWrap" class="hidden"><input id="scopeDate" type="date"></label>
+        </div>
+      </div>
+
+      <div class="statusCard">
+        <strong>Add / record object</strong>
+        <div class="hint" style="margin:6px 0 10px">
+          The main map Add button uses this same workflow. Live/GPS records go to Weekly drafts first.
+        </div>
+        <div class="row">
+          <button id="btnAddObject" class="primary">Add Object</button>
+          <button id="btnRecord">Record GPS</button>
+          <button id="btnToolbox">Canvas Toolbox</button>
+          <button id="finishLiveSessionBtn" class="good">Finish Live Session</button>
+        </div>
+      </div>
+
+      <div class="statusCard">
+        <strong>Route design / measure</strong>
+        <div class="hint" style="margin:6px 0 10px">Design = manual/canvas. Measure = live/current GPS.</div>
+        <div class="row" style="margin-top:10px">
+          <button id="routeDesignBtn" class="warn">Route Design</button>
+          <button id="routeMeasureBtn" class="warn">Route Measure</button>
+        </div>
+        <div id="routeCommandRow" class="row hidden" style="margin-top:10px">
+          <button data-route-cmd="start">Start</button>
+          <button data-route-cmd="vertex">Vertex</button>
+          <button data-route-cmd="pause">Pause</button>
+          <button data-route-cmd="resume">Resume</button>
+          <button data-route-cmd="end">End</button>
+        </div>
+      </div>
+
+      <div class="statusCard">
+        <strong>Area design / measure</strong>
+        <div class="hint" style="margin:6px 0 10px">Design = manual/canvas. Measure = live/current GPS.</div>
+        <div class="row" style="margin-top:10px">
+          <button id="areaDesignBtn" class="good">Area Design</button>
+          <button id="areaMeasureBtn" class="good">Area Measure</button>
+        </div>
+        <div id="areaCommandRow" class="row hidden" style="margin-top:10px">
+          <button data-area-cmd="vertex">Add Vertex</button>
+          <button data-area-cmd="close">Close Area</button>
+        </div>
+      </div>
+
+      <div class="statusCard">
+        <strong>Map actions</strong>
+        <div class="row" style="margin-top:10px">
+          <button id="btnPinMe" class="soft">Pin Me</button>
+          <button id="btnPinSelected" class="soft">Pin Selected</button>
+          <button id="btnFitScope" class="soft">Fit Visible</button>
+          <button id="btnRefreshLive" class="soft">Refresh GPS</button>
+          <button id="btnRefreshAddresses" class="soft">Refresh Addresses</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="mainAddButton" class="mainAddButton">＋ Add</button>
+
+  <div id="floatingEditor" class="floatingEditor">
+    <div id="floatingEditorHead" class="floatingEditorHead">
+      <strong id="floatingEditorTitle">Object details</strong>
+      <div class="spacer"></div>
+      <button id="floatingEditorMin">−</button>
+      <button id="floatingEditorClose">Close</button>
+    </div>
+    <div class="floatingEditorBody">
+      <div id="floatingEditorFields"></div>
+    </div>
+    <div class="floatingEditorFoot">
+      <button id="floatingEditorCancel">Cancel</button>
+      <button id="floatingEditorSave" class="primary">Save</button>
+    </div>
   </div>
 
   <button id="menuTab" class="menuTab">Menu</button>
@@ -367,7 +587,12 @@
           <button id="weekToday">This Week</button>
           <button id="weekNext">→</button>
         </div>
-        <div class="row" style="margin-bottom:10px"><span id="weekRangeText" class="pill"></span></div>
+        <div class="row" style="margin-bottom:10px">
+          <span id="weekRangeText" class="pill"></span>
+          <span id="pendingCountText" class="pill draftBadge">0 drafts</span>
+          <button id="submitPendingBtn" class="primary">Submit live drafts to database</button>
+          <button id="clearPendingBtn" class="danger">Clear drafts</button>
+        </div>
         <div id="weeklySummaryWrap"></div>
         <div id="weeklyRecordsWrap" style="margin-top:12px"></div>
       </section>
@@ -420,7 +645,7 @@
           </label>
         </div>
         <div class="hint" style="margin-top:12px">
-          Time model: <strong>calcTimestamp</strong> is used for views/calculations. <strong>capturedAt</strong> is the real creation time.
+          calcTimestamp is used for views and calculations. capturedAt is the real creation time.
         </div>
       </section>
 
@@ -448,23 +673,67 @@
     </div>
   </div>
 
-  <div id="bottomDeck" class="bottomDeck windowChrome resizableChrome" data-window-name="Tools">
-    <button id="btnRecord" class="primary">Record GPS</button>
-    <button id="btnToolbox" class="soft">Toolbox</button>
-    <button id="btnRoute" class="warn">Route GPS</button>
-    <button id="btnArea" class="good">Area GPS</button>
-    <button id="btnPinMe" class="soft">Pin Me</button>
-    <button id="btnPinSelected" class="soft">Pin Selected</button>
-    <button id="btnFitScope" class="soft">Fit</button>
-    <button id="btnRefreshLive" class="soft">Refresh</button>
-    <button id="btnRefreshAddresses" class="soft">Addresses</button>
-    <div class="spacer"></div>
+  <div class="mapZoom">
     <button id="btnZoomIn">+</button>
     <button id="btnZoomOut">−</button>
     <button id="btnResetView">Reset</button>
-    <span class="resizeHandle" data-resize-window="bottomDeck"></span>
   </div>
 </div>
+
+
+<dialog id="addObjectDialog">
+  <div class="modalHead"><strong>Add Object</strong></div>
+  <div class="modalBody">
+    <div class="addChoice">
+      <h4>1. Choose source</h4>
+      <div class="row">
+        <button data-add-source="gps" class="primary">Live / Current GPS</button>
+        <button data-add-source="manual">Date / Canvas Point</button>
+      </div>
+    </div>
+    <div id="addManualHint" class="hint hidden" style="margin-bottom:10px">
+      For manual/date mode: after choosing the object type, tap or long-hold the map where you want to place it.
+    </div>
+    <div class="addChoice">
+      <h4>2. Choose geometry</h4>
+      <div class="row">
+        <button data-add-geometry="point">Point</button>
+        <button data-add-geometry="line">Line / Route</button>
+        <button data-add-geometry="area">Area</button>
+      </div>
+    </div>
+    <div id="addPointKinds" class="addChoice hidden">
+      <h4>3. Point type</h4>
+      <div class="row">
+        <button data-add-point="habit">Habit point</button>
+        <button data-add-point="note">Note point</button>
+        <button data-add-point="route-event">Route event point</button>
+      </div>
+    </div>
+    <div id="addRouteKinds" class="addChoice hidden">
+      <h4>3. Route command</h4>
+      <div class="row">
+        <button data-add-route="start">Start / new segment</button>
+        <button data-add-route="vertex">Add vertex</button>
+        <button data-add-route="pause">Pause</button>
+        <button data-add-route="resume">Resume / new segment</button>
+        <button data-add-route="end">End route</button>
+      </div>
+    </div>
+    <div id="addAreaKinds" class="addChoice hidden">
+      <h4>3. Area command</h4>
+      <div class="row">
+        <button data-add-area="vertex">Add vertex</button>
+        <button data-add-area="close">Close area</button>
+      </div>
+    </div>
+    <div id="addObjectSummary" class="hint"></div>
+  </div>
+  <div class="modalFoot">
+    <button id="cancelAddObject">Cancel</button>
+    <button id="confirmAddObject" class="primary">Continue</button>
+  </div>
+</dialog>
 
 <dialog id="actionDialog">
   <div class="modalHead"><strong>Toolbox: place on canvas</strong></div>
@@ -565,6 +834,7 @@ let habits = [...DEFAULT_HABITS];
 
 let db;
 let records = [];
+let pendingRecords = [];
 let isLiveMode = true;
 let scope = "week";
 let anchorDate = new Date();
@@ -576,6 +846,7 @@ let cameraDefault = {centerX:0, centerY:0, zoom:1};
 let livePosition = null;
 let liveBlink = true;
 let compassHeading = null;
+let smoothedCompassHeading = null;
 let selectedRecordId = null;
 
 let pendingCanvasWorld = null;
@@ -617,22 +888,55 @@ const els = {
   btnMonthScope:$("btnMonthScope"),
   scopeDate:$("scopeDate"),
   scopeDateWrap:$("scopeDateWrap"),
-  statusLine:$("statusLine"),
+  statusGrid:$("statusGrid"),
   netPill:$("netPill"),
   compassPill:$("compassPill"),
   menuTab:$("menuTab"),
   menuDrawer:$("menuDrawer"),
   closeMenu:$("closeMenu"),
-  topHud:$("topHud"),
-  bottomDeck:$("bottomDeck"),
-  dockStatus:$("dockStatus"),
-  dockTools:$("dockTools"),
-  minTopHud:$("minTopHud"),
-  resetTopHud:$("resetTopHud"),
-  minBottomDeck:$("minBottomDeck"),
-  resetBottomDeck:$("resetBottomDeck"),
+  toolsTab:$("toolsTab"),
+  toolsPod:$("toolsPod"),
+  toolsDrawer:$("toolsDrawer"),
+  compassButton:$("compassButton"),
+  compassNeedle:$("compassNeedle"),
+  closeTools:$("closeTools"),
+  hideCompass:$("hideCompass"),
   btnRecord:$("btnRecord"),
   btnToolbox:$("btnToolbox"),
+  mainAddButton:$("mainAddButton"),
+  btnAddObject:$("btnAddObject"),
+  finishLiveSessionBtn:$("finishLiveSessionBtn"),
+  pendingCountText:$("pendingCountText"),
+  submitPendingBtn:$("submitPendingBtn"),
+  clearPendingBtn:$("clearPendingBtn"),
+  floatingEditor:$("floatingEditor"),
+  floatingEditorHead:$("floatingEditorHead"),
+  floatingEditorTitle:$("floatingEditorTitle"),
+  floatingEditorFields:$("floatingEditorFields"),
+  floatingEditorMin:$("floatingEditorMin"),
+  floatingEditorClose:$("floatingEditorClose"),
+  floatingEditorCancel:$("floatingEditorCancel"),
+  floatingEditorSave:$("floatingEditorSave"),
+  routeDesignBtn:$("routeDesignBtn"),
+  routeMeasureBtn:$("routeMeasureBtn"),
+  routeCommandRow:$("routeCommandRow"),
+  areaDesignBtn:$("areaDesignBtn"),
+  areaMeasureBtn:$("areaMeasureBtn"),
+  areaCommandRow:$("areaCommandRow"),
+  addObjectDialog:$("addObjectDialog"),
+  cancelAddObject:$("cancelAddObject"),
+  confirmAddObject:$("confirmAddObject"),
+  addManualHint:$("addManualHint"),
+  addPointKinds:$("addPointKinds"),
+  addRouteKinds:$("addRouteKinds"),
+  addAreaKinds:$("addAreaKinds"),
+  addObjectSummary:$("addObjectSummary"),
+  gpsRouteStart:$("gpsRouteStart"),
+  gpsRoutePause:$("gpsRoutePause"),
+  gpsRouteResume:$("gpsRouteResume"),
+  gpsRouteEnd:$("gpsRouteEnd"),
+  gpsAreaVertex:$("gpsAreaVertex"),
+  gpsAreaClose:$("gpsAreaClose"),
   btnRoute:$("btnRoute"),
   btnArea:$("btnArea"),
   btnPinMe:$("btnPinMe"),
@@ -934,7 +1238,10 @@ function onOrientation(e){
   else if(typeof e.alpha==="number") h=360-e.alpha;
   if(h!=null && Number.isFinite(h)){
     compassHeading=(h+360)%360;
-    els.compassPill.textContent=`Compass ${Math.round(compassHeading)}°`;
+    if(smoothedCompassHeading == null) smoothedCompassHeading = compassHeading;
+    let delta = ((compassHeading - smoothedCompassHeading + 540) % 360) - 180;
+    smoothedCompassHeading = (smoothedCompassHeading + delta * 0.12 + 360) % 360;
+    if(els.compassNeedle) els.compassNeedle.style.transform = `rotate(${smoothedCompassHeading}deg)`;
     drawCanvas();
   }
 }
@@ -961,7 +1268,7 @@ function nextRecordCode(type, calcTs){
   const cc=CAT_CODE[type]||"99";
   const dd=ymd.slice(8,10);
   const mm=ymd.slice(5,7);
-  const same=records.filter(r=>r.type===type && dateFromCalc(r)===ymd);
+  const same=allRecordsForViews().filter(r=>r.type===type && dateFromCalc(r)===ymd);
   return `${cc}${String(same.length+1).padStart(3,"0")}${dd}${mm}`;
 }
 function isoFromParts(date,time){
@@ -1061,7 +1368,7 @@ async function addGPSRecord(type, extra={}){
       heading:pos.coords.heading??null,
       address:await reverseGeocode(lat,lng)
     };
-    await dbAdd("records",rec);
+    await storeRecord(rec);
     await refreshRecords();
     fitScope();
   }catch(err){
@@ -1099,49 +1406,127 @@ async function addRouteEvent(name){
       address:await reverseGeocode(lat,lng),
       routeId:route.routeId||""
     };
-    await dbAdd("records",rec);
+    await storeRecord(rec);
     return {lat,lng,address:rec.address};
   }catch{
     return null;
   }
 }
 
+
+function loadPendingRecords(){
+  try{
+    pendingRecords = JSON.parse(localStorage.getItem("spatialJournalPendingRecords") || "[]");
+  }catch{
+    pendingRecords = [];
+  }
+}
+function savePendingRecords(){
+  localStorage.setItem("spatialJournalPendingRecords", JSON.stringify(pendingRecords));
+}
+function allRecordsForViews(){
+  return [...records, ...pendingRecords];
+}
+function isDraftRecord(r){
+  return !!r._draftId;
+}
+function draftId(){
+  return `draft_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+}
+async function storeRecord(rec){
+  if(rec.timeSource === "live"){
+    rec._draftId = draftId();
+    rec._draftStatus = "weekly-draft";
+    pendingRecords.push(rec);
+    savePendingRecords();
+    renderAll();
+    return rec._draftId;
+  }
+  return await dbAdd("records", rec);
+}
+async function submitPendingRecords(){
+  if(!pendingRecords.length){
+    alert("No live drafts to submit.");
+    return;
+  }
+  if(!confirm(`Submit ${pendingRecords.length} live draft records to the permanent database?`)) return;
+  const copy = [...pendingRecords];
+  pendingRecords = [];
+  savePendingRecords();
+  for(const r of copy){
+    const c = {...r};
+    delete c._draftId;
+    delete c._draftStatus;
+    await dbAdd("records", c);
+  }
+  await refreshRecords();
+  alert("Live drafts submitted to database.");
+}
+function clearPendingRecords(){
+  if(!pendingRecords.length) return;
+  if(!confirm(`Clear ${pendingRecords.length} draft records? This cannot be undone.`)) return;
+  pendingRecords = [];
+  savePendingRecords();
+  renderAll();
+}
+function deleteDraftRecord(id){
+  pendingRecords = pendingRecords.filter(r=>r._draftId !== id);
+  savePendingRecords();
+  renderAll();
+}
+function warnIfPendingBeforeChange(){
+  if(pendingRecords.length){
+    return confirm(`You have ${pendingRecords.length} unsubmitted live draft records in Weekly. Continue without submitting?`);
+  }
+  return true;
+}
+
 function recordsForScope(){
   if(isLiveMode){
     const start = liveSessionStartedAt ? new Date(liveSessionStartedAt).getTime() : 0;
-    return records.filter(r=>{
+    return allRecordsForViews().filter(r=>{
       const t = new Date(r.calcTimestamp||r.capturedAt||0).getTime();
       return dateFromCalc(r)===todayYMD() && t>=start;
     });
   }
   const ymd=toYMD(anchorDate);
-  if(scope==="day") return records.filter(r=>dateFromCalc(r)===ymd);
+  if(scope==="day") return allRecordsForViews().filter(r=>dateFromCalc(r)===ymd);
   if(scope==="week"){
     const m=mondayOfWeek(anchorDate), s=addDays(m,6);
     const a=toYMD(m), b=toYMD(s);
-    return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+    return allRecordsForViews().filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
   }
   const f=firstOfMonth(anchorDate);
   const n=new Date(f.getFullYear(), f.getMonth()+1, 1);
   const a=toYMD(f), b=toYMD(addDays(n,-1));
-  return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+  return allRecordsForViews().filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
 }
 function weeklyRecords(){
   const m=mondayOfWeek(anchorDate), s=addDays(m,6);
   const a=toYMD(m), b=toYMD(s);
-  return records.filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
+  return allRecordsForViews().filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
 }
 function selectedRecord(){
-  return records.find(r=>r.id===selectedRecordId)||null;
+  return allRecordsForViews().find(r=>(r.id===selectedRecordId || r._draftId===selectedRecordId))||null;
 }
 function updateStatusLine(){
   const mode=isLiveMode ? "Live" : scope[0].toUpperCase()+scope.slice(1);
   const context=isLiveMode ? todayYMD() : toYMD(anchorDate);
   const rt=route.active ? (route.paused ? "route paused" : "route recording") : "route idle";
   const sel=selectedRecord();
-  const st=sel ? `${sel.type}${sel.name ? " "+sel.name : ""}` : "none";
-  const live=livePosition ? `${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy!=null ? ` ±${Math.round(livePosition.accuracy)}m` : ""}` : "live position unavailable";
-  els.statusLine.textContent = `${mode} · ${context} · ${rt} · selected ${st} · ${live}`;
+  const st=sel ? `${sel.code || ""} ${sel.type}${sel.name ? " "+sel.name : ""}` : "none";
+  const live=livePosition ? `${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy!=null ? ` ±${Math.round(livePosition.accuracy)}m` : ""}` : "unavailable";
+  if(els.statusGrid){
+    els.statusGrid.innerHTML = `
+      <div class="k">Mode</div><div>${esc(mode)} · ${esc(context)}</div>
+      <div class="k">GPS</div><div>${esc(live)}</div>
+      <div class="k">Route</div><div>${esc(rt)}</div>
+      <div class="k">Manual route</div><div>${manualRoute.active ? `${manualRoute.points.length} vertices` : "idle"}</div>
+      <div class="k">Area</div><div>${area.active ? `${area.points.length} vertices` : "idle"}</div>
+      <div class="k">Drafts</div><div>${pendingRecords.length} waiting in Weekly</div>
+      <div class="k">Selected</div><div>${esc(st)}</div>
+    `;
+  }
 }
 function setModeButtons(){
   els.btnLiveMode.classList.toggle("active",isLiveMode);
@@ -1204,7 +1589,7 @@ function pinToSelected(){
   }
 }
 function focusRecordFromWeekly(id){
-  const r=records.find(x=>x.id===id);
+  const r=allRecordsForViews().find(x=>(x.id===id || x._draftId===id));
   if(!r) return;
   selectedRecordId=id;
   isLiveMode=false;
@@ -1259,8 +1644,8 @@ function drawCompass(){
   ctx.fillStyle="#24333b";
   ctx.font="12px system-ui, sans-serif";
   ctx.fillText("N",x-4,y-28);
-  if(compassHeading!=null){
-    const a=(compassHeading-90)*Math.PI/180;
+  if(smoothedCompassHeading!=null && els.toolsPod && els.toolsPod.classList.contains("open")){
+    const a=(smoothedCompassHeading-90)*Math.PI/180;
     ctx.translate(x,y); ctx.rotate(a);
     ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-7,-6); ctx.lineTo(-1,0); ctx.lineTo(-7,6); ctx.closePath();
     ctx.fillStyle="#2f6f7e"; ctx.fill();
@@ -1504,7 +1889,7 @@ async function routeEnd(){
       endAddress:route.endAddress
     }
   };
-  await dbAdd("records",rec);
+  await storeRecord(rec);
 
   route.active=false;
   route.paused=false;
@@ -1540,7 +1925,7 @@ async function manualRouteEndAt(lat,lng){
     points:manualRoute.points,
     meta:{manual:true}
   };
-  await dbAdd("records",rec);
+  await storeRecord(rec);
   manualRoute.active=false;
   manualRoute.routeId=null;
   manualRoute.points=[];
@@ -1583,11 +1968,194 @@ async function areaClose(){
     address:area.startAddress,
     meta:{startAddress:area.startAddress}
   };
-  await dbAdd("records",rec);
+  await storeRecord(rec);
   area.active=false;
   area.areaId=null;
   area.points=[];
   await refreshRecords();
+}
+
+
+let addState = {source:null, geometry:null, point:null, route:null, area:null};
+
+function updateAddObjectSummary(){
+  if(!els.addObjectSummary) return;
+  els.addObjectSummary.textContent = `Selected: ${addState.source || "-"} / ${addState.geometry || "-"} / ${addState.point || addState.route || addState.area || "-"}`;
+  if(els.addManualHint) els.addManualHint.classList.toggle("hidden", addState.source !== "manual");
+  if(els.addPointKinds) els.addPointKinds.classList.toggle("hidden", addState.geometry !== "point");
+  if(els.addRouteKinds) els.addRouteKinds.classList.toggle("hidden", addState.geometry !== "line");
+  if(els.addAreaKinds) els.addAreaKinds.classList.toggle("hidden", addState.geometry !== "area");
+}
+
+function openAddObjectDialog(){
+  addState = {source:null, geometry:null, point:null, route:null, area:null};
+  updateAddObjectSummary();
+  els.addObjectDialog.showModal();
+}
+
+document.querySelectorAll("[data-add-source]").forEach(b=>{
+  b.onclick=()=>{
+    addState.source=b.dataset.addSource;
+    updateAddObjectSummary();
+  };
+});
+document.querySelectorAll("[data-add-geometry]").forEach(b=>{
+  b.onclick=()=>{
+    addState.geometry=b.dataset.addGeometry;
+    addState.point=null; addState.route=null; addState.area=null;
+    updateAddObjectSummary();
+  };
+});
+document.querySelectorAll("[data-add-point]").forEach(b=>{
+  b.onclick=()=>{
+    addState.point=b.dataset.addPoint;
+    updateAddObjectSummary();
+  };
+});
+document.querySelectorAll("[data-add-route]").forEach(b=>{
+  b.onclick=()=>{
+    addState.route=b.dataset.addRoute;
+    updateAddObjectSummary();
+  };
+});
+document.querySelectorAll("[data-add-area]").forEach(b=>{
+  b.onclick=()=>{
+    addState.area=b.dataset.addArea;
+    updateAddObjectSummary();
+  };
+});
+els.cancelAddObject.onclick=()=>els.addObjectDialog.close();
+
+els.confirmAddObject.onclick=async()=>{
+  if(!addState.source || !addState.geometry){
+    alert("Choose source and geometry first.");
+    return;
+  }
+  els.addObjectDialog.close();
+
+  if(addState.source === "gps"){
+    if(addState.geometry === "point"){
+      if(addState.point === "habit"){ pendingCanvasWorld=null; els.habitDialog.showModal(); return; }
+      if(addState.point === "note"){ pendingCanvasWorld=null; pendingNoteMode="gps"; els.noteInput.value=""; els.noteDialog.showModal(); return; }
+      if(addState.point === "route-event"){ await addRouteEvent("manual event"); await refreshRecords(); return; }
+      alert("Choose point type.");
+      return;
+    }
+    if(addState.geometry === "line"){
+      if(addState.route === "start") await routeStart();
+      else if(addState.route === "pause") await routePause();
+      else if(addState.route === "resume") await routeResume();
+      else if(addState.route === "end") await routeEnd();
+      else if(addState.route === "vertex") await captureRouteSample();
+      else alert("Choose route command.");
+      return;
+    }
+    if(addState.geometry === "area"){
+      if(addState.area === "vertex") await areaAddGPSVertex();
+      else if(addState.area === "close") await areaClose();
+      else alert("Choose area command.");
+      return;
+    }
+  }
+
+  if(addState.source === "manual"){
+    alert("Now long-press or right-click the map where you want to place the object. The canvas toolbox will appear.");
+    if(addState.geometry === "point"){
+      if(addState.point === "habit") window.__pendingTool = "add-habit";
+      else if(addState.point === "note") window.__pendingTool = "add-note";
+      else if(addState.point === "route-event") window.__pendingTool = "symbol";
+    }else if(addState.geometry === "line"){
+      if(addState.route === "start") window.__pendingTool = "manual-route-start";
+      else if(addState.route === "vertex" || addState.route === "resume") window.__pendingTool = "manual-route-vertex";
+      else if(addState.route === "end") window.__pendingTool = "manual-route-end";
+      else if(addState.route === "pause") window.__pendingTool = null;
+    }else if(addState.geometry === "area"){
+      if(addState.area === "vertex") window.__pendingTool = "area-vertex";
+      else if(addState.area === "close") window.__pendingTool = "area-close";
+    }
+  }
+};
+
+async function runPendingCanvasTool(){
+  const tool = window.__pendingTool;
+  if(!tool || !pendingCanvasWorld) return false;
+  window.__pendingTool = null;
+  if(tool === "add-habit"){ els.habitDialog.showModal(); return true; }
+  if(tool === "add-note"){ pendingNoteMode="manual"; els.noteInput.value=""; els.noteDialog.showModal(); return true; }
+  const ll = xyToLL(pendingCanvasWorld.x,pendingCanvasWorld.y);
+  if(tool === "manual-route-start") await manualRouteStartAt(ll.lat,ll.lng);
+  if(tool === "manual-route-vertex") await manualRouteVertexAt(ll.lat,ll.lng);
+  if(tool === "manual-route-end") await manualRouteEndAt(ll.lat,ll.lng);
+  if(tool === "area-vertex") await areaAddVertexAt(ll.lat,ll.lng);
+  if(tool === "area-close") await areaClose();
+  if(tool === "symbol") await addManualRecord("note",ll.lat,ll.lng,{text:"[Route/event point]"});
+  return true;
+}
+
+
+function openFloatingEditor(title, htmlFields, onSave){
+  els.floatingEditorTitle.textContent = title;
+  els.floatingEditorFields.innerHTML = htmlFields;
+  els.floatingEditor.classList.add("open");
+  els.floatingEditorSave.onclick = onSave;
+}
+function closeFloatingEditor(){
+  els.floatingEditor.classList.remove("open");
+}
+els.floatingEditorClose.onclick=closeFloatingEditor;
+els.floatingEditorCancel.onclick=closeFloatingEditor;
+els.floatingEditorMin.onclick=()=>els.floatingEditor.classList.toggle("open");
+
+function initFloatingEditorDrag(){
+  let dragging=false,startX=0,startY=0,startLeft=0,startTop=0;
+  els.floatingEditorHead.addEventListener("pointerdown", e=>{
+    if(e.target.tagName==="BUTTON")return;
+    dragging=true;
+    els.floatingEditorHead.setPointerCapture(e.pointerId);
+    const rect=els.floatingEditor.getBoundingClientRect();
+    startX=e.clientX; startY=e.clientY; startLeft=rect.left; startTop=rect.top;
+    els.floatingEditor.style.left=`${startLeft}px`;
+    els.floatingEditor.style.top=`${startTop}px`;
+  });
+  els.floatingEditorHead.addEventListener("pointermove", e=>{
+    if(!dragging)return;
+    const dx=e.clientX-startX, dy=e.clientY-startY;
+    els.floatingEditor.style.left=`${Math.max(0,Math.min(window.innerWidth-80,startLeft+dx))}px`;
+    els.floatingEditor.style.top=`${Math.max(0,Math.min(window.innerHeight-60,startTop+dy))}px`;
+  });
+  els.floatingEditorHead.addEventListener("pointerup", e=>{
+    dragging=false;
+    try{els.floatingEditorHead.releasePointerCapture(e.pointerId)}catch{}
+  });
+}
+
+function initToolsPodDrag(){
+  let dragging=false,startX=0,startY=0,startLeft=0,startTop=0;
+  els.toolsPod.addEventListener("pointerdown", e=>{
+    if(e.target === els.compassButton || els.compassButton.contains(e.target)) return;
+    dragging=true;
+    els.toolsPod.setPointerCapture(e.pointerId);
+    const rect=els.toolsPod.getBoundingClientRect();
+    startX=e.clientX; startY=e.clientY; startLeft=rect.left; startTop=rect.top;
+    els.toolsPod.style.left=`${startLeft}px`;
+    els.toolsPod.style.top=`${startTop}px`;
+    els.toolsPod.style.transform="none";
+  });
+  els.toolsPod.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const dx=e.clientX-startX, dy=e.clientY-startY;
+    const maxL=window.innerWidth-60, maxT=window.innerHeight-60;
+    els.toolsPod.style.left=`${Math.max(0,Math.min(maxL,startLeft+dx))}px`;
+    els.toolsPod.style.top=`${Math.max(0,Math.min(maxT,startTop+dy))}px`;
+  });
+  els.toolsPod.addEventListener("pointerup", e=>{
+    dragging=false;
+    try{els.toolsPod.releasePointerCapture(e.pointerId)}catch{}
+  });
+  els.toolsPod.addEventListener("pointercancel", e=>{
+    dragging=false;
+    try{els.toolsPod.releasePointerCapture(e.pointerId)}catch{}
+  });
 }
 
 els.actionDialog.querySelectorAll("[data-action]").forEach(b=>{
@@ -1669,6 +2237,7 @@ function renderWeeklyPanel(){
   const m=mondayOfWeek(anchorDate);
   const ymds=Array.from({length:7},(_,i)=>toYMD(addDays(m,i)));
   els.weekRangeText.textContent=`${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
+  if(els.pendingCountText) els.pendingCountText.textContent = `${pendingRecords.length} live drafts`;
 
   const wr=weeklyRecords();
 
@@ -1705,14 +2274,14 @@ function renderWeeklyPanel(){
     }else{
       day.forEach(r=>{
         html+=`
-          <div class="card ${r.id===selectedRecordId?"selected":""}" data-week-record-id="${r.id}">
+          <div class="card ${(r.id===selectedRecordId || r._draftId===selectedRecordId)?"selected":""}" data-week-record-id="${r.id || r._draftId}">
             <div class="row">
               <span class="pill">${esc(r.code||"")}</span>
-              <span class="pill">${esc(r.type)}</span>
+              <span class="pill">${esc(r.type)}</span>${isDraftRecord(r)?`<span class="pill draftBadge">draft</span>`:""}
               ${r.name?`<span class="pill">${esc(r.name)}</span>`:""}
               <span class="pill">${esc(eventTimeLabel(r)||"--:--")}</span>
               <div class="spacer"></div>
-              <button data-show-on-map="${r.id}">Show on map</button>
+              ${isDraftRecord(r) ? `<button data-delete-draft="${r._draftId}" class="danger">Remove draft</button>` : ""}<button data-show-on-map="${r.id || r._draftId}">Show on map</button>
             </div>
             ${r.text?`<div style="margin-top:8px;white-space:pre-wrap">${esc(r.text)}</div>`:""}
             <div class="small muted" style="margin-top:8px">
@@ -1730,10 +2299,13 @@ function renderWeeklyPanel(){
   els.weeklyRecordsWrap.innerHTML=html;
 
   els.weeklyRecordsWrap.querySelectorAll("[data-show-on-map]").forEach(b=>{
-    b.onclick=()=>focusRecordFromWeekly(Number(b.dataset.showOnMap));
+    b.onclick=()=>focusRecordFromWeekly(b.dataset.showOnMap);
+  });
+  els.weeklyRecordsWrap.querySelectorAll("[data-delete-draft]").forEach(b=>{
+    b.onclick=(e)=>{e.stopPropagation(); deleteDraftRecord(b.dataset.deleteDraft);};
   });
   els.weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card=>{
-    const id=Number(card.dataset.weekRecordId);
+    const id=card.dataset.weekRecordId;
     card.onclick=()=>{
       selectedRecordId=id;
       updateStatusLine();
@@ -1836,6 +2408,8 @@ async function doRestoreBackup(file){
     await dbAdd("records",c);
   }
   selectedRecordId=null;
+  pendingRecords=[];
+  savePendingRecords();
   route.active=false;
   area.active=false;
   manualRoute.active=false;
@@ -1886,159 +2460,6 @@ function exportRecordsToDXF(list){
   return o.join("\n");
 }
 
-
-function px(n){ return `${Math.round(n)}px`; }
-
-function resetChromeWindow(which){
-  const el = $(which);
-  if(!el) return;
-  el.classList.remove("minimized");
-  if(which==="topHud"){
-    el.style.left="10px";
-    el.style.right="10px";
-    el.style.top="10px";
-    el.style.bottom="";
-    el.style.width="";
-    el.style.height="";
-  }
-  if(which==="bottomDeck"){
-    el.style.left="10px";
-    el.style.right="10px";
-    el.style.bottom="10px";
-    el.style.top="";
-    el.style.width="";
-    el.style.height="";
-  }
-  updateDockTabs();
-}
-
-function minimizeChromeWindow(which){
-  const el = $(which);
-  if(!el) return;
-  el.classList.add("minimized");
-  updateDockTabs();
-}
-
-function restoreChromeWindow(which){
-  const el = $(which);
-  if(!el) return;
-  el.classList.remove("minimized");
-  el.style.zIndex = String(90 + Date.now()%1000);
-  updateDockTabs();
-}
-
-function updateDockTabs(){
-  if(els.dockStatus) els.dockStatus.classList.toggle("show", els.topHud && els.topHud.classList.contains("minimized"));
-  if(els.dockTools) els.dockTools.classList.toggle("show", els.bottomDeck && els.bottomDeck.classList.contains("minimized"));
-}
-
-function makeChromeDraggable(){
-  document.querySelectorAll("[data-drag-window]").forEach(handle=>{
-    const id = handle.dataset.dragWindow;
-    const win = $(id);
-    if(!win) return;
-
-    let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
-
-    handle.addEventListener("pointerdown", e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      dragging=true;
-      handle.setPointerCapture(e.pointerId);
-      const rect=win.getBoundingClientRect();
-      startX=e.clientX;
-      startY=e.clientY;
-      startLeft=rect.left;
-      startTop=rect.top;
-      win.style.left=px(startLeft);
-      win.style.top=px(startTop);
-      win.style.right="auto";
-      win.style.bottom="auto";
-      win.style.zIndex=String(90 + Date.now()%1000);
-    });
-
-    handle.addEventListener("pointermove", e=>{
-      if(!dragging) return;
-      const dx=e.clientX-startX;
-      const dy=e.clientY-startY;
-      const rect=win.getBoundingClientRect();
-      const maxLeft=window.innerWidth-80;
-      const maxTop=window.innerHeight-50;
-      win.style.left=px(Math.max(-rect.width+80, Math.min(maxLeft, startLeft+dx)));
-      win.style.top=px(Math.max(0, Math.min(maxTop, startTop+dy)));
-    });
-
-    handle.addEventListener("pointerup", e=>{
-      dragging=false;
-      try{handle.releasePointerCapture(e.pointerId)}catch{}
-    });
-    handle.addEventListener("pointercancel", e=>{
-      dragging=false;
-      try{handle.releasePointerCapture(e.pointerId)}catch{}
-    });
-  });
-}
-
-function makeChromeResizable(){
-  document.querySelectorAll("[data-resize-window]").forEach(handle=>{
-    const id=handle.dataset.resizeWindow;
-    const win=$(id);
-    if(!win) return;
-
-    let resizing=false, startX=0, startY=0, startW=0, startH=0;
-
-    handle.addEventListener("pointerdown", e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      resizing=true;
-      handle.setPointerCapture(e.pointerId);
-      const rect=win.getBoundingClientRect();
-      startX=e.clientX;
-      startY=e.clientY;
-      startW=rect.width;
-      startH=rect.height;
-      win.style.width=px(startW);
-      win.style.height=px(startH);
-      win.style.right="auto";
-      win.style.bottom="auto";
-      win.style.zIndex=String(90 + Date.now()%1000);
-    });
-
-    handle.addEventListener("pointermove", e=>{
-      if(!resizing) return;
-      const nw=Math.max(220, Math.min(window.innerWidth-20, startW+(e.clientX-startX)));
-      const nh=Math.max(70, Math.min(window.innerHeight-20, startH+(e.clientY-startY)));
-      win.style.width=px(nw);
-      win.style.height=px(nh);
-      win.style.overflow="auto";
-    });
-
-    handle.addEventListener("pointerup", e=>{
-      resizing=false;
-      try{handle.releasePointerCapture(e.pointerId)}catch{}
-    });
-    handle.addEventListener("pointercancel", e=>{
-      resizing=false;
-      try{handle.releasePointerCapture(e.pointerId)}catch{}
-    });
-  });
-}
-
-function initChromeWindowManager(){
-  if(els.minTopHud) els.minTopHud.onclick = (e)=>{e.stopPropagation(); minimizeChromeWindow("topHud");};
-  if(els.resetTopHud) els.resetTopHud.onclick = (e)=>{e.stopPropagation(); resetChromeWindow("topHud");};
-  if(els.minBottomDeck) els.minBottomDeck.onclick = (e)=>{e.stopPropagation(); minimizeChromeWindow("bottomDeck");};
-  if(els.resetBottomDeck) els.resetBottomDeck.onclick = (e)=>{e.stopPropagation(); resetChromeWindow("bottomDeck");};
-
-  document.querySelectorAll("[data-restore-window]").forEach(tab=>{
-    tab.onclick=()=>restoreChromeWindow(tab.dataset.restoreWindow);
-  });
-
-  makeChromeDraggable();
-  makeChromeResizable();
-  updateDockTabs();
-}
-
 function renderAll(){
   updateStatusLine();
   renderWeeklyPanel();
@@ -2048,6 +2469,10 @@ function renderAll(){
 
 els.menuTab.onclick=()=>els.menuDrawer.classList.add("open");
 els.closeMenu.onclick=()=>els.menuDrawer.classList.remove("open");
+els.toolsTab.onclick=()=>els.toolsPod.classList.toggle("open");
+els.compassButton.onclick=()=>els.toolsDrawer.classList.add("open");
+els.closeTools.onclick=()=>els.toolsDrawer.classList.remove("open");
+els.hideCompass.onclick=()=>{els.toolsPod.classList.remove("open"); els.toolsDrawer.classList.remove("open");};
 document.querySelectorAll(".menuTabs button").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll(".menuTabs button").forEach(b=>b.classList.remove("active"));
@@ -2057,16 +2482,91 @@ document.querySelectorAll(".menuTabs button").forEach(btn=>{
   };
 });
 
-els.btnLiveMode.onclick=()=>{isLiveMode=true;setModeButtons();updateStatusLine();drawCanvas();};
-els.btnDayScope.onclick=()=>{isLiveMode=false;scope="day";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
-els.btnWeekScope.onclick=()=>{isLiveMode=false;scope="week";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
-els.btnMonthScope.onclick=()=>{isLiveMode=false;scope="month";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.btnLiveMode.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=true;setModeButtons();updateStatusLine();drawCanvas();};
+els.btnDayScope.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=false;scope="day";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.btnWeekScope.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=false;scope="week";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
+els.btnMonthScope.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=false;scope="month";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
 els.scopeDate.onchange=()=>{anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);if(!isLiveMode)fitScope();renderWeeklyPanel();updateStatusLine();};
 
 els.btnRecord.onclick=()=>els.recordDialog.showModal();
 els.btnToolbox.onclick=()=>els.actionDialog.showModal();
+els.mainAddButton.onclick=openAddObjectDialog;
+els.btnAddObject.onclick=openAddObjectDialog;
+els.finishLiveSessionBtn.onclick=submitPendingRecords;
+els.submitPendingBtn.onclick=submitPendingRecords;
+els.clearPendingBtn.onclick=clearPendingRecords;
 els.btnRoute.onclick=()=>els.recordDialog.showModal();
 els.btnArea.onclick=()=>els.recordDialog.showModal();
+
+let activeRouteToolMode = null; // "design" or "measure"
+let activeAreaToolMode = null;  // "design" or "measure"
+
+els.routeDesignBtn.onclick=()=>{
+  activeRouteToolMode="design";
+  els.routeCommandRow.classList.remove("hidden");
+  alert("Route Design: choose a command, then place it on the canvas if needed.");
+};
+els.routeMeasureBtn.onclick=()=>{
+  activeRouteToolMode="measure";
+  els.routeCommandRow.classList.remove("hidden");
+  alert("Route Measure: commands use current GPS position and go to Weekly drafts first.");
+};
+els.routeCommandRow.querySelectorAll("[data-route-cmd]").forEach(b=>{
+  b.onclick=async()=>{
+    const cmd=b.dataset.routeCmd;
+    if(activeRouteToolMode==="measure"){
+      if(cmd==="start") await routeStart();
+      else if(cmd==="pause") await routePause();
+      else if(cmd==="resume") await routeResume();
+      else if(cmd==="end") await routeEnd();
+      else if(cmd==="vertex") await captureRouteSample();
+      return;
+    }
+    if(activeRouteToolMode==="design"){
+      if(cmd==="start") window.__pendingTool="manual-route-start";
+      else if(cmd==="vertex" || cmd==="resume") window.__pendingTool="manual-route-vertex";
+      else if(cmd==="end") window.__pendingTool="manual-route-end";
+      else if(cmd==="pause") { alert("Design pause saved as a gap. Use resume/vertex to begin the next segment."); return; }
+      els.toolsDrawer.classList.remove("open");
+      alert("Now long-press/right-click the canvas to place this route command.");
+    }
+  };
+});
+
+els.areaDesignBtn.onclick=()=>{
+  activeAreaToolMode="design";
+  els.areaCommandRow.classList.remove("hidden");
+  alert("Area Design: choose Add Vertex, then place vertices on the canvas.");
+};
+els.areaMeasureBtn.onclick=()=>{
+  activeAreaToolMode="measure";
+  els.areaCommandRow.classList.remove("hidden");
+  alert("Area Measure: GPS vertices go to Weekly drafts first.");
+};
+els.areaCommandRow.querySelectorAll("[data-area-cmd]").forEach(b=>{
+  b.onclick=async()=>{
+    const cmd=b.dataset.areaCmd;
+    if(activeAreaToolMode==="measure"){
+      if(cmd==="vertex") await areaAddGPSVertex();
+      else if(cmd==="close") await areaClose();
+      return;
+    }
+    if(activeAreaToolMode==="design"){
+      if(cmd==="vertex") window.__pendingTool="area-vertex";
+      else if(cmd==="close") window.__pendingTool="area-close";
+      els.toolsDrawer.classList.remove("open");
+      if(cmd==="vertex") alert("Now long-press/right-click the canvas to place an area vertex.");
+      else await areaClose();
+    }
+  };
+});
+
+els.gpsRouteStart.onclick=routeStart;
+els.gpsRoutePause.onclick=routePause;
+els.gpsRouteResume.onclick=routeResume;
+els.gpsRouteEnd.onclick=routeEnd;
+els.gpsAreaVertex.onclick=areaAddGPSVertex;
+els.gpsAreaClose.onclick=areaClose;
 els.btnPinMe.onclick=pinToMe;
 els.btnPinSelected.onclick=pinToSelected;
 els.btnFitScope.onclick=fitScope;
@@ -2076,9 +2576,9 @@ els.btnZoomIn.onclick=()=>{camera.zoom=Math.min(10,camera.zoom*1.18);drawCanvas(
 els.btnZoomOut.onclick=()=>{camera.zoom=Math.max(.002,camera.zoom/1.18);drawCanvas();};
 els.btnResetView.onclick=()=>{camera={...cameraDefault};drawCanvas();};
 
-els.weekPrev.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),-7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
-els.weekToday.onclick=()=>{anchorDate=new Date();els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
-els.weekNext.onclick=()=>{anchorDate=addDays(mondayOfWeek(anchorDate),7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+els.weekPrev.onclick=()=>{if(!warnIfPendingBeforeChange())return;anchorDate=addDays(mondayOfWeek(anchorDate),-7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+els.weekToday.onclick=()=>{if(!warnIfPendingBeforeChange())return;anchorDate=new Date();els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
+els.weekNext.onclick=()=>{if(!warnIfPendingBeforeChange())return;anchorDate=addDays(mondayOfWeek(anchorDate),7);els.scopeDate.value=toYMD(anchorDate);renderWeeklyPanel();};
 
 els.dbApply.onclick=renderDatabasePanel;
 els.dbClear.onclick=()=>{els.dbFilterDate.value="";els.dbFilterType.value="";renderDatabasePanel();};
@@ -2130,7 +2630,11 @@ canvas.addEventListener("pointerdown", e=>{
   longPressTimer=setTimeout(()=>{
     const r=canvas.getBoundingClientRect();
     pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);
-    els.actionDialog.showModal();
+    if(window.__pendingTool){
+      runPendingCanvasTool();
+    }else{
+      els.actionDialog.showModal();
+    }
     longPressTimer=null;
   },500);
 });
@@ -2166,7 +2670,11 @@ canvas.addEventListener("contextmenu", e=>{
   e.preventDefault();
   const r=canvas.getBoundingClientRect();
   pendingCanvasWorld=screenToWorld(e.clientX-r.left,e.clientY-r.top);
-  els.actionDialog.showModal();
+  if(window.__pendingTool){
+    runPendingCanvasTool();
+  }else{
+    els.actionDialog.showModal();
+  }
 });
 canvas.addEventListener("wheel", e=>{
   e.preventDefault();
@@ -2193,13 +2701,15 @@ function resizeCanvas(){
 window.addEventListener("resize",resizeCanvas);
 
 async function boot(){
-  initChromeWindowManager();
+  initFloatingEditorDrag();
+  initToolsPodDrag();
   updateNetPill();
   window.addEventListener("online",updateNetPill);
   window.addEventListener("offline",updateNetPill);
   els.scopeDate.value=todayYMD();
 
   await openDB();
+  loadPendingRecords();
   await loadSettings();
   await refreshRecords();
   await initCompass();
