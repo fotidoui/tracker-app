@@ -19,7 +19,7 @@
       --panel:#fffaf0;
       --shadow:0 14px 34px rgba(36,51,59,.14);
       --radius:18px;
-      --glass:rgba(255,250,240,.88);
+      --glass:rgba(255,250,240,.9);
     }
     *{box-sizing:border-box}
     html,body{margin:0;padding:0;background:var(--cream);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -36,187 +36,65 @@
     button.danger{background:#fff0ef;border-color:#e3b1aa}
     button.active{outline:2px solid var(--sea2);outline-offset:1px}
 
-    .app{
-      position:relative;
-      width:100vw;
-      height:100dvh;
-      overflow:hidden;
-      background:linear-gradient(180deg,#f8f1e3,#f3eadb);
-    }
-
-    #mapWrap{
-      position:absolute; inset:0;
-      overflow:hidden;
-      background:linear-gradient(180deg,#fffaf2,#f6efdf);
-      touch-action:none;
-    }
-    canvas{
-      display:block;
-      width:100%;
-      height:100%;
-    }
+    .app{position:relative;width:100vw;height:100dvh;overflow:hidden;background:linear-gradient(180deg,#f8f1e3,#f3eadb)}
+    #mapWrap{position:absolute;inset:0;overflow:hidden;background:linear-gradient(180deg,#fffaf2,#f6efdf);touch-action:none}
+    canvas{display:block;width:100%;height:100%}
 
     .overlay{
-      position:absolute;
-      z-index:20;
-      background:var(--glass);
-      backdrop-filter:blur(8px);
-      border:1px solid rgba(216,204,178,.95);
-      box-shadow:var(--shadow);
-      border-radius:18px;
+      position:absolute;z-index:20;background:var(--glass);backdrop-filter:blur(8px);
+      border:1px solid rgba(216,204,178,.95);box-shadow:var(--shadow);border-radius:18px
     }
 
-    .topBar{
-      top:10px; left:10px; right:10px;
-      padding:10px;
-      display:flex; gap:8px; flex-wrap:wrap; align-items:center;
-    }
-
-    .statusBar{
-      top:84px; left:10px;
-      padding:10px 12px;
-      min-width:280px;
-      max-width:min(92vw,560px);
-    }
-
-    .toolsBar{
-      bottom:12px; left:12px;
-      padding:10px;
-      display:flex; gap:8px; flex-wrap:wrap;
-      max-width:min(92vw,760px);
-    }
-
-    .zoomBar{
-      right:12px; bottom:12px;
-      padding:10px;
-      display:flex; flex-direction:column; gap:8px;
-      align-items:stretch;
-    }
-
-    .sideInfo{
-      top:140px; right:12px;
-      padding:10px;
-      width:min(92vw,290px);
-    }
-
-    .panelToggleBar{
-      top:140px; left:12px;
-      padding:10px;
-      display:flex; flex-direction:column; gap:8px;
-    }
+    .topBar{top:10px;left:10px;right:10px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .statusBar{top:84px;left:10px;right:10px;padding:10px 12px}
+    .toolsBar{bottom:12px;left:12px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;max-width:min(96vw,980px)}
+    .zoomBar{right:12px;bottom:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+    .panelToggleBar{top:140px;left:12px;padding:10px;display:flex;flex-direction:column;gap:8px}
+    .sideInfo{top:140px;right:12px;padding:10px;width:min(92vw,320px)}
 
     .panel{
-      position:absolute;
-      z-index:30;
-      top:130px;
-      left:76px;
-      width:min(94vw,520px);
-      max-height:calc(100dvh - 150px);
-      overflow:auto;
-      display:none;
-      padding:12px;
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:18px;
-      box-shadow:var(--shadow);
+      position:absolute;z-index:30;top:130px;left:76px;width:min(94vw,620px);
+      max-height:calc(100dvh - 150px);overflow:auto;display:none;padding:12px;
+      background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)
     }
     .panel.active{display:block}
-
-    .panel h3{
-      margin:0 0 10px 0;
-    }
-
     .panelHeader{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      margin-bottom:10px;
-      position:sticky;
-      top:0;
-      background:var(--panel);
-      padding-bottom:10px;
-      z-index:3;
+      display:flex;gap:8px;align-items:center;margin-bottom:10px;position:sticky;top:0;
+      background:var(--panel);padding-bottom:10px;z-index:3
     }
-
     .spacer{flex:1 1 auto}
     .small{font-size:12px}
     .muted{color:var(--muted)}
-    .pill{
-      display:inline-flex; align-items:center;
-      border-radius:999px;
-      border:1px solid var(--line);
-      padding:5px 10px;
-      background:#fff;
-      font-size:12px;
-    }
-    .row{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    .grid{display:grid; gap:10px}
+    .pill{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line);padding:5px 10px;background:#fff;font-size:12px}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .grid{display:grid;gap:10px}
     .grid.two{grid-template-columns:1fr 1fr}
     @media (max-width:700px){
       .grid.two{grid-template-columns:1fr}
-      .statusBar{top:94px}
-      .sideInfo{top:176px}
-      .panel{left:12px;width:min(94vw,560px)}
+      .statusBar{top:96px}
+      .panel{left:12px;width:min(94vw,620px)}
+      .sideInfo{top:180px}
     }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-    }
-    th,td{
-      border:1px solid var(--line);
-      padding:8px;
-      vertical-align:top;
-    }
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--line);padding:8px;vertical-align:top}
     th{background:#f8f0df}
     .weeklyTable td,.weeklyTable th{text-align:center}
-    .weeklyTable td:first-child,.weeklyTable th:first-child{
-      text-align:left; position:sticky; left:0; background:#f8f0df; z-index:1;
-    }
+    .weeklyTable td:first-child,.weeklyTable th:first-child{text-align:left;position:sticky;left:0;background:#f8f0df;z-index:1}
 
-    .recordCard{
-      background:#fff;
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:10px;
-      margin-bottom:10px;
-    }
-
-    .recordCard.selected{
-      outline:2px solid var(--sea2);
-      outline-offset:1px;
-    }
-
-    .dbWrap{
-      max-height:56dvh;
-      overflow:auto;
-      border:1px solid var(--line);
-      border-radius:14px;
-    }
+    .recordCard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px}
+    .recordCard.selected{outline:2px solid var(--sea2);outline-offset:1px}
+    .dbWrap{max-height:56dvh;overflow:auto;border:1px solid var(--line);border-radius:14px}
 
     dialog{
-      width:min(92vw,760px);
-      border:1px solid var(--line);
-      border-radius:18px;
-      background:var(--panel);
-      color:var(--ink);
-      padding:0;
-      box-shadow:var(--shadow);
+      width:min(92vw,760px);border:1px solid var(--line);border-radius:18px;background:var(--panel);
+      color:var(--ink);padding:0;box-shadow:var(--shadow)
     }
     dialog::backdrop{background:rgba(36,51,59,.22)}
-    .modalHead,.modalBody,.modalFoot{
-      padding:14px;
-      border-bottom:1px solid var(--line);
-    }
+    .modalHead,.modalBody,.modalFoot{padding:14px;border-bottom:1px solid var(--line)}
     .modalFoot{border-bottom:0;display:flex;gap:8px;justify-content:flex-end}
-    .menuGrid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:8px;
-    }
-    @media (max-width:640px){
-      .menuGrid{grid-template-columns:1fr}
-    }
+    .menuGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    @media (max-width:640px){.menuGrid{grid-template-columns:1fr}}
 
     .hint{font-size:13px;color:var(--muted)}
     .hidden{display:none !important}
@@ -224,49 +102,36 @@
 </head>
 <body>
 <div class="app">
-  <div id="mapWrap">
-    <canvas id="mapCanvas"></canvas>
-  </div>
+  <div id="mapWrap"><canvas id="mapCanvas"></canvas></div>
 
   <div class="overlay topBar">
     <strong style="color:var(--sea)">Personal Spatial Journal</strong>
-
     <button id="btnLiveMode" class="primary active">Live</button>
     <button id="btnDayScope" class="soft">Day</button>
-    <button id="btnWeekScope" class="soft active">Week</button>
+    <button id="btnWeekScope" class="soft">Week</button>
     <button id="btnMonthScope" class="soft">Month</button>
-
-    <label id="scopeDateWrap">
-      <input id="scopeDate" type="date">
-    </label>
-
+    <label id="scopeDateWrap" class="hidden"><input id="scopeDate" type="date"></label>
     <div class="spacer"></div>
     <span id="netPill" class="pill">Checking…</span>
     <span id="compassPill" class="pill">Compass --</span>
   </div>
 
   <div class="overlay statusBar">
-    <div class="row">
-      <span id="selectedPeriodText" class="pill">Current week</span>
-      <span id="routeStateText" class="pill">Route: idle</span>
-      <span id="selectedItemText" class="pill">Selected: none</span>
-    </div>
-    <div style="margin-top:8px" id="statusText">Ready.</div>
-  </div>
-
-  <div class="overlay sideInfo">
-    <div class="small muted">Map state</div>
-    <div id="mapStateText">Week mode</div>
-    <div style="margin-top:10px" class="small muted">Current live position</div>
-    <div id="livePosText">Not available</div>
-    <div style="margin-top:10px" class="small muted">Hint</div>
-    <div class="hint">Tap to inspect. Long press or right click to add or control records.</div>
+    <div id="statusLine">Live · today · route idle · selected none · live position unavailable</div>
+    <div id="statusText" class="small muted" style="margin-top:6px">Ready.</div>
   </div>
 
   <div class="overlay panelToggleBar">
     <button id="toggleWeekly" class="soft">Weekly</button>
     <button id="toggleDatabase" class="soft">Database</button>
     <button id="toggleSettings" class="soft">Settings</button>
+  </div>
+
+  <div class="overlay sideInfo">
+    <div class="small muted">Selected</div>
+    <div id="selectedInfoText">None</div>
+    <div style="margin-top:10px" class="small muted">Hint</div>
+    <div class="hint">Tap to inspect. Long press or right click to open the action menu.</div>
   </div>
 
   <div class="overlay toolsBar">
@@ -276,6 +141,7 @@
     <button id="btnPinMe" class="soft">Pin Me</button>
     <button id="btnPinSelected" class="soft">Pin Selected</button>
     <button id="btnFitScope" class="soft">Fit Scope</button>
+    <button id="btnRefreshLive" class="soft">Refresh</button>
     <button id="btnRefreshAddresses" class="soft">Refresh Addresses</button>
   </div>
 
@@ -294,9 +160,7 @@
       <button id="weekNext">→</button>
       <button data-close-panel="weeklyPanel">Close</button>
     </div>
-    <div class="row" style="margin-bottom:10px">
-      <span id="weekRangeText" class="pill"></span>
-    </div>
+    <div class="row" style="margin-bottom:10px"><span id="weekRangeText" class="pill"></span></div>
     <div id="weeklySummaryWrap"></div>
     <div id="weeklyRecordsWrap" style="margin-top:12px"></div>
   </div>
@@ -320,14 +184,12 @@
       <button id="dbClear">Clear</button>
       <button data-close-panel="databasePanel">Close</button>
     </div>
-    <div class="row" style="margin-bottom:10px">
-      <span id="dbCountText" class="pill"></span>
-    </div>
+    <div class="row" style="margin-bottom:10px"><span id="dbCountText" class="pill"></span></div>
     <div class="dbWrap">
       <table id="dbTable">
         <thead>
           <tr>
-            <th>ID</th><th>Type</th><th>Date</th><th>Time</th><th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th><th>Route km</th><th>Area m²</th><th>Delete</th>
+            <th>Code</th><th>Type</th><th>Date</th><th>Time</th><th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th><th>Route km</th><th>Area m²</th><th>Delete</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -347,13 +209,19 @@
       <button id="resetHabitNames">Reset</button>
     </div>
     <div class="row" style="margin-top:16px">
-      <button id="exportJSON">Export JSON</button>
-      <button id="exportCSV">Export CSV</button>
-      <button id="importJSONBtn">Import JSON</button>
-      <input id="importJSONInput" type="file" accept=".json,application/json" class="hidden">
+      <label>Default route seconds <input id="defaultRouteSeconds" type="number" min="1" value="5" style="width:90px"></label>
     </div>
-    <div class="hint" style="margin-top:10px">
-      Export regularly. All data is stored locally in this browser.
+
+    <div class="row" style="margin-top:16px">
+      <button id="backupAllBtn" class="primary">Backup All</button>
+      <button id="restoreBackupBtn">Restore Backup</button>
+      <input id="restoreBackupInput" type="file" accept=".json,application/json" class="hidden">
+    </div>
+
+    <div class="row" style="margin-top:16px">
+      <button id="exportCurrentCSV">Export Current CSV</button>
+      <button id="exportCurrentKML">Export Current KML</button>
+      <button id="exportCurrentDXF">Export Current DXF</button>
     </div>
   </div>
 </div>
@@ -376,45 +244,41 @@
       <button data-action="inspect">Inspect Nearby</button>
     </div>
   </div>
-  <div class="modalFoot">
-    <button onclick="document.getElementById('actionDialog').close()">Close</button>
-  </div>
+  <div class="modalFoot"><button onclick="document.getElementById('actionDialog').close()">Close</button></div>
 </dialog>
 
 <dialog id="habitDialog">
   <div class="modalHead"><strong>Choose Habit</strong></div>
   <div id="habitDialogBody" class="modalBody"></div>
-  <div class="modalFoot">
-    <button onclick="document.getElementById('habitDialog').close()">Close</button>
-  </div>
+  <div class="modalFoot"><button onclick="document.getElementById('habitDialog').close()">Close</button></div>
 </dialog>
 
 <dialog id="noteDialog">
   <div class="modalHead"><strong>Add Note</strong></div>
-  <div class="modalBody">
-    <textarea id="noteInput" rows="5" style="width:100%" placeholder="Write your note..."></textarea>
-  </div>
+  <div class="modalBody"><textarea id="noteInput" rows="5" style="width:100%" placeholder="Write your note..."></textarea></div>
   <div class="modalFoot">
     <button onclick="document.getElementById('noteDialog').close()">Cancel</button>
     <button id="saveNote" class="primary">Save</button>
   </div>
 </dialog>
 
+<dialog id="chooserDialog">
+  <div class="modalHead"><strong>Choose Element</strong></div>
+  <div id="chooserBody" class="modalBody"></div>
+  <div class="modalFoot"><button onclick="document.getElementById('chooserDialog').close()">Close</button></div>
+</dialog>
+
 <dialog id="infoDialog">
   <div class="modalHead"><strong>Record Details</strong></div>
   <div id="infoBody" class="modalBody"></div>
-  <div class="modalFoot">
-    <button onclick="document.getElementById('infoDialog').close()">Close</button>
-  </div>
+  <div class="modalFoot"><button onclick="document.getElementById('infoDialog').close()">Close</button></div>
 </dialog>
 
 <script>
 (() => {
   "use strict";
 
-  // ---------- DOM ----------
   const $ = id => document.getElementById(id);
-
   const canvas = $("mapCanvas");
   const ctx = canvas.getContext("2d");
 
@@ -423,13 +287,10 @@
   const btnWeekScope = $("btnWeekScope");
   const btnMonthScope = $("btnMonthScope");
   const scopeDate = $("scopeDate");
-
-  const selectedPeriodText = $("selectedPeriodText");
-  const routeStateText = $("routeStateText");
-  const selectedItemText = $("selectedItemText");
+  const scopeDateWrap = $("scopeDateWrap");
+  const statusLine = $("statusLine");
   const statusText = $("statusText");
-  const mapStateText = $("mapStateText");
-  const livePosText = $("livePosText");
+  const selectedInfoText = $("selectedInfoText");
   const netPill = $("netPill");
   const compassPill = $("compassPill");
 
@@ -439,6 +300,7 @@
   const btnPinMe = $("btnPinMe");
   const btnPinSelected = $("btnPinSelected");
   const btnFitScope = $("btnFitScope");
+  const btnRefreshLive = $("btnRefreshLive");
   const btnRefreshAddresses = $("btnRefreshAddresses");
   const btnZoomIn = $("btnZoomIn");
   const btnZoomOut = $("btnZoomOut");
@@ -447,7 +309,6 @@
   const toggleWeekly = $("toggleWeekly");
   const toggleDatabase = $("toggleDatabase");
   const toggleSettings = $("toggleSettings");
-
   const weeklyPanel = $("weeklyPanel");
   const databasePanel = $("databasePanel");
   const settingsPanel = $("settingsPanel");
@@ -469,10 +330,14 @@
   const habitSettingsWrap = $("habitSettingsWrap");
   const saveHabitNames = $("saveHabitNames");
   const resetHabitNames = $("resetHabitNames");
-  const exportJSON = $("exportJSON");
-  const exportCSV = $("exportCSV");
-  const importJSONBtn = $("importJSONBtn");
-  const importJSONInput = $("importJSONInput");
+  const defaultRouteSeconds = $("defaultRouteSeconds");
+
+  const backupAllBtn = $("backupAllBtn");
+  const restoreBackupBtn = $("restoreBackupBtn");
+  const restoreBackupInput = $("restoreBackupInput");
+  const exportCurrentCSV = $("exportCurrentCSV");
+  const exportCurrentKML = $("exportCurrentKML");
+  const exportCurrentDXF = $("exportCurrentDXF");
 
   const actionDialog = $("actionDialog");
   const habitDialog = $("habitDialog");
@@ -480,38 +345,37 @@
   const noteDialog = $("noteDialog");
   const noteInput = $("noteInput");
   const saveNote = $("saveNote");
+  const chooserDialog = $("chooserDialog");
+  const chooserBody = $("chooserBody");
   const infoDialog = $("infoDialog");
   const infoBody = $("infoBody");
 
-  // ---------- STATE ----------
-  const DEFAULT_HABITS = Array.from({length:10}, (_, i) => `Habit ${i+1}`);
+  const DEFAULT_HABITS = Array.from({length:10}, (_,i)=>`Habit ${i+1}`);
   let habits = [...DEFAULT_HABITS];
 
   let db;
   let records = [];
-
-  // modes
   let isLiveMode = true;
-  let scope = "week"; // day | week | month
-  let anchorDate = new Date(); // used when not live, and for weekly panel
+  let scope = "week";
+  let anchorDate = new Date();
   scopeDate.value = toYMD(anchorDate);
 
-  // camera in projected meters
-  let projectionOrigin = null; // {lat,lng}
-  let camera = { centerX: 0, centerY: 0, zoom: 1 }; // px per meter
-  let cameraDefault = { centerX: 0, centerY: 0, zoom: 1 };
+  let projectionOrigin = null;
+  let camera = { centerX:0, centerY:0, zoom:1 };
+  let cameraDefault = { centerX:0, centerY:0, zoom:1 };
 
   let livePosition = null;
   let liveBlink = true;
   let compassHeading = null;
   let selectedRecordId = null;
-  let longPressTimer = null;
-  let longPressPoint = null;
-  let hitCache = [];
-  let pan = { active:false, startX:0, startY:0, startCenterX:0, startCenterY:0 };
 
-  // live session / route
-  let liveSessionStartedAt = null;
+  let pendingCanvasWorld = null;
+  let hitCache = [];
+  let longPressTimer = null;
+  let pan = {active:false, startX:0, startY:0, startCenterX:0, startCenterY:0};
+
+  let liveSessionStartedAt = new Date().toISOString();
+
   let route = {
     active:false,
     paused:false,
@@ -522,7 +386,8 @@
     startAddress:"",
     endAddress:"",
     pauseEvents:[],
-    resumeEvents:[]
+    resumeEvents:[],
+    intervalSec:5
   };
 
   let area = {
@@ -533,9 +398,6 @@
     startAddress:""
   };
 
-  let pendingCanvasWorld = null;
-
-  // ---------- HELPERS ----------
   function setStatus(msg){ statusText.textContent = msg; }
   function todayYMD(){ return toYMD(new Date()); }
   function toYMD(d){
@@ -548,15 +410,12 @@
     return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
   }
   function escapeHtml(s=""){
-    return String(s).replace(/[&<>"']/g, ch => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[ch]));
+    return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   }
   function uid(prefix="id"){ return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
   function safeNum(v, fb=0){ const n = Number(v); return Number.isFinite(n) ? n : fb; }
   function isOnline(){ return navigator.onLine; }
   function updateNetPill(){ netPill.textContent = isOnline() ? "Online" : "Offline"; }
-  function currentActionDate(){ return isLiveMode ? todayYMD() : toYMD(anchorDate); }
 
   function mondayOfWeek(date){
     const d = new Date(date);
@@ -575,13 +434,15 @@
     d.setDate(d.getDate()+n);
     return d;
   }
+  function formatDateLabel(ymd){
+    return new Date(`${ymd}T12:00:00`).toLocaleDateString([], {weekday:"short", day:"2-digit", month:"2-digit"});
+  }
 
   function setProjectionOriginIfMissing(lat, lng){
     if(!projectionOrigin && lat != null && lng != null){
       projectionOrigin = {lat, lng};
     }
   }
-
   function llToXY(lat, lng){
     if(!projectionOrigin) setProjectionOriginIfMissing(lat, lng);
     const origin = projectionOrigin || {lat:0, lng:0};
@@ -597,54 +458,49 @@
     const lng = origin.lng + (x / (R * Math.cos(origin.lat * Math.PI/180))) * 180/Math.PI;
     return {lat, lng};
   }
-
-  function screenToWorld(px, py){
-    const w = canvas.getBoundingClientRect().width || 1;
-    const h = canvas.getBoundingClientRect().height || 1;
-    const x = camera.centerX + (px - w/2) / camera.zoom;
-    const y = camera.centerY - (py - h/2) / camera.zoom;
-    return {x, y};
-  }
   function worldToScreen(x, y){
     const w = canvas.getBoundingClientRect().width || 1;
     const h = canvas.getBoundingClientRect().height || 1;
-    const px = (x - camera.centerX) * camera.zoom + w/2;
-    const py = h/2 - (y - camera.centerY) * camera.zoom;
-    return {x:px, y:py};
+    return {
+      x: (x - camera.centerX) * camera.zoom + w/2,
+      y: h/2 - (y - camera.centerY) * camera.zoom
+    };
+  }
+  function screenToWorld(px, py){
+    const w = canvas.getBoundingClientRect().width || 1;
+    const h = canvas.getBoundingClientRect().height || 1;
+    return {
+      x: camera.centerX + (px - w/2) / camera.zoom,
+      y: camera.centerY + (h/2 - py) / camera.zoom
+    };
   }
   function latLngToScreen(lat, lng){
     const p = llToXY(lat, lng);
     return worldToScreen(p.x, p.y);
   }
-
   function hexToRgba(color, alpha){
     if(!color) return `rgba(77,140,149,${alpha})`;
     if(color.startsWith("#")){
       let c = color.slice(1);
-      if(c.length===3) c = c.split("").map(ch => ch+ch).join("");
+      if(c.length===3) c = c.split("").map(ch=>ch+ch).join("");
       if(c.length===6){
-        const r = parseInt(c.slice(0,2),16);
-        const g = parseInt(c.slice(2,4),16);
-        const b = parseInt(c.slice(4,6),16);
+        const r = parseInt(c.slice(0,2),16), g = parseInt(c.slice(2,4),16), b = parseInt(c.slice(4,6),16);
         return `rgba(${r},${g},${b},${alpha})`;
       }
     }
     return color;
   }
-
   function haversineKm(lat1, lng1, lat2, lng2){
     const R = 6371;
     const rad = x => x * Math.PI/180;
     const dLat = rad(lat2-lat1);
     const dLng = rad(lng2-lng1);
     const a = Math.sin(dLat/2)**2 + Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLng/2)**2;
-    return 2*R*Math.asin(Math.sqrt(a));
+    return 2 * R * Math.asin(Math.sqrt(a));
   }
   function routeDistanceKm(points=[]){
     let km = 0;
-    for(let i=1;i<points.length;i++){
-      km += haversineKm(points[i-1].lat, points[i-1].lng, points[i].lat, points[i].lng);
-    }
+    for(let i=1;i<points.length;i++) km += haversineKm(points[i-1].lat, points[i-1].lng, points[i].lat, points[i].lng);
     return km;
   }
   function polygonAreaSqM(points=[]){
@@ -652,10 +508,10 @@
     const lat0 = points.reduce((s,p)=>s+p.lat,0)/points.length;
     const lng0 = points.reduce((s,p)=>s+p.lng,0)/points.length;
     const R = 6378137;
-    const lat0r = lat0 * Math.PI/180;
+    const lat0r = lat0*Math.PI/180;
     const xy = points.map(p => ({
-      x: R * (p.lng-lng0) * Math.PI/180 * Math.cos(lat0r),
-      y: R * (p.lat-lat0) * Math.PI/180
+      x: R*(p.lng-lng0)*Math.PI/180*Math.cos(lat0r),
+      y: R*(p.lat-lat0)*Math.PI/180
     }));
     let area2 = 0;
     for(let i=0;i<xy.length;i++){
@@ -664,11 +520,28 @@
     }
     return Math.abs(area2/2);
   }
+  function pointSegmentDistance(px, py, ax, ay, bx, by){
+    const dx = bx - ax, dy = by - ay;
+    if(dx === 0 && dy === 0) return Math.hypot(px-ax, py-ay);
+    let t = ((px-ax)*dx + (py-ay)*dy) / (dx*dx + dy*dy);
+    t = Math.max(0, Math.min(1, t));
+    const x = ax + t*dx, y = ay + t*dy;
+    return Math.hypot(px-x, py-y);
+  }
+  function pointInPolygon(px, py, pts){
+    let inside = false;
+    for(let i=0, j=pts.length-1; i<pts.length; j=i++){
+      const xi = pts[i].x, yi = pts[i].y;
+      const xj = pts[j].x, yj = pts[j].y;
+      const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / ((yj - yi) || 1e-9) + xi);
+      if(intersect) inside = !inside;
+    }
+    return inside;
+  }
 
-  // ---------- DB ----------
   function openDB(){
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open("oneScreenSpatialJournalDB", 1);
+      const req = indexedDB.open("spatialJournalStable3DB", 1);
       req.onupgradeneeded = e => {
         const dbx = e.target.result;
         if(!dbx.objectStoreNames.contains("records")){
@@ -738,56 +611,63 @@
       req.onerror = () => reject(req.error);
     });
   }
+  function clearRecordStore(){
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction("records", "readwrite");
+      const store = tx.objectStore("records");
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
 
   async function refreshRecords(){
     records = await dbGetAll("records");
     records.sort((a,b)=>String(a.createdAt || a.timestamp || "").localeCompare(String(b.createdAt || b.timestamp || "")));
+    projectionOrigin = null;
     for(const r of records){
       if(r.lat != null && r.lng != null) setProjectionOriginIfMissing(r.lat, r.lng);
-      if(Array.isArray(r.points)){
-        for(const p of r.points) setProjectionOriginIfMissing(p.lat, p.lng);
-      }
+      if(Array.isArray(r.points)) r.points.forEach(p => setProjectionOriginIfMissing(p.lat, p.lng));
     }
     renderAll();
   }
 
-  // ---------- SETTINGS ----------
   async function loadSettings(){
     const savedHabits = await dbGetSetting("habits");
     if(Array.isArray(savedHabits) && savedHabits.length === 10) habits = savedHabits;
+    const savedRouteSec = await dbGetSetting("defaultRouteSeconds");
+    if(safeNum(savedRouteSec, 0) > 0) defaultRouteSeconds.value = String(savedRouteSec);
     renderHabitSettings();
     renderHabitPicker();
   }
 
   function renderHabitSettings(){
     habitSettingsWrap.innerHTML = "";
-    habits.forEach((h, i) => {
+    habits.forEach((h,i) => {
       const wrap = document.createElement("label");
       wrap.innerHTML = `<div class="small muted">Habit ${i+1}</div><input data-idx="${i}" type="text" value="${escapeHtml(h)}">`;
       habitSettingsWrap.appendChild(wrap);
     });
   }
-
   function renderHabitPicker(){
     habitDialogBody.innerHTML = `<div class="menuGrid">${
-      habits.map((h, i) => `<button data-habit-index="${i}">${escapeHtml(h)}</button>`).join("")
+      habits.map((h,i)=>`<button data-habit-index="${i}">${escapeHtml(h)}</button>`).join("")
     }</div>`;
     habitDialogBody.querySelectorAll("button[data-habit-index]").forEach(btn => {
       btn.onclick = async () => {
-        const i = Number(btn.dataset.habitIndex);
+        const idx = Number(btn.dataset.habitIndex);
         habitDialog.close();
         if(pendingCanvasWorld){
           const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
-          await addManualRecord("habit", ll.lat, ll.lng, {name: habits[i]});
+          await addManualRecord("habit", ll.lat, ll.lng, {name: habits[idx]});
           pendingCanvasWorld = null;
-        } else {
-          await addGPSRecord("habit", {name: habits[i]});
+        }else{
+          await addGPSRecord("habit", {name: habits[idx]});
         }
       };
     });
   }
 
-  // ---------- GEO / COMPASS ----------
   async function getPosition(){
     return new Promise((resolve, reject) => {
       if(!navigator.geolocation) return reject(new Error("Geolocation not supported"));
@@ -798,7 +678,6 @@
       );
     });
   }
-
   async function reverseGeocode(lat, lng){
     if(!isOnline()) return "";
     try{
@@ -811,7 +690,6 @@
       return "";
     }
   }
-
   async function initCompass(){
     try{
       if(typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function"){
@@ -827,23 +705,17 @@
       compassPill.textContent = "Compass unavailable";
     }
   }
-
   function onOrientation(e){
     let heading = null;
-    if(typeof e.webkitCompassHeading === "number"){
-      heading = e.webkitCompassHeading;
-    }else if(typeof e.alpha === "number"){
-      heading = 360 - e.alpha;
-    }
+    if(typeof e.webkitCompassHeading === "number") heading = e.webkitCompassHeading;
+    else if(typeof e.alpha === "number") heading = 360 - e.alpha;
     if(heading != null && Number.isFinite(heading)){
       compassHeading = (heading + 360) % 360;
       compassPill.textContent = `Compass ${Math.round(compassHeading)}°`;
       drawCanvas();
     }
   }
-
   async function refreshLivePosition(){
-    if(!isLiveMode) return;
     try{
       const pos = await getPosition();
       livePosition = {
@@ -854,36 +726,52 @@
         timestamp: new Date().toISOString()
       };
       setProjectionOriginIfMissing(livePosition.lat, livePosition.lng);
-      livePosText.textContent = `${livePosition.lat.toFixed(6)}, ${livePosition.lng.toFixed(6)}${livePosition.accuracy != null ? ` · ±${Math.round(livePosition.accuracy)}m` : ""}`;
+      updateStatusLine();
       drawCanvas();
-    }catch(err){
-      livePosText.textContent = `Unavailable`;
-    }
+    }catch{}
   }
 
-  // ---------- RECORDS ----------
+  const CAT_CODE = {
+    habit: "01",
+    note: "02",
+    route: "03",
+    area: "04",
+    "route-event": "05"
+  };
+
+  function nextRecordCode(type, ymd){
+    const cc = CAT_CODE[type] || "99";
+    const dd = ymd.slice(8,10);
+    const mm = ymd.slice(5,7);
+    const same = records.filter(r => r.type === type && r.date === ymd);
+    const nnn = String(same.length + 1).padStart(3,"0");
+    return `${cc}${nnn}${dd}${mm}`;
+  }
+
   function baseRecord(type){
+    const date = currentActionDate();
     return {
+      code: nextRecordCode(type, date),
       type,
-      date: currentActionDate(),
+      date,
       timestamp: isLiveMode ? new Date().toISOString() : "",
       createdAt: new Date().toISOString(),
-      name: "",
-      text: "",
-      lat: null,
-      lng: null,
-      accuracy: null,
-      altitude: null,
-      speed: null,
-      heading: null,
-      address: "",
-      routeId: "",
-      areaId: "",
-      distanceKm: null,
-      areaSqM: null,
-      color: "",
-      points: null,
-      meta: {}
+      name:"",
+      text:"",
+      lat:null,
+      lng:null,
+      accuracy:null,
+      altitude:null,
+      speed:null,
+      heading:null,
+      address:"",
+      routeId:"",
+      areaId:"",
+      distanceKm:null,
+      areaSqM:null,
+      color:"",
+      points:null,
+      meta:{}
     };
   }
 
@@ -891,11 +779,9 @@
     try{
       setStatus(`Getting GPS for ${type}…`);
       const pos = await getPosition();
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
       setProjectionOriginIfMissing(lat, lng);
       const address = await reverseGeocode(lat, lng);
-
       const rec = {
         ...baseRecord(type),
         ...extra,
@@ -924,14 +810,13 @@
     };
     await dbAdd("records", rec);
     await refreshRecords();
-    setStatus(`${type} saved on ${currentActionDate()}.`);
+    setStatus(`${type} saved.`);
   }
 
   async function addRouteEvent(name){
     try{
       const pos = await getPosition();
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const lat = pos.coords.latitude, lng = pos.coords.longitude;
       setProjectionOriginIfMissing(lat, lng);
       const address = await reverseGeocode(lat, lng);
       const rec = {
@@ -946,40 +831,27 @@
         routeId: route.routeId || ""
       };
       await dbAdd("records", rec);
-      return {lat, lng, address, pos};
+      return {lat, lng, address};
     }catch(err){
       setStatus(`Route event failed: ${err.message || err}`);
       return null;
     }
   }
 
-  // ---------- LIVE / STORED SCOPE ----------
-  function scopeLabel(){
-    if(isLiveMode) return "Live radar";
-    if(scope === "day") return `Day ${toYMD(anchorDate)}`;
-    if(scope === "week"){
-      const m = mondayOfWeek(anchorDate);
-      const s = addDays(m, 6);
-      return `Week ${toYMD(m)} → ${toYMD(s)}`;
-    }
-    const first = firstOfMonth(anchorDate);
-    return `Month ${first.getFullYear()}-${String(first.getMonth()+1).padStart(2,"0")}`;
+  function currentActionDate(){
+    return isLiveMode ? todayYMD() : toYMD(anchorDate);
   }
 
   function recordsForScope(){
     if(isLiveMode){
-      if(!liveSessionStartedAt) return [];
-      const t0 = new Date(liveSessionStartedAt).getTime();
+      const start = liveSessionStartedAt ? new Date(liveSessionStartedAt).getTime() : 0;
       return records.filter(r => {
         const t = r.timestamp ? new Date(r.timestamp).getTime() : new Date(r.createdAt || 0).getTime();
-        return t >= t0 && r.date === todayYMD();
+        return r.date === todayYMD() && t >= start;
       });
     }
-
     const ymd = toYMD(anchorDate);
-    if(scope === "day"){
-      return records.filter(r => r.date === ymd);
-    }
+    if(scope === "day") return records.filter(r => r.date === ymd);
     if(scope === "week"){
       const monday = mondayOfWeek(anchorDate);
       const sunday = addDays(monday, 6);
@@ -999,68 +871,82 @@
     return records.filter(r => r.date >= a && r.date <= b);
   }
 
-  // ---------- FIT / PIN ----------
-  function collectPointsFromRecords(sourceRecords){
+  function selectedRecord(){
+    return records.find(r => r.id === selectedRecordId) || null;
+  }
+
+  function updateStatusLine(){
+    const mode = isLiveMode ? "Live" : scope[0].toUpperCase() + scope.slice(1);
+    const context = isLiveMode ? todayYMD() : toYMD(anchorDate);
+    const routeText = route.active ? (route.paused ? "route paused" : "route recording") : "route idle";
+    const selected = selectedRecord();
+    const selText = selected ? `${selected.type}${selected.name ? " "+selected.name : ""}` : "none";
+    const liveText = livePosition ? `${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy != null ? ` ±${Math.round(livePosition.accuracy)}m` : ""}` : "live position unavailable";
+    statusLine.textContent = `${mode} · ${context} · ${routeText} · selected ${selText} · ${liveText}`;
+    selectedInfoText.textContent = selected ? `${selected.code} · ${selected.type}${selected.name ? " · " + selected.name : ""}` : "None";
+  }
+
+  function setModeButtons(){
+    btnLiveMode.classList.toggle("active", isLiveMode);
+    btnLiveMode.classList.toggle("primary", isLiveMode);
+    btnDayScope.classList.toggle("active", !isLiveMode && scope==="day");
+    btnWeekScope.classList.toggle("active", !isLiveMode && scope==="week");
+    btnMonthScope.classList.toggle("active", !isLiveMode && scope==="month");
+    scopeDateWrap.classList.toggle("hidden", isLiveMode);
+  }
+
+  function closeAllPanels(){
+    weeklyPanel.classList.remove("active");
+    databasePanel.classList.remove("active");
+    settingsPanel.classList.remove("active");
+  }
+  function togglePanel(panel){
+    const willOpen = !panel.classList.contains("active");
+    closeAllPanels();
+    if(willOpen) panel.classList.add("active");
+  }
+
+  function collectPointsFromRecords(source){
     const pts = [];
-    sourceRecords.forEach(r => {
+    source.forEach(r => {
       if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
         pts.push(llToXY(r.lat, r.lng));
-      }
-      if((r.type === "route" || r.type === "area") && Array.isArray(r.points)){
+      }else if((r.type === "route" || r.type === "area") && Array.isArray(r.points)){
         r.points.forEach(p => pts.push(llToXY(p.lat, p.lng)));
       }
     });
     return pts;
   }
 
-  function fitWorldPoints(points, paddingPx = 40){
+  function fitWorldPoints(points, paddingPx=40){
     const w = canvas.getBoundingClientRect().width || 1;
     const h = canvas.getBoundingClientRect().height || 1;
     if(!points.length) return;
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX=Infinity, minY=Infinity, maxX=-Infinity, maxY=-Infinity;
     points.forEach(p => {
-      minX = Math.min(minX, p.x);
-      minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x);
-      maxY = Math.max(maxY, p.y);
+      minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+      maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
     });
-
-    const width = Math.max(1, maxX - minX);
-    const height = Math.max(1, maxY - minY);
-    const zoomX = (w - paddingPx*2) / width;
-    const zoomY = (h - paddingPx*2) / height;
-    camera.zoom = Math.max(0.02, Math.min(5, Math.min(zoomX, zoomY)));
-    camera.centerX = (minX + maxX) / 2;
-    camera.centerY = (minY + maxY) / 2;
+    const width = Math.max(1, maxX-minX);
+    const height = Math.max(1, maxY-minY);
+    camera.zoom = Math.max(0.002, Math.min(6, Math.min((w-paddingPx*2)/width, (h-paddingPx*2)/height)));
+    camera.centerX = (minX+maxX)/2;
+    camera.centerY = (minY+maxY)/2;
     cameraDefault = {...camera};
     drawCanvas();
   }
 
   function fitScope(){
-    const pts = collectPointsFromRecords(recordsForScope());
-    if(!isLiveMode && livePosition){
-      // do not include live position in fit by default for stored scopes
-    }
     if(isLiveMode){
-      const livePts = [];
-      if(route.active && route.points.length){
-        route.points.forEach(p => livePts.push(llToXY(p.lat, p.lng)));
-      }
-      if(area.active && area.points.length){
-        area.points.forEach(p => livePts.push(llToXY(p.lat, p.lng)));
-      }
-      if(livePosition){
-        livePts.push(llToXY(livePosition.lat, livePosition.lng));
-      }
-      if(livePts.length){
-        fitWorldPoints(livePts);
-        return;
-      }
+      const pts = [];
+      if(route.active) route.points.forEach(p => pts.push(llToXY(p.lat, p.lng)));
+      if(area.active) area.points.forEach(p => pts.push(llToXY(p.lat, p.lng)));
+      if(livePosition) pts.push(llToXY(livePosition.lat, livePosition.lng));
+      if(pts.length) fitWorldPoints(pts);
+      return;
     }
-    if(pts.length){
-      fitWorldPoints(pts);
-    }
+    const pts = collectPointsFromRecords(recordsForScope());
+    if(pts.length) fitWorldPoints(pts);
   }
 
   function pinToMe(){
@@ -1071,10 +957,6 @@
     drawCanvas();
   }
 
-  function selectedRecord(){
-    return records.find(r => r.id === selectedRecordId) || null;
-  }
-
   function pinToSelected(tight=true){
     const r = selectedRecord();
     if(!r) return setStatus("No selected record.");
@@ -1082,7 +964,7 @@
     if(!pts.length) return;
     if(tight){
       fitWorldPoints(pts, 80);
-      camera.zoom = Math.min(8, camera.zoom * 1.3);
+      camera.zoom = Math.min(10, camera.zoom * 1.25);
       drawCanvas();
     }else{
       camera.centerX = pts[0].x;
@@ -1092,205 +974,39 @@
   }
 
   function focusRecordFromWeekly(id){
-    selectedRecordId = id;
-    const r = selectedRecord();
+    const r = records.find(x => x.id === id);
     if(!r) return;
+    selectedRecordId = id;
     isLiveMode = false;
-    setLiveModeButtons();
     scope = "week";
-    setScopeButtons();
     anchorDate = new Date(`${r.date}T12:00:00`);
     scopeDate.value = toYMD(anchorDate);
+    setModeButtons();
     closeAllPanels();
     pinToSelected(true);
-    updateHeaderTexts();
+    updateStatusLine();
+    renderWeeklyPanel();
     drawCanvas();
     setStatus("Focused record in week scope.");
   }
 
-  // ---------- PANELS ----------
-  function closeAllPanels(){
-    weeklyPanel.classList.remove("active");
-    databasePanel.classList.remove("active");
-    settingsPanel.classList.remove("active");
+  function drawPoint(px, py, color, r=5){
+    ctx.beginPath(); ctx.arc(px,py,r,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
   }
-
-  function togglePanel(panelEl){
-    const willOpen = !panelEl.classList.contains("active");
-    closeAllPanels();
-    if(willOpen) panelEl.classList.add("active");
-  }
-
-  // ---------- WEEKLY ----------
-  function renderWeeklyPanel(){
-    const monday = mondayOfWeek(anchorDate);
-    const weekDays = Array.from({length:7}, (_,i)=>addDays(monday, i));
-    const ymds = weekDays.map(toYMD);
-    weekRangeText.textContent = `${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
-
-    const weekRecs = weeklyRecords();
-
-    let table = `<div style="overflow:auto"><table class="weeklyTable"><thead><tr><th>Habit</th>`;
-    ymds.forEach(ymd => table += `<th>${escapeHtml(formatDateLabel(ymd))}</th>`);
-    table += `</tr></thead><tbody>`;
-
-    habits.forEach(h => {
-      table += `<tr><td>${escapeHtml(h)}</td>`;
-      ymds.forEach(ymd => {
-        const count = weekRecs.filter(r => r.type === "habit" && r.name === h && r.date === ymd).length;
-        table += `<td>${count}</td>`;
-      });
-      table += `</tr>`;
-    });
-
-    table += `<tr><td><strong>Route km</strong></td>`;
-    ymds.forEach(ymd => {
-      const km = weekRecs.filter(r => r.type === "route" && r.date === ymd).reduce((s,r)=>s+safeNum(r.distanceKm,0),0);
-      table += `<td>${km ? km.toFixed(2) : ""}</td>`;
-    });
-    table += `</tr>`;
-
-    table += `<tr><td><strong>Areas m²</strong></td>`;
-    ymds.forEach(ymd => {
-      const sqm = weekRecs.filter(r => r.type === "area" && r.date === ymd).reduce((s,r)=>s+safeNum(r.areaSqM,0),0);
-      table += `<td>${sqm ? sqm.toFixed(1) : ""}</td>`;
-    });
-    table += `</tr></tbody></table></div>`;
-    weeklySummaryWrap.innerHTML = table;
-
-    let html = "";
-    ymds.forEach(ymd => {
-      const dayRecords = weekRecs.filter(r => r.date === ymd);
-      html += `<div class="recordCard"><div class="row"><strong>${escapeHtml(formatDateLabel(ymd))}</strong><span class="pill">${dayRecords.length} records</span></div>`;
-      if(!dayRecords.length){
-        html += `<div class="hint" style="margin-top:8px">No records.</div>`;
-      }else{
-        dayRecords.forEach(r => {
-          const selectedClass = r.id === selectedRecordId ? "selected" : "";
-          html += `
-            <div class="recordCard ${selectedClass}" data-week-record-id="${r.id}">
-              <div class="row">
-                <span class="pill">${escapeHtml(r.type)}</span>
-                ${r.name ? `<span class="pill">${escapeHtml(r.name)}</span>` : ""}
-                ${r.timestamp ? `<span class="pill">${escapeHtml(toTimeHM(r.timestamp))}</span>` : ""}
-                <div class="spacer"></div>
-                <button data-show-on-map="${r.id}">Show on map</button>
-              </div>
-              ${r.text ? `<div style="margin-top:8px;white-space:pre-wrap">${escapeHtml(r.text)}</div>` : ""}
-              <div class="small muted" style="margin-top:8px">
-                ${r.lat != null && r.lng != null ? `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}` : ""}
-                ${r.address ? ` · ${escapeHtml(r.address)}` : ""}
-                ${r.distanceKm != null ? ` · ${Number(r.distanceKm).toFixed(3)} km` : ""}
-                ${r.areaSqM != null ? ` · ${Number(r.areaSqM).toFixed(2)} m²` : ""}
-              </div>
-            </div>
-          `;
-        });
-      }
-      html += `</div>`;
-    });
-    weeklyRecordsWrap.innerHTML = html;
-
-    weeklyRecordsWrap.querySelectorAll("button[data-show-on-map]").forEach(btn => {
-      btn.onclick = () => focusRecordFromWeekly(Number(btn.dataset.showOnMap));
-    });
-
-    weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card => {
-      const id = Number(card.dataset.weekRecordId);
-      card.oncontextmenu = (e) => {
-        e.preventDefault();
-        focusRecordFromWeekly(id);
-      };
-      let timer = null;
-      card.addEventListener("pointerdown", () => {
-        timer = setTimeout(() => focusRecordFromWeekly(id), 450);
-      });
-      card.addEventListener("pointerup", () => clearTimeout(timer));
-      card.addEventListener("pointermove", () => clearTimeout(timer));
-      card.addEventListener("pointercancel", () => clearTimeout(timer));
-      card.addEventListener("click", () => {
-        selectedRecordId = id;
-        updateHeaderTexts();
-        renderWeeklyPanel();
-        drawCanvas();
-      });
-    });
-  }
-
-  // ---------- DATABASE ----------
-  function renderDatabasePanel(){
-    const rows = records.filter(r => {
-      if(dbFilterDate.value && r.date !== dbFilterDate.value) return false;
-      if(dbFilterType.value && r.type !== dbFilterType.value) return false;
-      return true;
-    });
-    dbCountText.textContent = `${rows.length} records`;
-
-    dbTableBody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${r.id ?? ""}</td>
-        <td>${escapeHtml(r.type || "")}</td>
-        <td>${escapeHtml(r.date || "")}</td>
-        <td>${escapeHtml(r.timestamp ? toTimeHM(r.timestamp) : "")}</td>
-        <td>${escapeHtml(r.name || "")}</td>
-        <td>${escapeHtml(r.text || "")}</td>
-        <td>${r.lat ?? ""}</td>
-        <td>${r.lng ?? ""}</td>
-        <td>${escapeHtml(r.address || (r.meta?.startAddress || "") || "")}</td>
-        <td>${r.distanceKm != null ? Number(r.distanceKm).toFixed(3) : ""}</td>
-        <td>${r.areaSqM != null ? Number(r.areaSqM).toFixed(2) : ""}</td>
-        <td><button data-del-id="${r.id}" class="danger">Delete</button></td>
-      </tr>
-    `).join("");
-
-    dbTableBody.querySelectorAll("button[data-del-id]").forEach(btn => {
-      btn.onclick = async () => {
-        const id = Number(btn.dataset.delId);
-        if(!confirm(`Delete record ${id}?`)) return;
-        await dbDelete("records", id);
-        await refreshRecords();
-        setStatus(`Deleted record ${id}.`);
-      };
-    });
-  }
-
-  // ---------- DRAW ----------
-  function drawGrid(){
-    const w = canvas.getBoundingClientRect().width;
-    const h = canvas.getBoundingClientRect().height;
-    ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle = "rgba(36,51,59,.06)";
-    ctx.lineWidth = 1;
-    for(let x=0;x<w;x+=40){
-      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
-    }
-    for(let y=0;y<h;y+=40){
-      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
-    }
-  }
-
-  function drawPoint(px, py, color, radius=5){
-    ctx.beginPath();
-    ctx.arc(px, py, radius, 0, Math.PI*2);
-    ctx.fillStyle = color;
-    ctx.fill();
-  }
-
-  function drawLabel(px, py, text, color= "#24333b"){
+  function drawLabel(px, py, text, color="#24333b"){
     ctx.save();
     ctx.font = "12px system-ui, sans-serif";
     ctx.fillStyle = color;
-    ctx.fillText(text, px + 8, py - 8);
+    ctx.fillText(text, px+8, py-8);
     ctx.restore();
   }
-
   function drawPolyline(points, color, width=2.5){
     if(!points || points.length < 1) return;
     ctx.save();
     ctx.strokeStyle = color;
     ctx.lineWidth = width;
     ctx.beginPath();
-    points.forEach((p, i) => {
+    points.forEach((p,i) => {
       const s = latLngToScreen(p.lat, p.lng);
       if(i===0) ctx.moveTo(s.x, s.y);
       else ctx.lineTo(s.x, s.y);
@@ -1298,7 +1014,6 @@
     ctx.stroke();
     ctx.restore();
   }
-
   function drawPolygon(points, color){
     if(!points || points.length < 2) return;
     ctx.save();
@@ -1306,7 +1021,7 @@
     ctx.fillStyle = hexToRgba(color, 0.18);
     ctx.lineWidth = 2;
     ctx.beginPath();
-    points.forEach((p, i) => {
+    points.forEach((p,i) => {
       const s = latLngToScreen(p.lat, p.lng);
       if(i===0) ctx.moveTo(s.x, s.y);
       else ctx.lineTo(s.x, s.y);
@@ -1330,17 +1045,12 @@
     ctx.fillStyle = "#24333b";
     ctx.font = "12px system-ui, sans-serif";
     ctx.fillText("N", x-4, y-28);
-
     if(compassHeading != null){
       const ang = (compassHeading - 90) * Math.PI/180;
       ctx.translate(x, y);
       ctx.rotate(ang);
       ctx.beginPath();
-      ctx.moveTo(16,0);
-      ctx.lineTo(-7,-6);
-      ctx.lineTo(-1,0);
-      ctx.lineTo(-7,6);
-      ctx.closePath();
+      ctx.moveTo(16,0); ctx.lineTo(-7,-6); ctx.lineTo(-1,0); ctx.lineTo(-7,6); ctx.closePath();
       ctx.fillStyle = "#2f6f7e";
       ctx.fill();
     }
@@ -1350,19 +1060,16 @@
   function drawLiveMarker(){
     if(!livePosition) return;
     if(!isLiveMode){
-      // show in non-live only if it currently falls inside view
       const p = latLngToScreen(livePosition.lat, livePosition.lng);
-      const w = canvas.getBoundingClientRect().width;
-      const h = canvas.getBoundingClientRect().height;
+      const w = canvas.getBoundingClientRect().width, h = canvas.getBoundingClientRect().height;
       if(p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
     }
     const p = latLngToScreen(livePosition.lat, livePosition.lng);
 
     if(livePosition.accuracy != null){
-      const accuracyMeters = livePosition.accuracy;
-      const top = llToXY(livePosition.lat + accuracyMeters/111320, livePosition.lng);
-      const center = llToXY(livePosition.lat, livePosition.lng);
-      const radius = Math.abs((top.y - center.y) * camera.zoom);
+      const dxy = llToXY(livePosition.lat + livePosition.accuracy / 111320, livePosition.lng);
+      const cxy = llToXY(livePosition.lat, livePosition.lng);
+      const radius = Math.abs((dxy.y - cxy.y) * camera.zoom);
       ctx.beginPath();
       ctx.arc(p.x, p.y, Math.max(8, radius), 0, Math.PI*2);
       ctx.fillStyle = "rgba(47,111,126,.08)";
@@ -1383,44 +1090,126 @@
       ctx.translate(p.x, p.y);
       ctx.rotate(ang);
       ctx.beginPath();
-      ctx.moveTo(15,0);
-      ctx.lineTo(-6,-5);
-      ctx.lineTo(-1,0);
-      ctx.lineTo(-6,5);
-      ctx.closePath();
+      ctx.moveTo(15,0); ctx.lineTo(-6,-5); ctx.lineTo(-1,0); ctx.lineTo(-6,5); ctx.closePath();
       ctx.fillStyle = "#2f6f7e";
       ctx.fill();
       ctx.restore();
     }
   }
 
-  function drawSelectedHalo(rec){
+  function drawSelectionHalo(rec){
     const pts = [];
     if((rec.type === "habit" || rec.type === "note" || rec.type === "route-event") && rec.lat != null && rec.lng != null){
       pts.push(latLngToScreen(rec.lat, rec.lng));
-    }else if((rec.type === "route" || rec.type === "area") && Array.isArray(rec.points) && rec.points.length){
+    }else if((rec.type === "route" || rec.type === "area") && Array.isArray(rec.points)){
       rec.points.forEach(p => pts.push(latLngToScreen(p.lat, p.lng)));
     }
     if(!pts.length) return;
-
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
     pts.forEach(p => {
-      minX = Math.min(minX, p.x);
-      minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x);
-      maxY = Math.max(maxY, p.y);
+      minX=Math.min(minX,p.x); minY=Math.min(minY,p.y);
+      maxX=Math.max(maxX,p.x); maxY=Math.max(maxY,p.y);
     });
     ctx.save();
-    ctx.strokeStyle = "rgba(77,140,149,.9)";
+    ctx.strokeStyle = "rgba(77,140,149,.95)";
     ctx.lineWidth = 2;
     ctx.setLineDash([7,5]);
-    ctx.strokeRect(minX - 10, minY - 10, (maxX-minX)+20, (maxY-minY)+20);
+    ctx.strokeRect(minX-10,minY-10,(maxX-minX)+20,(maxY-minY)+20);
     ctx.restore();
   }
 
-  function drawCanvas(){
-    drawGrid();
+  function rebuildHitCache(){
     hitCache = [];
+    const scoped = recordsForScope();
+
+    scoped.forEach(r => {
+      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
+        const s = latLngToScreen(r.lat, r.lng);
+        hitCache.push({kind:"point", record:r, x:s.x, y:s.y});
+      }else if(r.type === "route" && Array.isArray(r.points) && r.points.length > 1){
+        hitCache.push({kind:"route", record:r, points:r.points.map(p => latLngToScreen(p.lat, p.lng))});
+      }else if(r.type === "area" && Array.isArray(r.points) && r.points.length > 2){
+        hitCache.push({kind:"area", record:r, points:r.points.map(p => latLngToScreen(p.lat, p.lng))});
+      }
+    });
+
+    if(route.active && route.points.length > 1){
+      hitCache.push({kind:"live-route", record:null, points:route.points.map(p => latLngToScreen(p.lat,p.lng))});
+    }
+    if(area.active && area.points.length > 2){
+      hitCache.push({kind:"live-area", record:null, points:area.points.map(p => latLngToScreen(p.lat,p.lng))});
+    }
+  }
+
+  function pickHits(px, py){
+    const hits = [];
+    hitCache.forEach(h => {
+      if(h.kind === "point"){
+        const d = Math.hypot(px-h.x, py-h.y);
+        if(d <= 14) hits.push({record:h.record, score:d});
+      }else if(h.kind === "route"){
+        let best = Infinity;
+        for(let i=1;i<h.points.length;i++){
+          const a = h.points[i-1], b = h.points[i];
+          best = Math.min(best, pointSegmentDistance(px,py,a.x,a.y,b.x,b.y));
+        }
+        if(best <= 10) hits.push({record:h.record, score:best});
+      }else if(h.kind === "area"){
+        if(pointInPolygon(px,py,h.points)) hits.push({record:h.record, score:1});
+      }
+    });
+    hits.sort((a,b)=>a.score-b.score);
+    return hits.map(h=>h.record);
+  }
+
+  function openChooser(recordsList){
+    chooserBody.innerHTML = `<div class="menuGrid">${
+      recordsList.map(r => `<button data-choose-id="${r.id}">${escapeHtml(r.code)} · ${escapeHtml(r.type)}${r.name ? " · " + escapeHtml(r.name) : ""}</button>`).join("")
+    }</div>`;
+    chooserBody.querySelectorAll("button[data-choose-id]").forEach(btn => {
+      btn.onclick = () => {
+        const id = Number(btn.dataset.chooseId);
+        chooserDialog.close();
+        selectedRecordId = id;
+        updateStatusLine();
+        showRecordInfo(selectedRecord());
+        if(weeklyPanel.classList.contains("active")) renderWeeklyPanel();
+        drawCanvas();
+      };
+    });
+    chooserDialog.showModal();
+  }
+
+  function showRecordInfo(rec){
+    if(!rec) return;
+    const meta = rec.meta || {};
+    infoBody.innerHTML = `
+      <div class="small muted">Code</div><div>${escapeHtml(rec.code || "")}</div>
+      <div class="small muted" style="margin-top:8px">Type</div><div>${escapeHtml(rec.type || "")}</div>
+      <div class="small muted" style="margin-top:8px">Date</div><div>${escapeHtml(rec.date || "")}</div>
+      <div class="small muted" style="margin-top:8px">Time</div><div>${escapeHtml(rec.timestamp ? toTimeHM(rec.timestamp) : "-")}</div>
+      <div class="small muted" style="margin-top:8px">Name</div><div>${escapeHtml(rec.name || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${escapeHtml(rec.text || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat ?? "-"}, ${rec.lng ?? "-"}</div>
+      <div class="small muted" style="margin-top:8px">Address</div><div>${escapeHtml(rec.address || meta.startAddress || "-")}</div>
+      <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm != null ? Number(rec.distanceKm).toFixed(3) : "-"}</div>
+      <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM != null ? Number(rec.areaSqM).toFixed(2) : "-"}</div>
+      ${meta.endAddress ? `<div class="small muted" style="margin-top:8px">Route end address</div><div>${escapeHtml(meta.endAddress)}</div>` : ""}
+      ${Array.isArray(meta.pauseEvents) && meta.pauseEvents.length ? `<div class="small muted" style="margin-top:8px">Pause events</div><div>${meta.pauseEvents.map(p=>escapeHtml(p.address || p.timestamp || "")).join("<br>")}</div>` : ""}
+      ${Array.isArray(meta.resumeEvents) && meta.resumeEvents.length ? `<div class="small muted" style="margin-top:8px">Resume events</div><div>${meta.resumeEvents.map(p=>escapeHtml(p.address || p.timestamp || "")).join("<br>")}</div>` : ""}
+    `;
+    infoDialog.showModal();
+  }
+
+  function drawCanvas(){
+    const w = canvas.getBoundingClientRect().width;
+    const h = canvas.getBoundingClientRect().height;
+    ctx.clearRect(0,0,w,h);
+
+    ctx.strokeStyle = "rgba(36,51,59,.06)";
+    ctx.lineWidth = 1;
+    for(let x=0;x<w;x+=40){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+    for(let y=0;y<h;y+=40){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
 
     const scoped = recordsForScope();
 
@@ -1444,20 +1233,17 @@
         if(r.type === "habit") drawLabel(s.x, s.y, r.name || "Habit", "#5f7247");
         if(r.type === "note") drawLabel(s.x, s.y, "Note", "#b54a4a");
         if(r.type === "route-event") drawLabel(s.x, s.y, r.name || "Route", "#9e5e3b");
-        hitCache.push({x:s.x, y:s.y, r, radius:12});
       }
     });
 
-    // live route
-    if(isLiveMode && route.active && route.points.length){
-      drawPolyline(route.points, "#c57449", 2.8);
-      route.points.forEach((p, i) => {
+    if(route.active && route.points.length){
+      drawPolyline(route.points, "#c57449", 3.1);
+      route.points.forEach((p,i) => {
         const s = latLngToScreen(p.lat, p.lng);
-        drawPoint(s.x, s.y, "#c57449", i === route.points.length - 1 ? 4.5 : 3);
+        drawPoint(s.x, s.y, "#c57449", i===route.points.length-1 ? 4.5 : 3);
       });
     }
 
-    // live area
     if(area.active && area.points.length){
       drawPolygon(area.points, area.color);
       area.points.forEach(p => {
@@ -1467,42 +1253,13 @@
     }
 
     const sel = selectedRecord();
-    if(sel) drawSelectedHalo(sel);
+    if(sel) drawSelectionHalo(sel);
 
     drawLiveMarker();
     drawCompass();
+    rebuildHitCache();
   }
 
-  function nearestHit(px, py){
-    let best = null, bestD = Infinity;
-    hitCache.forEach(h => {
-      const d = Math.hypot(h.x - px, h.y - py);
-      if(d < h.radius && d < bestD){
-        best = h;
-        bestD = d;
-      }
-    });
-    return best;
-  }
-
-  function showRecordInfo(rec){
-    const meta = rec.meta || {};
-    infoBody.innerHTML = `
-      <div class="small muted">Type</div><div>${escapeHtml(rec.type || "")}</div>
-      <div class="small muted" style="margin-top:8px">Date</div><div>${escapeHtml(rec.date || "")}</div>
-      <div class="small muted" style="margin-top:8px">Time</div><div>${escapeHtml(rec.timestamp ? toTimeHM(rec.timestamp) : "-")}</div>
-      <div class="small muted" style="margin-top:8px">Name</div><div>${escapeHtml(rec.name || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${escapeHtml(rec.text || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat ?? "-"}, ${rec.lng ?? "-"}</div>
-      <div class="small muted" style="margin-top:8px">Address</div><div>${escapeHtml(rec.address || meta.startAddress || "-")}</div>
-      <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm != null ? Number(rec.distanceKm).toFixed(3) : "-"}</div>
-      <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM != null ? Number(rec.areaSqM).toFixed(2) : "-"}</div>
-      ${meta.endAddress ? `<div class="small muted" style="margin-top:8px">Route end address</div><div>${escapeHtml(meta.endAddress)}</div>` : ""}
-    `;
-    infoDialog.showModal();
-  }
-
-  // ---------- ROUTE ----------
   async function captureRouteSample(){
     if(!route.active || route.paused) return;
     try{
@@ -1518,7 +1275,7 @@
       };
       setProjectionOriginIfMissing(p.lat, p.lng);
       route.points.push(p);
-      routeStateText.textContent = `Route: ${route.points.length} pts · ${routeDistanceKm(route.points).toFixed(3)} km`;
+      updateStatusLine();
       drawCanvas();
     }catch(err){
       setStatus(`Route sample failed: ${err.message || err}`);
@@ -1527,6 +1284,13 @@
 
   async function routeStart(){
     if(route.active) return setStatus("Route already active.");
+    const currentDefault = safeNum(defaultRouteSeconds.value, 5);
+    const chosen = prompt("Route interval seconds", String(currentDefault));
+    if(!chosen) return;
+    route.intervalSec = Math.max(1, safeNum(chosen, currentDefault));
+    defaultRouteSeconds.value = String(route.intervalSec);
+    await dbSetSetting("defaultRouteSeconds", route.intervalSec);
+
     route.active = true;
     route.paused = false;
     route.routeId = uid("route");
@@ -1537,17 +1301,16 @@
     route.startAddress = "";
     route.endAddress = "";
     isLiveMode = true;
-    setLiveModeButtons();
     liveSessionStartedAt = route.startedAt;
+    setModeButtons();
 
     const ev = await addRouteEvent("start");
     if(ev) route.startAddress = ev.address || "";
 
-    const sec = Math.max(1, safeNum(await dbGetSetting("routeIntervalSec"), 5));
-    route.timer = setInterval(captureRouteSample, sec * 1000);
     await captureRouteSample();
-    routeStateText.textContent = "Route: recording";
-    setStatus("Route started.");
+    route.timer = setInterval(captureRouteSample, route.intervalSec * 1000);
+    updateStatusLine();
+    setStatus(`Route started (${route.intervalSec}s).`);
   }
 
   async function routePause(){
@@ -1557,7 +1320,7 @@
     route.paused = true;
     const ev = await addRouteEvent("pause");
     if(ev) route.pauseEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
-    routeStateText.textContent = `Route: paused`;
+    updateStatusLine();
     setStatus("Route paused.");
   }
 
@@ -1566,9 +1329,8 @@
     route.paused = false;
     const ev = await addRouteEvent("resume");
     if(ev) route.resumeEvents.push({timestamp:new Date().toISOString(), address:ev.address || ""});
-    const sec = Math.max(1, safeNum(await dbGetSetting("routeIntervalSec"), 5));
-    route.timer = setInterval(captureRouteSample, sec * 1000);
-    routeStateText.textContent = `Route: recording`;
+    route.timer = setInterval(captureRouteSample, route.intervalSec * 1000);
+    updateStatusLine();
     setStatus("Route resumed.");
   }
 
@@ -1576,17 +1338,15 @@
     if(!route.active) return setStatus("No active route.");
     if(route.timer) clearInterval(route.timer);
     route.timer = null;
-
     const ev = await addRouteEvent("end");
     if(ev) route.endAddress = ev.address || "";
 
-    const distanceKm = routeDistanceKm(route.points);
     const rec = {
       ...baseRecord("route"),
       date: toYMD(route.startedAt || new Date()),
       timestamp: route.startedAt || "",
       routeId: route.routeId,
-      distanceKm,
+      distanceKm: routeDistanceKm(route.points),
       points: route.points,
       meta: {
         startAddress: route.startAddress,
@@ -1605,24 +1365,22 @@
     route.endAddress = "";
     route.pauseEvents = [];
     route.resumeEvents = [];
-    routeStateText.textContent = "Route: idle";
-    liveSessionStartedAt = null;
-
+    liveSessionStartedAt = new Date().toISOString();
     await refreshRecords();
-    drawCanvas();
-    setStatus(`Route saved (${distanceKm.toFixed(3)} km).`);
+    updateStatusLine();
+    setStatus(`Route saved (${Number(rec.distanceKm).toFixed(3)} km).`);
   }
 
-  // ---------- AREA ----------
   function areaBegin(){
     if(area.active) return setStatus("Area already active.");
     area.active = true;
     area.areaId = uid("area");
     area.points = [];
-    area.color = prompt("Area color (hex or CSS color)", area.color || "#4d8c95") || "#4d8c95";
     area.startAddress = "";
+    area.color = prompt("Area color (hex or CSS color)", area.color || "#4d8c95") || "#4d8c95";
+    updateStatusLine();
+    drawCanvas();
     setStatus("Area started.");
-    updateHeaderTexts();
   }
 
   async function areaAddVertexAt(lat, lng){
@@ -1632,7 +1390,7 @@
     if(area.points.length === 1 && !area.startAddress){
       area.startAddress = await reverseGeocode(lat, lng);
     }
-    updateHeaderTexts();
+    updateStatusLine();
     drawCanvas();
     setStatus(`Area vertex added (${area.points.length}).`);
   }
@@ -1663,12 +1421,11 @@
     area.points = [];
     area.startAddress = "";
     await refreshRecords();
+    updateStatusLine();
     setStatus("Area saved.");
-    updateHeaderTexts();
   }
 
-  // ---------- ACTION MENU ----------
-  function openActionDialogAtWorld(world){
+  function openActionAtWorld(world){
     pendingCanvasWorld = world;
     actionDialog.showModal();
   }
@@ -1682,7 +1439,6 @@
         habitDialog.showModal();
         return;
       }
-
       if(action === "add-note"){
         noteInput.value = "";
         noteDialog.showModal();
@@ -1714,12 +1470,14 @@
       if(action === "inspect"){
         if(!pendingCanvasWorld) return;
         const s = worldToScreen(pendingCanvasWorld.x, pendingCanvasWorld.y);
-        const hit = nearestHit(s.x, s.y);
-        if(hit){
-          selectedRecordId = hit.r.id;
-          updateHeaderTexts();
-          showRecordInfo(hit.r);
+        const hits = pickHits(s.x, s.y);
+        if(hits.length === 1){
+          selectedRecordId = hits[0].id;
+          updateStatusLine();
+          showRecordInfo(hits[0]);
           drawCanvas();
+        }else if(hits.length > 1){
+          openChooser(hits);
         }
       }
     };
@@ -1731,14 +1489,139 @@
     noteDialog.close();
     if(pendingCanvasWorld){
       const ll = xyToLL(pendingCanvasWorld.x, pendingCanvasWorld.y);
-      await addManualRecord("note", ll.lat, ll.lng, {text: txt});
+      await addManualRecord("note", ll.lat, ll.lng, {text:txt});
       pendingCanvasWorld = null;
     }else{
-      await addGPSRecord("note", {text: txt});
+      await addGPSRecord("note", {text:txt});
     }
   };
 
-  // ---------- ADDRESS REFRESH ----------
+  function renderWeeklyPanel(){
+    const monday = mondayOfWeek(anchorDate);
+    const ymds = Array.from({length:7}, (_,i)=>toYMD(addDays(monday, i)));
+    weekRangeText.textContent = `${formatDateLabel(ymds[0])} → ${formatDateLabel(ymds[6])}`;
+
+    const weekRecs = weeklyRecords();
+
+    let table = `<div style="overflow:auto"><table class="weeklyTable"><thead><tr><th>Habit</th>`;
+    ymds.forEach(ymd => table += `<th>${escapeHtml(formatDateLabel(ymd))}</th>`);
+    table += `</tr></thead><tbody>`;
+
+    habits.forEach(h => {
+      table += `<tr><td>${escapeHtml(h)}</td>`;
+      ymds.forEach(ymd => {
+        const count = weekRecs.filter(r => r.type==="habit" && r.name===h && r.date===ymd).length;
+        table += `<td>${count}</td>`;
+      });
+      table += `</tr>`;
+    });
+
+    table += `<tr><td><strong>Route km</strong></td>`;
+    ymds.forEach(ymd => {
+      const km = weekRecs.filter(r => r.type==="route" && r.date===ymd).reduce((s,r)=>s+safeNum(r.distanceKm,0),0);
+      table += `<td>${km ? km.toFixed(2) : ""}</td>`;
+    });
+    table += `</tr>`;
+
+    table += `<tr><td><strong>Areas m²</strong></td>`;
+    ymds.forEach(ymd => {
+      const sqm = weekRecs.filter(r => r.type==="area" && r.date===ymd).reduce((s,r)=>s+safeNum(r.areaSqM,0),0);
+      table += `<td>${sqm ? sqm.toFixed(1) : ""}</td>`;
+    });
+    table += `</tr></tbody></table></div>`;
+    weeklySummaryWrap.innerHTML = table;
+
+    let html = "";
+    ymds.forEach(ymd => {
+      const dayRecs = weekRecs.filter(r => r.date===ymd);
+      html += `<div class="recordCard"><div class="row"><strong>${escapeHtml(formatDateLabel(ymd))}</strong><span class="pill">${dayRecs.length} records</span></div>`;
+      if(!dayRecs.length){
+        html += `<div class="hint" style="margin-top:8px">No records.</div>`;
+      }else{
+        dayRecs.forEach(r => {
+          const selectedClass = r.id === selectedRecordId ? "selected" : "";
+          html += `
+            <div class="recordCard ${selectedClass}" data-week-record-id="${r.id}">
+              <div class="row">
+                <span class="pill">${escapeHtml(r.code || "")}</span>
+                <span class="pill">${escapeHtml(r.type)}</span>
+                ${r.name ? `<span class="pill">${escapeHtml(r.name)}</span>` : ""}
+                ${r.timestamp ? `<span class="pill">${escapeHtml(toTimeHM(r.timestamp))}</span>` : ""}
+                <div class="spacer"></div>
+                <button data-show-on-map="${r.id}">Show on map</button>
+              </div>
+              ${r.text ? `<div style="margin-top:8px;white-space:pre-wrap">${escapeHtml(r.text)}</div>` : ""}
+              <div class="small muted" style="margin-top:8px">
+                ${r.lat != null && r.lng != null ? `${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}` : ""}
+                ${r.address ? ` · ${escapeHtml(r.address)}` : ""}
+                ${r.distanceKm != null ? ` · ${Number(r.distanceKm).toFixed(3)} km` : ""}
+                ${r.areaSqM != null ? ` · ${Number(r.areaSqM).toFixed(2)} m²` : ""}
+              </div>
+            </div>
+          `;
+        });
+      }
+      html += `</div>`;
+    });
+    weeklyRecordsWrap.innerHTML = html;
+
+    weeklyRecordsWrap.querySelectorAll("button[data-show-on-map]").forEach(btn => {
+      btn.onclick = () => focusRecordFromWeekly(Number(btn.dataset.showOnMap));
+    });
+
+    weeklyRecordsWrap.querySelectorAll("[data-week-record-id]").forEach(card => {
+      const id = Number(card.dataset.weekRecordId);
+      let timer = null;
+      card.oncontextmenu = e => { e.preventDefault(); focusRecordFromWeekly(id); };
+      card.addEventListener("pointerdown", () => { timer = setTimeout(() => focusRecordFromWeekly(id), 450); });
+      card.addEventListener("pointerup", () => clearTimeout(timer));
+      card.addEventListener("pointermove", () => clearTimeout(timer));
+      card.addEventListener("pointercancel", () => clearTimeout(timer));
+      card.addEventListener("click", () => {
+        selectedRecordId = id;
+        updateStatusLine();
+        renderWeeklyPanel();
+        drawCanvas();
+      });
+    });
+  }
+
+  function renderDatabasePanel(){
+    const rows = records.filter(r => {
+      if(dbFilterDate.value && r.date !== dbFilterDate.value) return false;
+      if(dbFilterType.value && r.type !== dbFilterType.value) return false;
+      return true;
+    });
+    dbCountText.textContent = `${rows.length} records`;
+
+    dbTableBody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${escapeHtml(r.code || "")}</td>
+        <td>${escapeHtml(r.type || "")}</td>
+        <td>${escapeHtml(r.date || "")}</td>
+        <td>${escapeHtml(r.timestamp ? toTimeHM(r.timestamp) : "")}</td>
+        <td>${escapeHtml(r.name || "")}</td>
+        <td>${escapeHtml(r.text || "")}</td>
+        <td>${r.lat ?? ""}</td>
+        <td>${r.lng ?? ""}</td>
+        <td>${escapeHtml(r.address || (r.meta?.startAddress || "") || "")}</td>
+        <td>${r.distanceKm != null ? Number(r.distanceKm).toFixed(3) : ""}</td>
+        <td>${r.areaSqM != null ? Number(r.areaSqM).toFixed(2) : ""}</td>
+        <td><button data-del-id="${r.id}" class="danger">Delete</button></td>
+      </tr>
+    `).join("");
+
+    dbTableBody.querySelectorAll("button[data-del-id]").forEach(btn => {
+      btn.onclick = async () => {
+        const id = Number(btn.dataset.delId);
+        if(!confirm(`Delete record ${id}?`)) return;
+        await dbDelete("records", id);
+        await refreshRecords();
+        setStatus(`Deleted record ${id}.`);
+      };
+    });
+  }
+
   async function refreshMissingAddresses(){
     if(!isOnline()) return setStatus("You are offline.");
     setStatus("Refreshing missing addresses…");
@@ -1747,23 +1630,23 @@
     for(const r of records){
       let changed = false;
 
-      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && !r.address && r.lat != null && r.lng != null){
+      if((r.type==="habit" || r.type==="note" || r.type==="route-event") && !r.address && r.lat != null && r.lng != null){
         r.address = await reverseGeocode(r.lat, r.lng);
         changed = changed || !!r.address;
       }
 
-      if(r.type === "area" && !r.address && Array.isArray(r.points) && r.points.length){
+      if(r.type==="area" && !r.address && Array.isArray(r.points) && r.points.length){
         r.address = await reverseGeocode(r.points[0].lat, r.points[0].lng);
         changed = changed || !!r.address;
       }
 
-      if(r.type === "route" && r.meta){
+      if(r.type==="route" && r.meta){
         if(!r.meta.startAddress && Array.isArray(r.points) && r.points.length){
           r.meta.startAddress = await reverseGeocode(r.points[0].lat, r.points[0].lng);
           changed = changed || !!r.meta.startAddress;
         }
         if(!r.meta.endAddress && Array.isArray(r.points) && r.points.length){
-          const p = r.points[r.points.length - 1];
+          const p = r.points[r.points.length-1];
           r.meta.endAddress = await reverseGeocode(p.lat, p.lng);
           changed = changed || !!r.meta.endAddress;
         }
@@ -1779,188 +1662,255 @@
     setStatus(`Address refresh finished. Updated ${updated} records.`);
   }
 
-  // ---------- INFO ----------
-  function updateHeaderTexts(){
-    selectedPeriodText.textContent = scopeLabel();
-    routeStateText.textContent = route.active
-      ? `Route: ${route.paused ? "paused" : "recording"}`
-      : "Route: idle";
-    const sel = selectedRecord();
-    selectedItemText.textContent = sel
-      ? `Selected: ${sel.type}${sel.name ? ` · ${sel.name}` : ""}`
-      : "Selected: none";
-
-    const mapLabel = isLiveMode ? "Live radar" : `${scope[0].toUpperCase()+scope.slice(1)} scope`;
-    mapStateText.textContent = mapLabel + (isLiveMode && liveSessionStartedAt ? " · active session" : "");
+  function currentViewRecords(){
+    return recordsForScope();
   }
 
-  function setLiveModeButtons(){
-    btnLiveMode.classList.toggle("active", isLiveMode);
-    btnLiveMode.classList.toggle("primary", isLiveMode);
-    $("scopeDateWrap").classList.toggle("hidden", isLiveMode);
+  function scopeNameForFile(){
+    if(isLiveMode) return "live";
+    if(scope === "day") return `day-${toYMD(anchorDate)}`;
+    if(scope === "week"){
+      const m = mondayOfWeek(anchorDate);
+      return `week-${toYMD(m)}`;
+    }
+    const f = firstOfMonth(anchorDate);
+    return `month-${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}`;
   }
 
-  function setScopeButtons(){
-    btnDayScope.classList.toggle("active", !isLiveMode && scope === "day");
-    btnWeekScope.classList.toggle("active", !isLiveMode && scope === "week");
-    btnMonthScope.classList.toggle("active", !isLiveMode && scope === "month");
-  }
-
-  function renderAll(){
-    updateHeaderTexts();
-    renderWeeklyPanel();
-    renderDatabasePanel();
-    drawCanvas();
-  }
-
-  // ---------- EXPORT / IMPORT ----------
   function downloadBlob(blob, filename){
     const a = document.createElement("a");
     const url = URL.createObjectURL(blob);
     a.href = url;
     a.download = filename;
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 2500);
+    setTimeout(()=>URL.revokeObjectURL(url), 2500);
   }
 
-  function doExportJSON(){
+  function doBackupAll(){
+    const payload = {
+      version: 4,
+      exportedAt: new Date().toISOString(),
+      records
+    };
     downloadBlob(
-      new Blob([JSON.stringify({version:1, habits, records}, null, 2)], {type:"application/json"}),
-      "personal-spatial-journal.json"
+      new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"}),
+      `spatial-journal-backup-${todayYMD()}.json`
     );
   }
 
-  function doExportCSV(){
-    const headers = ["id","type","date","timestamp","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];
-    const lines = [headers.join(",")];
-    records.forEach(r => {
-      const row = headers.map(h => {
-        let v = r[h] ?? "";
-        if(typeof v === "object") v = JSON.stringify(v);
-        return `"${String(v).replace(/"/g, '""')}"`;
-      });
-      lines.push(row.join(","));
-    });
-    downloadBlob(new Blob([lines.join("\n")], {type:"text/csv"}), "personal-spatial-journal.csv");
-  }
-
-  async function doImportJSON(file){
+  async function doRestoreBackup(file){
     const txt = await file.text();
     const payload = JSON.parse(txt);
-    if(Array.isArray(payload.habits) && payload.habits.length === 10){
-      habits = payload.habits;
-      await dbSetSetting("habits", habits);
-      renderHabitSettings();
-      renderHabitPicker();
+
+    if(!payload || !Array.isArray(payload.records)){
+      throw new Error("Invalid backup file.");
     }
-    if(!payload.records || !Array.isArray(payload.records)) throw new Error("Invalid JSON");
+
+    const valid = payload.records.every(r =>
+      r &&
+      typeof r === "object" &&
+      typeof r.type === "string" &&
+      typeof r.date === "string" &&
+      typeof r.code === "string"
+    );
+
+    if(!valid){
+      throw new Error("Backup records failed validation.");
+    }
+
+    const confirmed = confirm(
+      `Restore backup with ${payload.records.length} records?\n\n` +
+      `This will REPLACE all current database records and avoid duplicates.`
+    );
+    if(!confirmed) return;
+
+    await clearRecordStore();
+
     for(const r of payload.records){
       const copy = {...r};
       delete copy.id;
       await dbAdd("records", copy);
     }
+
+    selectedRecordId = null;
+    route.active = false;
+    route.paused = false;
+    route.routeId = null;
+    route.points = [];
+    area.active = false;
+    area.areaId = null;
+    area.points = [];
+
     await refreshRecords();
+    fitScope();
   }
 
-  // ---------- EVENTS ----------
+  function exportRecordsToCSV(recordsToExport){
+    const headers = ["code","type","date","timestamp","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];
+    const lines = [headers.join(",")];
+    recordsToExport.forEach(r => {
+      const row = headers.map(h => {
+        let v = r[h] ?? "";
+        if(typeof v === "object") v = JSON.stringify(v);
+        return `"${String(v).replace(/"/g,'""')}"`;
+      });
+      lines.push(row.join(","));
+    });
+    return lines.join("\n");
+  }
+
+  function escapeXml(str=""){
+    return String(str)
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&apos;");
+  }
+
+  function exportRecordsToKML(recordsToExport){
+    const parts = [];
+    parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+    parts.push(`<kml xmlns="http://www.opengis.net/kml/2.2"><Document>`);
+    parts.push(`<name>${scopeNameForFile()}</name>`);
+
+    recordsToExport.forEach(r => {
+      const name = escapeXml(r.code || r.type || "record");
+      const desc = escapeXml([
+        r.type || "",
+        r.name || "",
+        r.text || "",
+        r.address || "",
+        r.distanceKm != null ? `distanceKm=${r.distanceKm}` : "",
+        r.areaSqM != null ? `areaSqM=${r.areaSqM}` : ""
+      ].filter(Boolean).join(" | "));
+
+      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
+        parts.push(`<Placemark><name>${name}</name><description>${desc}</description><Point><coordinates>${r.lng},${r.lat},0</coordinates></Point></Placemark>`);
+      } else if(r.type === "route" && Array.isArray(r.points) && r.points.length){
+        const coords = r.points.map(p => `${p.lng},${p.lat},0`).join(" ");
+        parts.push(`<Placemark><name>${name}</name><description>${desc}</description><LineString><coordinates>${coords}</coordinates></LineString></Placemark>`);
+      } else if(r.type === "area" && Array.isArray(r.points) && r.points.length){
+        const coords = [...r.points, r.points[0]].map(p => `${p.lng},${p.lat},0`).join(" ");
+        parts.push(`<Placemark><name>${name}</name><description>${desc}</description><Polygon><outerBoundaryIs><LinearRing><coordinates>${coords}</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>`);
+      }
+    });
+
+    parts.push(`</Document></kml>`);
+    return parts.join("");
+  }
+
+  function exportRecordsToDXF(recordsToExport){
+    const out = [];
+    const push = (...lines) => out.push(...lines);
+
+    push("0","SECTION","2","HEADER","0","ENDSEC");
+    push("0","SECTION","2","TABLES","0","ENDSEC");
+    push("0","SECTION","2","ENTITIES");
+
+    recordsToExport.forEach(r => {
+      if((r.type === "habit" || r.type === "note" || r.type === "route-event") && r.lat != null && r.lng != null){
+        const p = llToXY(r.lat, r.lng);
+        push("0","POINT","8","0","10",String(p.x),"20",String(p.y),"30","0");
+      } else if(r.type === "route" && Array.isArray(r.points) && r.points.length){
+        push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","0");
+        r.points.forEach(pt => {
+          const p = llToXY(pt.lat, pt.lng);
+          push("10",String(p.x),"20",String(p.y));
+        });
+      } else if(r.type === "area" && Array.isArray(r.points) && r.points.length){
+        push("0","LWPOLYLINE","8","0","90",String(r.points.length),"70","1");
+        r.points.forEach(pt => {
+          const p = llToXY(pt.lat, pt.lng);
+          push("10",String(p.x),"20",String(p.y));
+        });
+      }
+    });
+
+    push("0","ENDSEC","0","EOF");
+    return out.join("\n");
+  }
+
+  function renderAll(){
+    updateStatusLine();
+    renderWeeklyPanel();
+    renderDatabasePanel();
+    drawCanvas();
+  }
+
   btnLiveMode.onclick = () => {
     isLiveMode = true;
-    setLiveModeButtons();
-    setScopeButtons();
-    updateHeaderTexts();
+    setModeButtons();
+    updateStatusLine();
     drawCanvas();
     setStatus("Live mode.");
   };
-
   btnDayScope.onclick = () => {
     isLiveMode = false;
     scope = "day";
     anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
-    setLiveModeButtons();
-    setScopeButtons();
+    setModeButtons();
     fitScope();
-    updateHeaderTexts();
-    setStatus("Day scope.");
+    updateStatusLine();
   };
-
   btnWeekScope.onclick = () => {
     isLiveMode = false;
     scope = "week";
     anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
-    setLiveModeButtons();
-    setScopeButtons();
+    setModeButtons();
     fitScope();
-    updateHeaderTexts();
-    setStatus("Week scope.");
+    updateStatusLine();
   };
-
   btnMonthScope.onclick = () => {
     isLiveMode = false;
     scope = "month";
     anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
-    setLiveModeButtons();
-    setScopeButtons();
+    setModeButtons();
     fitScope();
-    updateHeaderTexts();
-    setStatus("Month scope.");
+    updateStatusLine();
   };
-
   scopeDate.onchange = () => {
     anchorDate = new Date(`${scopeDate.value || todayYMD()}T12:00:00`);
-    renderWeeklyPanel();
     if(!isLiveMode) fitScope();
-    updateHeaderTexts();
+    renderWeeklyPanel();
+    updateStatusLine();
   };
 
-  btnRecord.onclick = () => {
-    pendingCanvasWorld = null;
-    habitDialog.showModal();
-  };
-
+  btnRecord.onclick = () => { pendingCanvasWorld = null; habitDialog.showModal(); };
   btnRoute.onclick = async () => {
     const action = prompt("Route action: start / pause / resume / end", route.active ? (route.paused ? "resume" : "pause") : "start");
     if(!action) return;
     const a = action.trim().toLowerCase();
-    if(a === "start") await routeStart();
-    if(a === "pause") await routePause();
-    if(a === "resume") await routeResume();
-    if(a === "end") await routeEnd();
+    if(a==="start") await routeStart();
+    if(a==="pause") await routePause();
+    if(a==="resume") await routeResume();
+    if(a==="end") await routeEnd();
   };
-
   btnArea.onclick = async () => {
     const action = prompt("Area action: start / gps / close / cancel", area.active ? "gps" : "start");
     if(!action) return;
     const a = action.trim().toLowerCase();
-    if(a === "start") areaBegin();
-    if(a === "gps") await areaAddGPSVertex();
-    if(a === "close") await areaClose();
-    if(a === "cancel"){
-      area.active = false;
-      area.areaId = null;
-      area.points = [];
-      area.startAddress = "";
-      setStatus("Area canceled.");
-      updateHeaderTexts();
-      drawCanvas();
+    if(a==="start") areaBegin();
+    if(a==="gps") await areaAddGPSVertex();
+    if(a==="close") await areaClose();
+    if(a==="cancel"){
+      area.active = false; area.areaId = null; area.points = []; area.startAddress = "";
+      drawCanvas(); setStatus("Area canceled.");
     }
   };
-
   btnPinMe.onclick = pinToMe;
   btnPinSelected.onclick = () => pinToSelected(true);
   btnFitScope.onclick = fitScope;
+  btnRefreshLive.onclick = async () => { await refreshLivePosition(); drawCanvas(); setStatus("Refreshed."); };
   btnRefreshAddresses.onclick = refreshMissingAddresses;
-
-  btnZoomIn.onclick = () => { camera.zoom = Math.min(10, camera.zoom * 1.18); drawCanvas(); };
-  btnZoomOut.onclick = () => { camera.zoom = Math.max(0.002, camera.zoom / 1.18); drawCanvas(); };
+  btnZoomIn.onclick = () => { camera.zoom = Math.min(10, camera.zoom*1.18); drawCanvas(); };
+  btnZoomOut.onclick = () => { camera.zoom = Math.max(0.002, camera.zoom/1.18); drawCanvas(); };
   btnResetView.onclick = () => { camera = {...cameraDefault}; drawCanvas(); };
 
   toggleWeekly.onclick = () => togglePanel(weeklyPanel);
   toggleDatabase.onclick = () => togglePanel(databasePanel);
   toggleSettings.onclick = () => togglePanel(settingsPanel);
-
-  document.querySelectorAll("[data-close-panel]").forEach(btn => {
-    btn.onclick = () => btn.closest(".panel").classList.remove("active");
-  });
+  document.querySelectorAll("[data-close-panel]").forEach(btn => btn.onclick = () => btn.closest(".panel").classList.remove("active"));
 
   weekPrev.onclick = () => { anchorDate = addDays(mondayOfWeek(anchorDate), -7); scopeDate.value = toYMD(anchorDate); renderWeeklyPanel(); };
   weekToday.onclick = () => { anchorDate = new Date(); scopeDate.value = toYMD(anchorDate); renderWeeklyPanel(); };
@@ -1971,7 +1921,7 @@
 
   saveHabitNames.onclick = async () => {
     const inputs = habitSettingsWrap.querySelectorAll("input[data-idx]");
-    habits = Array.from(inputs).map((el, i) => el.value.trim() || `Habit ${i+1}`);
+    habits = Array.from(inputs).map((el,i)=>el.value.trim() || `Habit ${i+1}`);
     await dbSetSetting("habits", habits);
     renderHabitPicker();
     renderWeeklyPanel();
@@ -1985,37 +1935,42 @@
     renderWeeklyPanel();
     setStatus("Habit names reset.");
   };
+  defaultRouteSeconds.onchange = async () => {
+    const sec = Math.max(1, safeNum(defaultRouteSeconds.value, 5));
+    defaultRouteSeconds.value = String(sec);
+    await dbSetSetting("defaultRouteSeconds", sec);
+  };
 
-  exportJSON.onclick = doExportJSON;
-  exportCSV.onclick = doExportCSV;
-  importJSONBtn.onclick = () => importJSONInput.click();
-  importJSONInput.onchange = async e => {
+  backupAllBtn.onclick = doBackupAll;
+  restoreBackupBtn.onclick = () => restoreBackupInput.click();
+  restoreBackupInput.onchange = async e => {
     const file = e.target.files && e.target.files[0];
     if(!file) return;
     try{
-      await doImportJSON(file);
-      setStatus("Import completed.");
+      await doRestoreBackup(file);
+      setStatus("Backup restored. Records replaced.");
     }catch(err){
-      setStatus(`Import failed: ${err.message || err}`);
+      setStatus(`Restore failed: ${err.message || err}`);
     }finally{
-      importJSONInput.value = "";
+      restoreBackupInput.value = "";
     }
   };
 
-  // ---------- HABIT / NOTE DIALOGS ----------
-  // habit dialog built dynamically
-  noteInput.value = "";
-
-  // ---------- CANVAS INTERACTION ----------
-  function resizeCanvas(){
-    const ratio = Math.max(1, window.devicePixelRatio || 1);
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.floor(rect.width * ratio);
-    canvas.height = Math.floor(rect.height * ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-    drawCanvas();
-  }
-  window.addEventListener("resize", resizeCanvas);
+  exportCurrentCSV.onclick = () => {
+    const data = currentViewRecords();
+    const csv = exportRecordsToCSV(data);
+    downloadBlob(new Blob([csv], {type:"text/csv"}), `spatial-journal-${scopeNameForFile()}.csv`);
+  };
+  exportCurrentKML.onclick = () => {
+    const data = currentViewRecords();
+    const kml = exportRecordsToKML(data);
+    downloadBlob(new Blob([kml], {type:"application/vnd.google-earth.kml+xml"}), `spatial-journal-${scopeNameForFile()}.kml`);
+  };
+  exportCurrentDXF.onclick = () => {
+    const data = currentViewRecords();
+    const dxf = exportRecordsToDXF(data);
+    downloadBlob(new Blob([dxf], {type:"application/dxf"}), `spatial-journal-${scopeNameForFile()}.dxf`);
+  };
 
   function clearLongPress(){
     if(longPressTimer) clearTimeout(longPressTimer);
@@ -2033,9 +1988,9 @@
     clearLongPress();
     longPressTimer = setTimeout(() => {
       const rect = canvas.getBoundingClientRect();
-      const localX = e.clientX - rect.left;
-      const localY = e.clientY - rect.top;
-      pendingCanvasWorld = screenToWorld(localX, localY);
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      pendingCanvasWorld = screenToWorld(px, py);
       actionDialog.showModal();
       longPressTimer = null;
     }, 500);
@@ -2045,8 +2000,7 @@
     if(!pan.active) return;
     const dx = e.clientX - pan.startX;
     const dy = e.clientY - pan.startY;
-    if(Math.hypot(dx, dy) > 6) clearLongPress();
-
+    if(Math.hypot(dx,dy) > 6) clearLongPress();
     camera.centerX = pan.startCenterX - dx / camera.zoom;
     camera.centerY = pan.startCenterY + dy / camera.zoom;
     drawCanvas();
@@ -2055,21 +2009,22 @@
   canvas.addEventListener("pointerup", e => {
     const dx = e.clientX - pan.startX;
     const dy = e.clientY - pan.startY;
-    const moved = Math.hypot(dx, dy);
+    const moved = Math.hypot(dx,dy);
     pan.active = false;
     clearLongPress();
 
     if(moved < 5){
       const rect = canvas.getBoundingClientRect();
-      const localX = e.clientX - rect.left;
-      const localY = e.clientY - rect.top;
-      const hit = nearestHit(localX, localY);
-      if(hit){
-        selectedRecordId = hit.r.id;
-        updateHeaderTexts();
-        showRecordInfo(hit.r);
-        if(weeklyPanel.classList.contains("active")) renderWeeklyPanel();
+      const px = e.clientX - rect.left;
+      const py = e.clientY - rect.top;
+      const hits = pickHits(px, py);
+      if(hits.length === 1){
+        selectedRecordId = hits[0].id;
+        updateStatusLine();
+        showRecordInfo(hits[0]);
         drawCanvas();
+      }else if(hits.length > 1){
+        openChooser(hits);
       }
     }
   });
@@ -2097,22 +2052,16 @@
     drawCanvas();
   }, {passive:false});
 
-  // ---------- LIVE TIMERS ----------
-  setInterval(() => {
-    liveBlink = !liveBlink;
+  function resizeCanvas(){
+    const ratio = Math.max(1, window.devicePixelRatio || 1);
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.floor(rect.width * ratio);
+    canvas.height = Math.floor(rect.height * ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
     drawCanvas();
-  }, 700);
-
-  setInterval(() => {
-    refreshLivePosition();
-  }, 4000);
-
-  // ---------- FORMAT ----------
-  function formatDateLabel(ymd){
-    return new Date(`${ymd}T12:00:00`).toLocaleDateString([], {weekday:"short", day:"2-digit", month:"2-digit"});
   }
+  window.addEventListener("resize", resizeCanvas);
 
-  // ---------- BOOT ----------
   async function boot(){
     updateNetPill();
     window.addEventListener("online", updateNetPill);
@@ -2123,8 +2072,8 @@
     await refreshRecords();
     await initCompass();
 
-    routeStateText.textContent = "Route: idle";
-    updateHeaderTexts();
+    setModeButtons();
+    liveSessionStartedAt = new Date().toISOString();
 
     requestAnimationFrame(() => {
       resizeCanvas();
@@ -2133,11 +2082,11 @@
     });
 
     await refreshLivePosition();
+    setInterval(() => { liveBlink = !liveBlink; drawCanvas(); }, 700);
+    setInterval(() => refreshLivePosition(), 4000);
   }
 
-  boot().catch(err => {
-    setStatus(`Startup error: ${err.message || err}`);
-  });
+  boot().catch(err => setStatus(`Startup error: ${err.message || err}`));
 })();
 </script>
 </body>
