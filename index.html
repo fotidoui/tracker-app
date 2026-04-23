@@ -117,7 +117,6 @@ let records = JSON.parse(localStorage.getItem("records") || "[]");
 
 // ===== SESSION =====
 let currentSession = null;
-let watchId = null;
 
 // ===== NAV =====
 function show(id){
@@ -146,14 +145,28 @@ function getWeek(ts){
   return Math.ceil((((d - onejan) / 86400000) + onejan.getDay()+1)/7);
 }
 
-// ===== RECORD EVENT =====
+// ===== RECORD EVENT (FIXED GPS) =====
 function recordEvent(type){
 
-  navigator.geolocation.getCurrentPosition(pos=>{
-    createRecord(type, pos.coords.latitude, pos.coords.longitude);
-  }, ()=>{
+  if(!navigator.geolocation){
     createRecord(type, null, null);
-  });
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      createRecord(type, pos.coords.latitude, pos.coords.longitude);
+    },
+    err=>{
+      console.warn("GPS error:", err.message);
+      createRecord(type, null, null);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
 }
 
 function createRecord(type, lat, lng){
@@ -174,7 +187,8 @@ function createRecord(type, lat, lng){
   records.push(rec);
   save();
 
-  document.getElementById("status").innerText = "Saved: "+type;
+  document.getElementById("status").innerText =
+    "Saved: " + type + (lat ? " (GPS OK)" : " (NO GPS)");
 }
 
 // ===== WEEKLY =====
@@ -192,7 +206,7 @@ function renderWeekly(){
       <div class="event">
         ${new Date(r.timestamp).toLocaleString()} |
         ${r.type} |
-        ${r.lat ? r.lat.toFixed(4)+","+r.lng.toFixed(4) : "no GPS"}
+        ${r.lat ? r.lat.toFixed(5)+","+r.lng.toFixed(5) : "no GPS"}
       </div>
     `;
   });
@@ -230,7 +244,6 @@ function renderMap(){
     }
   });
 
-  // draw routes
   Object.values(sessions).forEach(arr=>{
     arr.sort((a,b)=>a.timestamp-b.timestamp);
 
@@ -240,7 +253,6 @@ function renderMap(){
     }
   });
 
-  // draw points
   data.forEach(r=>{
     L.circleMarker([r.lat,r.lng]).addTo(layer)
       .bindPopup(r.type);
