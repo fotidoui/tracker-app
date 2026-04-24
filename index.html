@@ -129,6 +129,30 @@
     .muted{color:var(--muted)}
     .hint{font-size:13px;color:var(--muted)}
 
+
+    .addModeChoice{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .addModeChoice button{
+      min-height:58px;
+      font-weight:750;
+    }
+    .addModeChoice .selectedMode{
+      outline:3px solid var(--sea2);
+      outline-offset:2px;
+    }
+    .addNowBox{
+      border-color:#b8d2a8;
+      background:#f7fbf1;
+    }
+    .addThenBox{
+      border-color:#ddb88a;
+      background:#fff7e8;
+    }
+
     .routeFloat{
       position:absolute;
       z-index:82;
@@ -171,6 +195,25 @@
       min-height:42px;
       font-weight:650;
     }
+
+    .routeFloat{
+      resize:both;
+      overflow:auto;
+      min-width:280px;
+      min-height:230px;
+    }
+    .routeFloatResize{
+      position:absolute;
+      right:5px;
+      bottom:5px;
+      width:18px;
+      height:18px;
+      border-right:3px solid rgba(36,51,59,.35);
+      border-bottom:3px solid rgba(36,51,59,.35);
+      border-radius:2px;
+      pointer-events:none;
+    }
+
     .routeMiniStatus{
       font-size:12px;
       color:var(--muted);
@@ -189,7 +232,31 @@
       margin-top:8px;
     }
     @media (max-width:520px){
-      .routeFloat{
+  
+    .addModeChoice{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .addModeChoice button{
+      min-height:58px;
+      font-weight:750;
+    }
+    .addModeChoice .selectedMode{
+      outline:3px solid var(--sea2);
+      outline-offset:2px;
+    }
+    .addNowBox{
+      border-color:#b8d2a8;
+      background:#f7fbf1;
+    }
+    .addThenBox{
+      border-color:#ddb88a;
+      background:#fff7e8;
+    }
+
+    .routeFloat{
         width:calc(100vw - 28px);
         bottom:78px;
       }
@@ -894,7 +961,7 @@
               <tr>
                 <th>Code</th><th>Type</th><th>Event</th><th>Captured</th><th>Source</th>
                 <th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th>
-                <th>Address source</th><th>Route km</th><th>Area m²</th><th>Delete</th>
+                <th>City</th><th>Address source</th><th>Route vertices</th><th>Area vertices</th><th>Route km</th><th>Area m²</th><th>Delete</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -954,50 +1021,66 @@
 <dialog id="addObjectDialog">
   <div class="modalHead"><strong>Add Object</strong></div>
   <div class="modalBody">
-    <div class="addChoice">
-      <h4>1. Choose source</h4>
-      <div class="row">
-        <button data-add-source="gps" class="primary">Measure: current GPS</button>
-        <button data-add-source="manual">Design: date + canvas point</button>
-        <button id="addRandomSourceBtn" type="button">Design: random/search</button>
+    <div class="addModeChoice">
+      <button id="addNowModeBtn" type="button" class="primary">Add Now<br><span class="small">current GPS only</span></button>
+      <button id="addThenModeBtn" type="button">Add Then<br><span class="small">manual / date / canvas / random</span></button>
+    </div>
+
+    <div id="addNowInfo" class="addChoice addNowBox hidden">
+      <h4>Add Now rules</h4>
+      <div class="hint">
+        Everything here uses your current GPS position and true live time. These records first go to Weekly drafts for validation.
       </div>
     </div>
-    <div id="addManualHint" class="hint hidden" style="margin-bottom:10px">
-      For Design mode: after choosing the object type, long-press/right-click the map where you want to place it.
+
+    <div id="addManualHint" class="hidden"></div>
+    <div id="addThenInfo" class="addChoice addThenBox hidden">
+      <h4>Add Then rules</h4>
+      <div class="hint">
+        Everything here is manual/design data. It asks for event date/time and uses calcTimestamp. It may be placed by canvas, typed coordinates, or address/database search.
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="addRandomSourceBtn" type="button">Add Random / Search Location</button>
+      </div>
     </div>
+
     <div class="addChoice">
-      <h4>2. Choose geometry</h4>
+      <h4>Choose geometry</h4>
       <div class="row">
         <button data-add-geometry="point">Point</button>
         <button data-add-geometry="line">Line / Route</button>
         <button data-add-geometry="area">Area</button>
       </div>
     </div>
+
     <div id="addPointKinds" class="addChoice hidden">
-      <h4>3. Point type</h4>
+      <h4>Point type</h4>
       <div class="row">
         <button data-add-point="habit">Habit point</button>
         <button data-add-point="note">Note point</button>
-        <button data-add-point="route-event">Route point</button>
+        <button data-add-point="route-event">Route point / event</button>
       </div>
     </div>
+
     <div id="addRouteKinds" class="addChoice hidden">
-      <h4>3. Route command</h4>
+      <h4>Route command</h4>
       <div class="row">
         <button data-add-route="start">Start route / new segment</button>
-        <button data-add-route="vertex">Add vertex</button>
-        <button data-add-route="pause">Pause</button>
+        <button data-add-route="vertex">Add route point</button>
+        <button data-add-route="pause">Pause segment</button>
         <button data-add-route="resume">Resume / new segment</button>
         <button data-add-route="end">End route</button>
       </div>
     </div>
+
     <div id="addAreaKinds" class="addChoice hidden">
-      <h4>3. Area command</h4>
+      <h4>Area command</h4>
       <div class="row">
-        <button data-add-area="vertex">Add vertex</button>
+        <button data-add-area="vertex">Add area vertex</button>
         <button data-add-area="close">Close area</button>
       </div>
     </div>
+
     <div id="addObjectSummary" class="hint"></div>
   </div>
   <div class="modalFoot">
@@ -1009,24 +1092,36 @@
 
 <div id="routeFloat" class="routeFloat">
   <div id="routeFloatHead" class="routeFloatHead">
-    <strong>Route Control</strong>
+    <strong>Quick Controls</strong>
     <span id="routeFloatState" class="pill">idle</span>
     <div class="spacer"></div>
     <button id="routeFloatMin">−</button>
   </div>
   <div class="routeFloatBody">
     <div id="routeFloatInfo" class="routeMiniStatus">No active route.</div>
+
     <div class="routeFloatGrid">
       <button id="floatRouteStart" class="warn">Start</button>
       <button id="floatRoutePause" class="warn">Pause</button>
       <button id="floatRouteResume" class="warn">Resume</button>
       <button id="floatRouteEnd" class="warn">End</button>
     </div>
-    <div class="row" style="margin-top:8px">
-      <button id="floatSaveState">Save Route State</button>
+
+    <div class="routeFloatGrid" style="margin-top:8px">
+      <button id="floatPinMe">Pin Me</button>
+      <button id="floatPinSelected">Pin Selected</button>
+      <button id="floatFitScope">Fit</button>
+      <button id="floatRefreshGps">Refresh GPS</button>
+    </div>
+
+    <div class="routeFloatGrid" style="margin-top:8px">
+      <button id="floatFinishLive" class="good">Finish Live</button>
+      <button id="floatRefreshAddresses">Addresses</button>
+      <button id="floatSaveState">Save State</button>
       <button id="floatWakeLock">Keep Awake</button>
     </div>
     <div id="autoBackupStatus" class="backupStatus">Auto-backup waiting</div>
+    <span id="routeFloatResize" class="routeFloatResize"></span>
   </div>
 </div>
 
@@ -1215,6 +1310,12 @@ const els = {
   floatRoutePause:$("floatRoutePause"),
   floatRouteResume:$("floatRouteResume"),
   floatRouteEnd:$("floatRouteEnd"),
+  floatPinMe:$("floatPinMe"),
+  floatPinSelected:$("floatPinSelected"),
+  floatFitScope:$("floatFitScope"),
+  floatRefreshGps:$("floatRefreshGps"),
+  floatFinishLive:$("floatFinishLive"),
+  floatRefreshAddresses:$("floatRefreshAddresses"),
   floatSaveState:$("floatSaveState"),
   floatWakeLock:$("floatWakeLock"),
   autoBackupStatus:$("autoBackupStatus"),
@@ -1232,6 +1333,10 @@ const els = {
   floatingEditorCancel:$("floatingEditorCancel"),
   floatingEditorSave:$("floatingEditorSave"),
   addObjectDialog:$("addObjectDialog"),
+  addNowModeBtn:$("addNowModeBtn"),
+  addThenModeBtn:$("addThenModeBtn"),
+  addNowInfo:$("addNowInfo"),
+  addThenInfo:$("addThenInfo"),
   cancelAddObject:$("cancelAddObject"),
   confirmAddObject:$("confirmAddObject"),
   addManualHint:$("addManualHint"),
@@ -1406,6 +1511,40 @@ function routeDistanceKm(points=[]){
   for(let i=1;i<points.length;i++) km += haversineKm(points[i-1].lat,points[i-1].lng,points[i].lat,points[i].lng);
   return km;
 }
+
+function areaVerticesText(points=[]){
+  if(!Array.isArray(points) || !points.length) return "";
+  return points.map((p,i)=>`${i+1}: ${Number(p.lat).toFixed(8)}, ${Number(p.lng).toFixed(8)}`).join(" | ");
+}
+function routeVerticesText(points=[]){
+  if(!Array.isArray(points) || !points.length) return "";
+  return points.map((p,i)=>`${i+1}: ${Number(p.lat).toFixed(8)}, ${Number(p.lng).toFixed(8)}`).join(" | ");
+}
+function polygonCentroidLatLng(points=[]){
+  if(!Array.isArray(points) || !points.length) return {lat:null,lng:null};
+  if(points.length < 3){
+    const lat = points.reduce((s,p)=>s+Number(p.lat||0),0)/points.length;
+    const lng = points.reduce((s,p)=>s+Number(p.lng||0),0)/points.length;
+    return {lat,lng};
+  }
+  // planar centroid in local lat/lng approximation; enough for small personal areas
+  let twiceArea=0, cx=0, cy=0;
+  const pts = points.map(p=>({x:Number(p.lng), y:Number(p.lat)}));
+  for(let i=0;i<pts.length;i++){
+    const j=(i+1)%pts.length;
+    const cross = pts[i].x*pts[j].y - pts[j].x*pts[i].y;
+    twiceArea += cross;
+    cx += (pts[i].x + pts[j].x) * cross;
+    cy += (pts[i].y + pts[j].y) * cross;
+  }
+  if(Math.abs(twiceArea) < 1e-12){
+    const lat = points.reduce((s,p)=>s+Number(p.lat||0),0)/points.length;
+    const lng = points.reduce((s,p)=>s+Number(p.lng||0),0)/points.length;
+    return {lat,lng};
+  }
+  return {lng: cx/(3*twiceArea), lat: cy/(3*twiceArea)};
+}
+
 function polygonAreaSqM(points=[]){
   if(points.length<3) return 0;
   const lat0 = points.reduce((s,p)=>s+p.lat,0)/points.length;
@@ -1468,11 +1607,35 @@ function dbGetSetting(k){ return new Promise((res,rej)=>{ const r=txStore("setti
 function dbSetSetting(k,v){ return new Promise((res,rej)=>{ const r=txStore("settings","readwrite").put({key:k,value:v}); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });}
 function clearRecordStore(){ return new Promise((res,rej)=>{ const r=txStore("records","readwrite").clear(); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });}
 
+
+function normalizeRecordGeometry(r){
+  if(r.address && !r.city) r.city = cityFromAddress(r.address);
+  if(r.type === "route" && Array.isArray(r.points)){
+    if(!r.routeVertices) r.routeVertices = routeVerticesText(r.points);
+    const cs = uniqueCitiesFromPoints(r.points); if(cs.length) r.routeCities = cs.join(" → ");
+    if((r.lat == null || r.lng == null) && r.points.length){
+      r.lat = r.points[0].lat;
+      r.lng = r.points[0].lng;
+    }
+  }
+  if(r.type === "area" && Array.isArray(r.points)){
+    if(!r.areaVertices) r.areaVertices = areaVerticesText(r.points);
+    if(!r.areaCity) r.areaCity = cityFromAddress(r.address || r.meta?.startAddress || "");
+    if(r.lat == null || r.lng == null){
+      const c = polygonCentroidLatLng(r.points);
+      r.lat = c.lat;
+      r.lng = c.lng;
+    }
+  }
+  return r;
+}
+
 async function refreshRecords(){
   records = await dbGetAll("records");
   records.sort((a,b)=>String(a.calcTimestamp||a.capturedAt||"").localeCompare(String(b.calcTimestamp||b.capturedAt||"")));
   projectionOrigin = null;
   for(const r of records){
+    normalizeRecordGeometry(r);
     if(r.lat!=null && r.lng!=null) setProjectionOriginIfMissing(r.lat,r.lng);
     if(Array.isArray(r.points)) r.points.forEach(p=>setProjectionOriginIfMissing(p.lat,p.lng));
   }
@@ -1738,7 +1901,7 @@ function savePendingRecords(){
   localStorage.setItem("spatialJournalPendingRecords", JSON.stringify(pendingRecords));
 }
 function allRecordsForViews(){
-  return [...records, ...pendingRecords];
+  return [...records, ...pendingRecords].map(normalizeRecordGeometry);
 }
 function isDraftRecord(r){
   return !!r._draftId;
@@ -1826,7 +1989,7 @@ function weeklyRecords(){
   return allRecordsForViews().filter(r=>dateFromCalc(r)>=a && dateFromCalc(r)<=b);
 }
 function selectedRecord(){
-  return allRecordsForViews().find(r=>(r.id===selectedRecordId || r._draftId===selectedRecordId))||null;
+  return allRecordsForViews().find(r=>(String(r.id)===String(selectedRecordId) || String(r._draftId)===String(selectedRecordId)))||null;
 }
 function updateStatusLine(){
   const mode=isLiveMode ? "Live" : scope[0].toUpperCase()+scope.slice(1);
@@ -1913,7 +2076,7 @@ function pinToSelected(){
   }
 }
 function focusRecordFromWeekly(id){
-  const r=allRecordsForViews().find(x=>(x.id===id || x._draftId===id));
+  const r=allRecordsForViews().find(x=>(String(x.id)===String(id) || String(x._draftId)===String(id)));
   if(!r) return;
   selectedRecordId=id;
   isLiveMode=false;
@@ -2057,7 +2220,11 @@ function showRecordInfo(rec){
     <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${esc(rec.text||"-")}</div>
     <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat??"-"}, ${rec.lng??"-"}</div>
     <div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address||m.startAddress||"-")}</div><div class="small muted" style="margin-top:8px">Address source</div><div>${esc(rec.addressSource||"-")}</div>
+    <div class="small muted" style="margin-top:8px">City</div><div>${esc(rec.city || rec.areaCity || cityFromAddress(rec.address || rec.meta?.startAddress || "") || "-")}</div>
+    <div class="small muted" style="margin-top:8px">Route cities</div><div>${esc(routeCitiesText(rec) || "-")}</div>
+    <div class="small muted" style="margin-top:8px">Route vertices</div><div style="white-space:pre-wrap">${esc(rec.routeVertices || (rec.type==="route" ? routeVerticesText(rec.points) : "-"))}</div>
     <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm!=null?Number(rec.distanceKm).toFixed(3):"-"}</div>
+    <div class="small muted" style="margin-top:8px">Area vertices</div><div style="white-space:pre-wrap">${esc(rec.areaVertices || (rec.type==="area" ? areaVerticesText(rec.points) : "-"))}</div>
     <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM!=null?Number(rec.areaSqM).toFixed(2):"-"}</div>
   `;
   if(rec.type==="route" || rec.type==="area"){
@@ -2364,6 +2531,9 @@ async function routeEnd(){
     routeId:route.routeId,
     distanceKm:distanceSegmentsKm(route.segments && route.segments.length ? route.segments : [route.points]),
     points:route.points,
+    lat: route.points[0]?.lat ?? null,
+    lng: route.points[0]?.lng ?? null,
+    routeVertices: routeVerticesText(route.points),
     segments:route.segments && route.segments.length ? route.segments : [route.points],
     meta:{
       startAddress:route.startAddress,
@@ -2422,6 +2592,9 @@ async function manualRouteEndAt(lat,lng){
     routeId:manualRoute.routeId,
     distanceKm:distanceSegmentsKm(manualRoute.segments),
     points:manualRoute.points,
+    lat: manualRoute.points[0]?.lat ?? null,
+    lng: manualRoute.points[0]?.lng ?? null,
+    routeVertices: routeVerticesText(manualRoute.points),
     segments:manualRoute.segments,
     meta:{manual:true, segmentCount:manualRoute.segments.length}
   };
@@ -2456,14 +2629,26 @@ async function areaAddGPSVertex(){
     alert(`GPS area vertex failed: ${err.message||err}`);
   }
 }
+async 
+function centroidPoint(points=[]){
+  if(!Array.isArray(points) || !points.length) return {lat:null,lng:null};
+  const lat = points.reduce((s,p)=>s+Number(p.lat||0),0)/points.length;
+  const lng = points.reduce((s,p)=>s+Number(p.lng||0),0)/points.length;
+  return {lat,lng};
+}
+
 async function areaClose(){
   if(!area.active || area.points.length<3) return alert("Need at least 3 area points.");
   const tm=isLiveMode ? liveTimeMeta() : await manualTimeMeta(true);
   if(!tm) return;
+  const center = polygonCentroidLatLng(area.points);
   const rec={
     ...makeBaseRecord("area",tm),
     areaId:area.areaId,
+    lat:center.lat,
+    lng:center.lng,
     points:area.points,
+    areaVertices: areaVerticesText(area.points),
     areaSqM:polygonAreaSqM(area.points),
     color:area.color,
     address:area.startAddress,
@@ -2523,6 +2708,8 @@ function openRandomWindow(prefill={}){
   els.randomSearchInput.value = "";
   els.randomResults.innerHTML = "";
   els.randomResults.classList.add("hidden");
+  els.menuDrawer?.classList.remove("open");
+  els.toolsDrawer?.classList.remove("open");
   els.randomWindow.classList.add("open");
 }
 
@@ -2694,11 +2881,24 @@ let addState = {source:null, geometry:null, point:null, route:null, area:null};
 
 function updateAddObjectSummary(){
   if(!els.addObjectSummary) return;
-  els.addObjectSummary.textContent = `Selected: ${addState.source || "-"} / ${addState.geometry || "-"} / ${addState.point || addState.route || addState.area || "-"}`;
-  if(els.addManualHint) els.addManualHint.classList.toggle("hidden", addState.source !== "manual");
+
+  if(els.addNowModeBtn) els.addNowModeBtn.classList.toggle("selectedMode", addState.source === "gps");
+  if(els.addThenModeBtn) els.addThenModeBtn.classList.toggle("selectedMode", addState.source === "manual");
+  if(els.addNowInfo) els.addNowInfo.classList.toggle("hidden", addState.source !== "gps");
+  if(els.addThenInfo) els.addThenInfo.classList.toggle("hidden", addState.source !== "manual");
+
   if(els.addPointKinds) els.addPointKinds.classList.toggle("hidden", addState.geometry !== "point");
   if(els.addRouteKinds) els.addRouteKinds.classList.toggle("hidden", addState.geometry !== "line");
   if(els.addAreaKinds) els.addAreaKinds.classList.toggle("hidden", addState.geometry !== "area");
+
+  const role = addState.source === "gps"
+    ? "Add Now / current GPS / Weekly draft"
+    : addState.source === "manual"
+      ? "Add Then / manual-date-design / database"
+      : "choose Add Now or Add Then";
+
+  els.addObjectSummary.textContent =
+    `Selected: ${role} / ${addState.geometry || "-"} / ${addState.point || addState.route || addState.area || "-"}`;
 }
 
 function openAddObjectDialog(){
@@ -2707,12 +2907,17 @@ function openAddObjectDialog(){
   els.addObjectDialog.showModal();
 }
 
-document.querySelectorAll("[data-add-source]").forEach(b=>{
-  b.onclick=()=>{
-    addState.source=b.dataset.addSource;
-    updateAddObjectSummary();
-  };
-});
+if(els.addNowModeBtn) els.addNowModeBtn.onclick=()=>{
+  addState.source="gps";
+  addState.geometry=null; addState.point=null; addState.route=null; addState.area=null;
+  updateAddObjectSummary();
+};
+if(els.addThenModeBtn) els.addThenModeBtn.onclick=()=>{
+  addState.source="manual";
+  addState.geometry=null; addState.point=null; addState.route=null; addState.area=null;
+  updateAddObjectSummary();
+};
+
 document.querySelectorAll("[data-add-geometry]").forEach(b=>{
   b.onclick=()=>{
     addState.geometry=b.dataset.addGeometry;
@@ -2740,7 +2945,11 @@ document.querySelectorAll("[data-add-area]").forEach(b=>{
 });
 
 if(els.btnRandomObject) els.btnRandomObject.onclick=()=>openRandomWindow();
-if(els.addRandomSourceBtn) els.addRandomSourceBtn.onclick=()=>openRandomWindow();
+if(els.addRandomSourceBtn) els.addRandomSourceBtn.onclick=()=>{
+  addState.source="manual";
+  updateAddObjectSummary();
+  openRandomWindow();
+};
 if(els.randomClose) els.randomClose.onclick=closeRandomWindow;
 if(els.randomCancel) els.randomCancel.onclick=closeRandomWindow;
 if(els.randomMin) els.randomMin.onclick=()=>els.randomWindow.classList.toggle("open");
@@ -2788,7 +2997,7 @@ els.confirmAddObject.onclick=async()=>{
   }
 
   if(addState.source === "manual"){
-    alert("Now long-press or right-click the map where you want to place the object. The canvas toolbox will appear.");
+    alert("Add Then selected. Now long-press/right-click the map where you want to place this manual object, or use Add Random/Search Location.");
     if(addState.geometry === "point"){
       if(addState.point === "habit") window.__pendingTool = "add-habit";
       else if(addState.point === "note") window.__pendingTool = "add-note";
@@ -2965,6 +3174,73 @@ els.saveNote.onclick=async()=>{
   }
 };
 
+
+
+function postalCodeFromAddress(address=""){
+  const m = String(address || "").match(/\b[A-Z]?\d{4,6}\s?[A-Z]{0,2}\b/i);
+  return m ? m[0].trim() : "";
+}
+function cityFromAddress(address=""){
+  if(!address) return "";
+  const parts = String(address).split(",").map(x=>x.trim()).filter(Boolean);
+  if(!parts.length) return "";
+
+  // Prefer non-numeric, human-scale locality candidates.
+  const countryOrRegion = /(\bnetherlands\b|\bnederland\b|\bgreece\b|\bellada\b|\bdeutschland\b|\bgermany\b|\bunited kingdom\b|\bfrance\b|\bitaly\b|\bspain\b|\bportugal\b|\bbelgium\b|\busa\b|\bunited states\b|\bprovince\b|\bregion\b)/i;
+  const postalLike = /\b[A-Z]?\d{4,6}\s?[A-Z]{0,2}\b/i;
+
+  const clean = parts.filter(p => !countryOrRegion.test(p));
+  const locality = clean.find(p => !postalLike.test(p) && !/^\d/.test(p) && p.length > 2 && p.length < 60);
+
+  if(locality) return locality;
+
+  // If no city/locality is available, fall back to postal code.
+  return postalCodeFromAddress(address) || clean[0] || parts[0] || "";
+}
+function uniqueCitiesFromPoints(points=[]){
+  const cities = [];
+  const ordered = [...(points || [])].sort((a,b)=>String(a.calcTimestamp || a.timestamp || "").localeCompare(String(b.calcTimestamp || b.timestamp || "")));
+  for(const p of ordered){
+    const c = p.city || cityFromAddress(p.address || "") || p.postalCode || "";
+    if(c && !cities.includes(c)) cities.push(c);
+  }
+  return cities;
+}
+function routeCitiesText(r){
+  if(r.routeCities) return r.routeCities;
+  if(Array.isArray(r.points)){
+    const cities = uniqueCitiesFromPoints(r.points);
+    if(cities.length) return cities.join(" → ");
+  }
+  const meta = r.meta || {};
+  const cities = [
+    cityFromAddress(meta.startAddress || ""),
+    cityFromAddress(meta.endAddress || "")
+  ].filter(Boolean);
+  return [...new Set(cities)].join(" → ");
+}
+function areaCityText(r){
+  if(r.areaCity) return r.areaCity;
+  return cityFromAddress(r.address || r.meta?.startAddress || "");
+}
+
+function firstLastRouteAddressText(r){
+  const meta = r.meta || {};
+  const start = meta.startAddress || r.startAddress || "";
+  const end = meta.endAddress || r.endAddress || "";
+  if(start || end) return ` · Start: ${esc(start || "-")} · End: ${esc(end || "-")}`;
+  return "";
+}
+function areaCenterText(r){
+  if(r.type !== "area") return "";
+  if(r.lat != null && r.lng != null) return ` · Center: ${Number(r.lat).toFixed(6)}, ${Number(r.lng).toFixed(6)}`;
+  if(Array.isArray(r.points) && r.points.length){
+    const c = polygonCentroidLatLng(r.points);
+    return ` · Center: ${Number(c.lat).toFixed(6)}, ${Number(c.lng).toFixed(6)}`;
+  }
+  return "";
+}
+
 function renderWeeklyPanel(){
   const m=mondayOfWeek(anchorDate);
   const ymds=Array.from({length:7},(_,i)=>toYMD(addDays(m,i)));
@@ -3007,11 +3283,13 @@ function renderWeeklyPanel(){
     }else{
       day.forEach(r=>{
         html+=`
-          <div class="card ${(r.id===selectedRecordId || r._draftId===selectedRecordId)?"selected":""}" data-week-record-id="${r.id || r._draftId}">
+          <div class="card ${(String(r.id)===String(selectedRecordId) || String(r._draftId)===String(selectedRecordId))?"selected":""}" data-week-record-id="${r.id || r._draftId}">
             <div class="row">
               <span class="pill">${esc(r.code||"")}</span>
               <span class="pill">${esc(r.type)}</span>${isDraftRecord(r)?`<span class="pill draftBadge">draft</span>`:""}
               ${r.name?`<span class="pill">${esc(r.name)}</span>`:""}
+              ${r.type==="route"?`<span class="pill">Route ID: ${esc(r.routeId || "-")}</span>`:""}
+              ${r.type==="area"?`<span class="pill">Area ID: ${esc(r.areaId || "-")}</span>`:""}
               <span class="pill">${esc(eventTimeLabel(r)||"--:--")}</span>
               <div class="spacer"></div>
               ${isDraftRecord(r) ? `<button data-delete-draft="${r._draftId}" class="danger">Remove draft</button>` : ""}<button data-show-on-map="${r.id || r._draftId}">Show on map</button>
@@ -3020,8 +3298,10 @@ function renderWeeklyPanel(){
             <div class="small muted" style="margin-top:8px">
               ${r.lat!=null&&r.lng!=null?`${r.lat.toFixed(6)}, ${r.lng.toFixed(6)}`:""}
               ${r.address?` · ${esc(r.address)}`:""}
-              ${r.distanceKm!=null?` · ${Number(r.distanceKm).toFixed(3)} km`:""}
-              ${r.areaSqM!=null?` · ${Number(r.areaSqM).toFixed(2)} m²`:""}
+              ${r.type==="route" ? ` · Route ID: ${esc(r.routeId || "-")} · ${Array.isArray(r.points)?r.points.length:0} vertices · ${r.distanceKm!=null?Number(r.distanceKm).toFixed(3)+" km":""} · Cities: ${esc(routeCitiesText(r) || "-")}` : ""}
+              ${r.type==="area" ? ` · Area ID: ${esc(r.areaId || "-")} · ${Array.isArray(r.points)?r.points.length:0} vertices · ${r.areaSqM!=null?Number(r.areaSqM).toFixed(2)+" m²":""}${areaCenterText(r)} · City: ${esc(areaCityText(r) || "-")}` : ""}
+              ${r.type!=="route" && r.type!=="area" && r.distanceKm!=null?` · ${Number(r.distanceKm).toFixed(3)} km`:""}
+              ${r.type!=="route" && r.type!=="area" && r.areaSqM!=null?` · ${Number(r.areaSqM).toFixed(2)} m²`:""}
               · ${esc(r.timeSource||"")}/${esc(r.timeConfidence||"")}
             </div>
           </div>`;
@@ -3085,7 +3365,7 @@ function renderDatabasePanel(){
   if(view === "metadata"){
     thead.innerHTML = `<tr>
       <th>Code</th><th>Type</th><th>calcTimestamp</th><th>capturedAt</th><th>timeSource</th><th>confidence</th>
-      <th>Accuracy</th><th>Altitude</th><th>Speed</th><th>Heading</th><th>Address source</th>
+      <th>Accuracy</th><th>Altitude</th><th>Speed</th><th>Heading</th><th>City</th><th>Address source</th>
       <th>Route ID</th><th>Area ID</th><th>Segments</th><th>Points</th><th>Meta/raw</th><th>Delete</th>
     </tr>`;
     els.dbTableBody.innerHTML=rows.map(r=>`
@@ -3104,7 +3384,7 @@ function renderDatabasePanel(){
     thead.innerHTML = `<tr>
       <th>Code</th><th>Type</th><th>Event</th><th>Captured</th><th>Source</th>
       <th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th>
-      <th>Address source</th><th>Route km</th><th>Area m²</th><th>Edit</th><th>Delete</th>
+      <th>City</th><th>Address source</th><th>Route vertices</th><th>Area vertices</th><th>Route km</th><th>Area m²</th><th>Edit</th><th>Delete</th>
     </tr>`;
     els.dbTableBody.innerHTML=rows.map(r=>`
       <tr>
@@ -3151,14 +3431,39 @@ async function refreshMissingAddresses(){
     let changed=false;
     if(["habit","note","route-event"].includes(r.type) && !r.address && r.lat!=null && r.lng!=null){
       r.address=await reverseGeocode(r.lat,r.lng);
-      if(r.address) r.addressSource="refresh-reverse";
+      if(r.address){ r.addressSource="refresh-reverse"; r.city=cityFromAddress(r.address); }
       changed=!!r.address;
     }
     if(r.type==="area" && !r.address && Array.isArray(r.points) && r.points.length){
       r.address=await reverseGeocode(r.points[0].lat,r.points[0].lng);
-      if(r.address) r.addressSource="refresh-reverse";
+      if(r.address){ r.addressSource="refresh-reverse"; r.areaCity=cityFromAddress(r.address); }
       changed=changed||!!r.address;
     }
+    
+    if(r.type==="route" && Array.isArray(r.points) && r.points.length){
+      let pointChanged = false;
+      for(const p of r.points){
+        if(!p.address && p.lat != null && p.lng != null){
+          p.address = await reverseGeocode(p.lat, p.lng);
+          if(p.address){
+            p.city = cityFromAddress(p.address);
+            p.postalCode = postalCodeFromAddress(p.address);
+            pointChanged = true;
+          }
+        }else if(p.address && !p.city){
+          p.city = cityFromAddress(p.address);
+          p.postalCode = postalCodeFromAddress(p.address);
+          pointChanged = true;
+        }
+      }
+      const cities = uniqueCitiesFromPoints(r.points);
+      if(cities.length){
+        r.routeCities = cities.join(" → ");
+        pointChanged = true;
+      }
+      changed = changed || pointChanged;
+    }
+
     if(changed){
       await dbPut("records",r);
       updated++;
@@ -3209,7 +3514,7 @@ async function doRestoreBackup(file){
   fitScope();
 }
 function exportRecordsToCSV(list){
-  const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","addressSource","routeId","areaId","distanceKm","areaSqM","color","meta"];
+  const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","city","routeCities","areaCity","addressSource","routeId","routeVertices","areaVertices","areaId","distanceKm","areaSqM","color","meta"];
   return [headers.join(","), ...list.map(r=>headers.map(h=>{
     let v=r[h]??"";
     if(typeof v==="object") v=JSON.stringify(v);
@@ -3455,6 +3760,12 @@ function initRouteFloatPanel(){
   if(els.floatRoutePause) els.floatRoutePause.onclick = routePause;
   if(els.floatRouteResume) els.floatRouteResume.onclick = routeResume;
   if(els.floatRouteEnd) els.floatRouteEnd.onclick = routeEnd;
+  if(els.floatPinMe) els.floatPinMe.onclick = pinToMe;
+  if(els.floatPinSelected) els.floatPinSelected.onclick = pinToSelected;
+  if(els.floatFitScope) els.floatFitScope.onclick = fitScope;
+  if(els.floatRefreshGps) els.floatRefreshGps.onclick = async()=>{ await refreshLivePosition(); drawCanvas(); updateRouteFloat(); };
+  if(els.floatFinishLive) els.floatFinishLive.onclick = submitPendingRecords;
+  if(els.floatRefreshAddresses) els.floatRefreshAddresses.onclick = refreshMissingAddresses;
   if(els.floatSaveState) els.floatSaveState.onclick = () => {
     persistRouteState();
     autoBackupToLocalStorage();
@@ -3482,10 +3793,16 @@ function initRouteFloatPanel(){
     });
     els.routeFloatHead.addEventListener("pointerup", e=>{
       dragging=false;
+      const rect=els.routeFloat.getBoundingClientRect();
+      const snapLeft = rect.left < window.innerWidth/2;
+      els.routeFloat.style.left = snapLeft ? "10px" : `${Math.max(10, window.innerWidth - rect.width - 10)}px`;
       try{els.routeFloatHead.releasePointerCapture(e.pointerId)}catch{}
     });
     els.routeFloatHead.addEventListener("pointercancel", e=>{
       dragging=false;
+      const rect=els.routeFloat.getBoundingClientRect();
+      const snapLeft = rect.left < window.innerWidth/2;
+      els.routeFloat.style.left = snapLeft ? "10px" : `${Math.max(10, window.innerWidth - rect.width - 10)}px`;
       try{els.routeFloatHead.releasePointerCapture(e.pointerId)}catch{}
     });
   }
@@ -3540,10 +3857,10 @@ function renderAll(){
   drawCanvas();
 }
 
-els.menuTab.onclick=()=>els.menuDrawer.classList.add("open");
+els.menuTab.onclick=()=>{els.toolsDrawer.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.menuDrawer.classList.add("open");};
 els.closeMenu.onclick=()=>els.menuDrawer.classList.remove("open");
 els.toolsTab.onclick=()=>els.toolsPod.classList.toggle("open");
-els.compassButton.onclick=()=>els.toolsDrawer.classList.add("open");
+els.compassButton.onclick=()=>{els.menuDrawer.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.toolsDrawer.classList.add("open");};
 els.closeTools.onclick=()=>els.toolsDrawer.classList.remove("open");
 els.hideCompass.onclick=()=>{els.toolsPod.classList.remove("open"); els.toolsDrawer.classList.remove("open");};
 document.querySelectorAll(".menuTabs button").forEach(btn=>{
