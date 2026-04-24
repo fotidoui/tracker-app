@@ -1,257 +1,247 @@
-<!doctype html>
-<html lang="el">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Personal Spatial Journal — Full Single File</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spatial Journal v2</title>
+
 <style>
-:root{
-  --bg:#fbf6ea;--panel:#fffaf0;--ink:#24333b;--muted:#6f7b82;--line:#d8ccb2;
-  --sea:#2f6f7e;--sea2:#4d8c95;--olive:#718455;--red:#d95d5d;--orange:#c57449;
-  --shadow:0 14px 30px rgba(36,51,59,.18);
+body { margin:0; font-family:Arial; }
+canvas { width:100%; height:100%; background:#f5f1e6; }
+
+#toolbar {
+  position:absolute; top:10px; left:10px;
+  background:white; padding:10px;
+  border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.2);
 }
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
-button,input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:9px 11px}
-button{cursor:pointer;touch-action:manipulation}
-.primary{background:var(--sea);border-color:var(--sea);color:#fff}.warn{background:#fff1e7}.good{background:#eff5e8}.danger{background:#fff0ef}
-.hidden{display:none!important}
-#app{position:relative;width:100vw;height:100dvh;overflow:hidden;background:linear-gradient(#fffaf2,#f6efdf)}
-#mapCanvas{position:absolute;inset:0;z-index:1;touch-action:none}
-#hud{position:absolute;z-index:16;left:10px;right:10px;top:10px;background:rgba(255,250,240,.92);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;pointer-events:auto}
-#statusLine{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.orb{position:absolute;z-index:22;width:54px;height:54px;border-radius:999px;display:grid;place-items:center;padding:0;font-size:24px;background:#fffaf0;border:1px solid var(--line);box-shadow:var(--shadow)}
-#bookBtn{left:12px;top:84px}#compassBtn{left:12px;top:148px}#addNowBtn{right:12px;top:84px}#addThenBtn{right:12px;top:148px}
-#zoomBox{position:absolute;z-index:18;right:12px;bottom:12px;display:flex;gap:8px;align-items:center;background:rgba(255,250,240,.90);border:1px solid var(--line);border-radius:16px;padding:8px;box-shadow:var(--shadow)}
-#sidePanel{position:absolute;z-index:32;right:0;top:0;width:min(96vw,760px);height:100dvh;background:var(--panel);border-left:1px solid var(--line);box-shadow:var(--shadow);transform:translateX(105%);transition:.2s;display:flex;flex-direction:column}
-#sidePanel.open{transform:translateX(0)}
-.panel-head,.tabs{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--line)}.panel-head{justify-content:space-between}
-.tabs button.active{outline:2px solid var(--sea)}
-.panel-section{display:none;overflow:auto;padding:12px;flex:1}.panel-section.active{display:block}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}.pill{display:inline-flex;border:1px solid var(--line);border-radius:999px;background:#fff;padding:4px 9px;font-size:12px}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;margin:8px 0;padding:10px}.draft{border-style:dashed;border-color:var(--orange);background:#fff8ea}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-label{display:block;margin:8px 0}
-pre{white-space:pre-wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;max-height:260px;overflow:auto}
-.table-wrap{max-height:70dvh;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--line);padding:7px;vertical-align:top;font-size:13px}th{background:#f8f0df}
-dialog{width:min(94vw,820px);border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--ink);box-shadow:0 18px 42px rgba(36,51,59,.25);padding:0}
-dialog::backdrop{background:rgba(36,51,59,.25)}.dialog-head,.dialog-body,.dialog-foot{padding:14px;border-bottom:1px solid var(--line)}.dialog-foot{border:0;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
-.result{border:1px solid var(--line);border-radius:12px;background:#fff;margin:6px 0;padding:8px;cursor:pointer}.muted{color:var(--muted);font-size:13px}.small{font-size:12px}
-@media(max-width:700px){.grid{grid-template-columns:1fr}#sidePanel{width:100vw}.orb{width:50px;height:50px}#bookBtn{top:78px}#compassBtn{top:136px}#addNowBtn{top:78px}#addThenBtn{top:136px}#hud{left:8px;right:8px;top:8px}#zoomBox{right:8px;bottom:8px}}
+
+#weekly {
+  position:absolute; bottom:0; left:0; right:0;
+  background:white; max-height:40%;
+  overflow:auto; border-top:1px solid #ccc;
+}
+
+button { margin:2px; }
+
 </style>
 </head>
 <body>
-<div id="app">
-  <canvas id="mapCanvas"></canvas>
-  <div id="hud"><strong style="color:var(--sea)">Spatial Journal</strong><span id="statusLine">εκκίνηση...</span></div>
-  <button id="bookBtn" class="orb" title="Βιβλίο / Menu">📘</button>
-  <button id="compassBtn" class="orb" title="Πυξίδα / Tools">🧭</button>
-  <button id="addNowBtn" class="orb" title="Add Now">📍</button>
-  <button id="addThenBtn" class="orb" title="Add Then">✍️</button>
-  <div id="zoomBox">
-    <button id="zoomInBtn">+</button><button id="zoomOutBtn">−</button><button id="fitBtn">Fit</button>
-    <button id="refreshMapBtn">Refresh Map</button><button id="refreshAddressesTopBtn">Refresh Addresses</button>
-  </div>
 
-  <aside id="sidePanel">
-    <div class="panel-head"><strong id="panelTitle">Βιβλίο</strong><button id="closePanelBtn">Κλείσιμο</button></div>
-    <div id="bookTabs" class="tabs">
-      <button data-panel-tab="weekly" class="active">Weekly</button>
-      <button data-panel-tab="database">Database</button>
-      <button data-panel-tab="layers">Layers</button>
-      <button data-panel-tab="settings">Settings</button>
-      <button data-panel-tab="backup">Backup / Export</button>
-    </div>
-    <div id="toolTabs" class="tabs hidden">
-      <button data-panel-tab="gps" class="active">GPS</button>
-      <button data-panel-tab="tools">Tools</button>
-      <button data-panel-tab="coord">Coordinates</button>
-      <button data-panel-tab="hidden">Hidden DBs</button>
-    </div>
+<canvas id="map"></canvas>
 
-    <section id="weekly" class="panel-section active">
-      <div class="row">
-        <button id="prevWeekBtn">←</button><button id="thisWeekBtn">This week</button><button id="nextWeekBtn">→</button>
-        <span id="weekLabel" class="pill"></span><span id="draftCount" class="pill"></span>
-        <button id="validateDraftsBtn" class="primary">Επικύρωση drafts</button>
-      </div>
-      <div id="weeklyView"></div>
-    </section>
+<div id="toolbar">
+Mode:
+<select id="mode">
+<option>now</option>
+<option>then</option>
+</select>
 
-    <section id="database" class="panel-section">
-      <div class="row">
-        <select id="dbScope"><option value="all">All</option><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select>
-        <input id="dbDate" type="date">
-        <select id="dbType"><option value="">All types</option><option value="point">point</option><option value="route">route</option><option value="area">area</option></select>
-        <button id="applyDbFilterBtn">Filter</button>
-      </div>
-      <div class="table-wrap"><table id="dbTable"></table></div>
-    </section>
+Entity:
+<select id="entity">
+<option>point</option>
+<option>line</option>
+<option>area</option>
+</select>
 
-    <section id="layers" class="panel-section">
-      <h3>Layers</h3>
-      <label><input type="checkbox" data-layer="points" checked> Points</label>
-      <label><input type="checkbox" data-layer="routes" checked> Routes</label>
-      <label><input type="checkbox" data-layer="areas" checked> Areas</label>
-      <label><input type="checkbox" data-layer="drafts" checked> Drafts</label>
-      <label><input type="checkbox" data-layer="rings" checked> Scale / Accuracy rings</label>
-      <label><input type="checkbox" data-layer="control" checked> Control points</label>
-    </section>
+Action:
+<select id="action">
+<option>start</option>
+<option>vertex</option>
+<option>end</option>
+</select>
 
-    <section id="settings" class="panel-section">
-      <h3>Categories / habits</h3><div id="categoryEditor"></div><button id="saveCategoriesBtn" class="primary">Save categories</button>
-      <h3>Route interval</h3><label>Seconds between route samples <input id="routeIntervalInput" type="number" min="1" value="5"></label>
-    </section>
-
-    <section id="backup" class="panel-section">
-      <h3>Backup / Restore</h3>
-      <button id="backupBtn" class="primary">Backup JSON</button><button id="restoreBtn">Restore JSON</button><input id="restoreFile" class="hidden" type="file" accept=".json,application/json">
-      <h3>Export visible</h3><button id="exportCsvBtn">CSV</button><button id="exportGeojsonBtn">GeoJSON</button><button id="exportDxfBtn">DXF</button>
-    </section>
-
-    <section id="gps" class="panel-section">
-      <h3>GPS status</h3><pre id="gpsStatus"></pre>
-      <button id="refreshGpsBtn">Refresh GPS</button><button id="wakeLockBtn">Keep awake</button><button id="refreshAddressesBtn">Refresh Addresses</button><button id="refreshMapPanelBtn">Refresh Map</button>
-    </section>
-
-    <section id="tools" class="panel-section">
-      <h3>Live route / area status</h3><pre id="liveToolStatus"></pre><button id="saveStateBtn">Save state</button>
-    </section>
-
-    <section id="coord" class="panel-section">
-      <h3>Coordinate system</h3>
-      <label>Display system <select id="displaySystem"><option value="local">Personal local</option><option value="wgs84">WGS84</option></select></label>
-      <pre id="coordStatus"></pre>
-    </section>
-
-    <section id="hidden" class="panel-section">
-      <h3>Hidden DB preview</h3><button id="rebuildCachesBtn">Rebuild view caches</button><pre id="hiddenDbStatus"></pre>
-    </section>
-  </aside>
+<button onclick="refreshMap()">Refresh Map</button>
+<button onclick="refreshAddresses()">Refresh Addr</button>
 </div>
 
-<dialog id="addNowDialog">
-  <div class="dialog-head"><strong>Add Now · current GPS only</strong></div>
-  <div class="dialog-body grid">
-    <button data-add-now="point">Point / category</button><button data-add-now="note">Note</button>
-    <button data-add-now="route-start">Route start</button><button data-add-now="route-pause">Route pause</button>
-    <button data-add-now="route-resume">Route resume</button><button data-add-now="route-end">Route end</button>
-    <button data-add-now="area-vertex">Area vertex</button><button data-add-now="area-close">Close area</button>
-  </div>
-  <div class="dialog-foot"><button onclick="addNowDialog.close()">Close</button></div>
-</dialog>
-
-<dialog id="addThenDialog">
-  <div class="dialog-head"><strong>Add Then · manual/design/history</strong></div>
-  <div class="dialog-body grid">
-    <button data-add-then="point">Manual point</button><button data-add-then="note">Manual note</button>
-    <button data-add-then="route-start">Manual route start</button><button data-add-then="route-vertex">Manual route vertex</button>
-    <button data-add-then="route-end">Manual route end</button><button data-add-then="area-vertex">Manual area vertex</button>
-    <button data-add-then="area-close">Close manual area</button><button data-add-then="random">Random / Search</button>
-  </div>
-  <div class="dialog-foot"><button onclick="addThenDialog.close()">Close</button></div>
-</dialog>
-
-<dialog id="recordEditorDialog">
-  <div class="dialog-head"><strong id="recordEditorTitle">Record editor</strong></div>
-  <div class="dialog-body" id="recordEditorBody"></div>
-  <div class="dialog-foot"><button id="cancelRecordBtn">Cancel</button><button id="saveRecordBtn" class="primary">Save</button></div>
-</dialog>
-
-<dialog id="categoryDialog">
-  <div class="dialog-head"><strong>Choose category</strong></div><div class="dialog-body" id="categoryChoices"></div><div class="dialog-foot"><button onclick="categoryDialog.close()">Close</button></div>
-</dialog>
+<div id="weekly"></div>
 
 <script>
-"use strict";
-const PSJ={db:null,stores:{records:"records",drafts:"drafts",coord:"coordStore",processor:"processorStore",mapCache:"mapViewCache",weeklyCache:"weeklyViewCache",settings:"settings"},state:{records:[],drafts:[],categories:["Habit 1","Habit 2","Habit 3","Habit 4","Habit 5","Habit 6","Habit 7","Habit 8","Habit 9","Habit 10"],layers:{points:true,routes:true,areas:true,drafts:true,rings:true,control:true},displaySystem:"local",selectedDate:new Date(),viewMode:"live",livePosition:null,route:{active:false,paused:false,id:null,segment:0,points:[],timer:null,intervalSec:5},area:{active:false,id:null,points:[]},manualRoute:{active:false,id:null,points:[]},pendingAddThen:null,camera:{x:100000,y:100000,z:1},coordinateSystem:null,wakeLock:null}};
-const R=6378137,$=id=>document.getElementById(id),ctx=mapCanvas.getContext("2d");
-function id(prefix){return prefix+"-"+Date.now()+"-"+Math.random().toString(36).slice(2,8)}
-function ymd(d){d=new Date(d);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function weekStart(d){d=new Date(d);const n=(d.getDay()+6)%7;d.setDate(d.getDate()-n);d.setHours(0,0,0,0);return d}
-function addDays(d,n){d=new Date(d);d.setDate(d.getDate()+n);return d}
-function weekNo(d){d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7));const y=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil((((d-y)/86400000)+1)/7)}
-function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function openDatabase(){return new Promise((resolve,reject)=>{const req=indexedDB.open("PersonalSpatialJournalSingleFullV1",1);req.onupgradeneeded=e=>{const db=e.target.result;for(const name of Object.values(PSJ.stores)){if(!db.objectStoreNames.contains(name)){if(name==="records"||name==="drafts")db.createObjectStore(name,{keyPath:"id"});else db.createObjectStore(name,{keyPath:"key"});}}};req.onsuccess=()=>{PSJ.db=req.result;resolve()};req.onerror=()=>reject(req.error)})}
-function txStore(n,m="readonly"){return PSJ.db.transaction(n,m).objectStore(n)}
-function put(n,v){return new Promise((res,rej)=>{const q=txStore(n,"readwrite").put(v);q.onsuccess=()=>res(v);q.onerror=()=>rej(q.error)})}
-function del(n,k){return new Promise((res,rej)=>{const q=txStore(n,"readwrite").delete(k);q.onsuccess=()=>res();q.onerror=()=>rej(q.error)})}
-function getAll(n){return new Promise((res,rej)=>{const q=txStore(n).getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>rej(q.error)})}
-function getOne(n,k){return new Promise((res,rej)=>{const q=txStore(n).get(k);q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)})}
-function clearStore(n){return new Promise((res,rej)=>{const q=txStore(n,"readwrite").clear();q.onsuccess=()=>res();q.onerror=()=>rej(q.error)})}
-function ensureCoordinateSystem(lat,lng,alt=0){if(!PSJ.state.coordinateSystem){PSJ.state.coordinateSystem={key:"active",type:"local-tangent-plane",origin:{lat,lng,alt},falseEasting:100000,falseNorthing:100000,falseUp:1000,scale:1,rotation:0};put(PSJ.stores.coord,PSJ.state.coordinateSystem)}}
-function wgs84ToLocal(lat,lng,alt=0){ensureCoordinateSystem(lat,lng,alt);const cs=PSJ.state.coordinateSystem,o=cs.origin;return{x:cs.falseEasting+R*(lng-o.lng)*Math.PI/180*Math.cos(o.lat*Math.PI/180)*cs.scale,y:cs.falseNorthing+R*(lat-o.lat)*Math.PI/180*cs.scale,z:cs.falseUp+((alt??o.alt??0)-(o.alt??0)),system:"personal-local"}}
-function localToWgs84(x,y,z=0){const cs=PSJ.state.coordinateSystem||{origin:{lat:0,lng:0,alt:0},falseEasting:100000,falseNorthing:100000,falseUp:1000,scale:1};const o=cs.origin;return{lat:o.lat+((y-cs.falseNorthing)/(R*cs.scale))*180/Math.PI,lng:o.lng+((x-cs.falseEasting)/(R*Math.cos(o.lat*Math.PI/180)*cs.scale))*180/Math.PI,alt:(z-cs.falseUp)+(o.alt||0)}}
-function screenToLocal(px,py){const r=mapCanvas.getBoundingClientRect(),cam=PSJ.state.camera;return{x:cam.x+(px-r.width/2)/cam.z,y:cam.y+(r.height/2-py)/cam.z,z:1000}}
-function localToScreen(x,y){const r=mapCanvas.getBoundingClientRect(),cam=PSJ.state.camera;return{x:(x-cam.x)*cam.z+r.width/2,y:r.height/2-(y-cam.y)*cam.z}}
-function haversine(a,b){const rad=x=>x*Math.PI/180,dlat=rad(b.lat-a.lat),dlng=rad(b.lng-a.lng);const q=Math.sin(dlat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dlng/2)**2;return 6371000*2*Math.asin(Math.sqrt(q))}
-function distance3d(vertices){let s2=0,s3=0;for(let i=1;i<vertices.length;i++){const a=vertices[i-1].wgs84,b=vertices[i].wgs84,d2=haversine(a,b),dz=(b.alt??0)-(a.alt??0);s2+=d2;s3+=Math.sqrt(d2*d2+dz*dz)}return{distance2dM:s2,distance3dM:s3}}
-function polygonAreaM2(vertices){if(vertices.length<3)return 0;const pts=vertices.map(v=>v.local);let a=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;a+=pts[i].x*pts[j].y-pts[j].x*pts[i].y}return Math.abs(a/2)}
-function centroid(vertices){if(!vertices.length)return null;const n=vertices.length,local={x:vertices.reduce((s,v)=>s+v.local.x,0)/n,y:vertices.reduce((s,v)=>s+v.local.y,0)/n,z:vertices.reduce((s,v)=>s+(v.local.z||0),0)/n};return{local,wgs84:localToWgs84(local.x,local.y,local.z)}}
-function cityFromAddress(addr=""){const parts=String(addr||"").split(",").map(x=>x.trim()).filter(Boolean);if(!parts.length)return"";const postal=(String(addr).match(/\b[A-Z]?\d{4,6}\s?[A-Z]{0,2}\b/i)||[""])[0];const c=parts.find(p=>!/^\d/.test(p)&&!/\d{4,}/.test(p)&&!/\b(netherlands|nederland|greece|germany|france|italy|spain|belgium|usa|united states)\b/i.test(p));return c||postal||parts[0]}
-async function reverseGeocode(lat,lng){if(!navigator.onLine)return"";try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`);if(!r.ok)return"";const j=await r.json();return j.display_name||""}catch{return""}}
-function baseTime(source,calcTimestamp=null,confidence="exact"){const now=new Date().toISOString();return{capturedAt:now,calcTimestamp:calcTimestamp||now,timeSource:source,timeConfidence:confidence}}
-function createRecord({type,category="",name="",text="",geometry,time,source="unknown",layer="",metadata={}}){return{id:id("REC"),type,category,name,text,source,layer:layer||type,status:"validated",geometry,time,metadata,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}
-function processRecord(record){const g=record.geometry;if(g?.vertices?.length){g.vertices=g.vertices.map(v=>{if(!v.local&&v.wgs84)v.local=wgs84ToLocal(v.wgs84.lat,v.wgs84.lng,v.wgs84.alt);if(!v.wgs84&&v.local)v.wgs84=localToWgs84(v.local.x,v.local.y,v.local.z);return v});if(record.type==="route")Object.assign(record.metadata,distance3d(g.vertices));if(record.type==="area"){record.metadata.areaM2=polygonAreaM2(g.vertices);g.center=centroid(g.vertices)}}else if(g?.wgs84){g.local=wgs84ToLocal(g.wgs84.lat,g.wgs84.lng,g.wgs84.alt)}else if(g?.local){g.wgs84=localToWgs84(g.local.x,g.local.y,g.local.z)}record.metadata.qualityScore=qualityScore(record);return record}
-function qualityScore(record){const acc=record.geometry?.wgs84?.accuracy??record.metadata?.accuracy??999;if(acc<=2)return 100;if(acc<=5)return 80;if(acc<=10)return 60;if(acc<=25)return 35;return 10}
-async function maybeUpdateControlDB(record){const g=record.geometry,acc=g?.wgs84?.accuracy??999;if(acc>5||!g?.wgs84)return;await put(PSJ.stores.coord,{key:id("CP"),recordId:record.id,wgs84:g.wgs84,local:g.local||wgs84ToLocal(g.wgs84.lat,g.wgs84.lng,g.wgs84.alt),qualityScore:qualityScore(record),createdAt:new Date().toISOString()})}
-async function saveDraft(record){const d={...record,id:id("DRF"),status:"draft",draftSessionId:"session-"+ymd(new Date())};await put(PSJ.stores.drafts,d);PSJ.state.drafts.push(d);return d}
-async function saveRecord(record){record.status="validated";record.updatedAt=new Date().toISOString();await put(PSJ.stores.records,record);PSJ.state.records.push(record);return record}
-async function validateDrafts(){for(const d of [...PSJ.state.drafts]){const rec={...d,status:"validated",id:id("REC"),updatedAt:new Date().toISOString()};delete rec.draftSessionId;await put(PSJ.stores.records,rec);await del(PSJ.stores.drafts,d.id)}PSJ.state.drafts=[];PSJ.state.records=await getAll(PSJ.stores.records)}
-async function loadState(){PSJ.state.records=await getAll(PSJ.stores.records);PSJ.state.drafts=await getAll(PSJ.stores.drafts);const settings=await getOne(PSJ.stores.settings,"appSettings");if(settings?.value){Object.assign(PSJ.state,settings.value);PSJ.state.records=await getAll(PSJ.stores.records);PSJ.state.drafts=await getAll(PSJ.stores.drafts)}}
-async function saveSettings(){await put(PSJ.stores.settings,{key:"appSettings",value:{categories:PSJ.state.categories,layers:PSJ.state.layers,displaySystem:PSJ.state.displaySystem,camera:PSJ.state.camera,coordinateSystem:PSJ.state.coordinateSystem}})}
-function visibleRecords(){const all=[...PSJ.state.records,...PSJ.state.drafts];const d=PSJ.state.selectedDate;if(PSJ.state.viewMode==="live")return all;if(PSJ.state.viewMode==="day")return all.filter(r=>(r.time?.calcTimestamp||"").slice(0,10)===ymd(d));if(PSJ.state.viewMode==="week"){const a=ymd(weekStart(d)),b=ymd(addDays(weekStart(d),6));return all.filter(r=>{const x=(r.time?.calcTimestamp||"").slice(0,10);return x>=a&&x<=b})}const m=ymd(d).slice(0,7);return all.filter(r=>(r.time?.calcTimestamp||"").startsWith(m))}
-function drawMap(){const r=mapCanvas.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);ctx.strokeStyle="rgba(36,51,59,.06)";for(let x=0;x<r.width;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,r.height);ctx.stroke()}for(let y=0;y<r.height;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(r.width,y);ctx.stroke()}for(const rec of visibleRecords()){const draft=rec.status==="draft";if(rec.type==="route"&&PSJ.state.layers.routes)drawLine(rec.geometry.vertices,draft?"#9a7a31":"#c57449",3);else if(rec.type==="area"&&PSJ.state.layers.areas)drawPolygon(rec.geometry.vertices,draft?"#879b64":"#4d8c95");else if(PSJ.state.layers.points)drawPoint(rec.geometry.local,rec.type==="point"?"#718455":"#d95d5d",draft?7:5)}if(PSJ.state.route.active)drawLine(PSJ.state.route.points,"#c57449",3);if(PSJ.state.area.active)drawPolygon(PSJ.state.area.points,"#4d8c95");if(PSJ.state.livePosition)drawAvatar(PSJ.state.livePosition)}
-function drawPoint(local,color="#2f6f7e",radius=5){const p=localToScreen(local.x,local.y);ctx.beginPath();ctx.arc(p.x,p.y,radius,0,Math.PI*2);ctx.fillStyle=color;ctx.fill()}
-function drawLine(vertices,color,width){if(!vertices?.length)return;ctx.beginPath();vertices.forEach((v,i)=>{const p=localToScreen(v.local.x,v.local.y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke()}
-function drawPolygon(vertices,color){if(!vertices?.length)return;ctx.beginPath();vertices.forEach((v,i)=>{const p=localToScreen(v.local.x,v.local.y);i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)});if(vertices.length>2)ctx.closePath();ctx.fillStyle="rgba(77,140,149,.18)";ctx.fill();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke()}
-function drawAvatar(obs){const local=wgs84ToLocal(obs.lat,obs.lng,obs.alt),p=localToScreen(local.x,local.y);if(PSJ.state.layers.rings){ctx.beginPath();ctx.arc(p.x,p.y,(obs.accuracy||0)*PSJ.state.camera.z,0,Math.PI*2);ctx.strokeStyle="rgba(217,93,93,.35)";ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.arc(p.x,p.y,10*PSJ.state.camera.z,0,Math.PI*2);ctx.strokeStyle="rgba(47,111,126,.45)";ctx.setLineDash([6,4]);ctx.stroke();ctx.setLineDash([])}ctx.beginPath();ctx.arc(p.x,p.y,8,0,Math.PI*2);ctx.fillStyle="#2f6f7e";ctx.fill()}
-function resizeCanvas(){const dpr=devicePixelRatio||1,r=mapCanvas.getBoundingClientRect();mapCanvas.width=Math.floor(r.width*dpr);mapCanvas.height=Math.floor(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);drawMap()}
-async function boot(){await openDatabase();await loadState();PSJ.state.selectedDate=new Date();dbDate.value=ymd(new Date());setupUI();resizeCanvas();await refreshGps();renderAll();setInterval(()=>saveSettings(),600000);window.addEventListener("resize",resizeCanvas);window.addEventListener("pagehide",()=>saveSettings())}
-function setupUI(){bookBtn.onclick=()=>openPanel("book","weekly");compassBtn.onclick=()=>openPanel("tools","gps");addNowBtn.onclick=()=>addNowDialog.showModal();addThenBtn.onclick=()=>addThenDialog.showModal();closePanelBtn.onclick=()=>sidePanel.classList.remove("open");document.querySelectorAll("[data-panel-tab]").forEach(b=>b.onclick=()=>showPanelSection(b.dataset.panelTab));document.querySelectorAll("[data-layer]").forEach(cb=>cb.onchange=()=>{PSJ.state.layers[cb.dataset.layer]=cb.checked;drawMap()});document.querySelectorAll("[data-add-now]").forEach(b=>b.onclick=()=>handleAddNow(b.dataset.addNow));document.querySelectorAll("[data-add-then]").forEach(b=>b.onclick=()=>handleAddThen(b.dataset.addThen));zoomInBtn.onclick=()=>{PSJ.state.camera.z*=1.25;drawMap()};zoomOutBtn.onclick=()=>{PSJ.state.camera.z/=1.25;drawMap()};fitBtn.onclick=fitVisible;refreshMapBtn.onclick=()=>renderAll();refreshMapPanelBtn.onclick=()=>renderAll();validateDraftsBtn.onclick=async()=>{await validateDrafts();await rebuildCaches();renderAll()};prevWeekBtn.onclick=()=>{PSJ.state.selectedDate=addDays(weekStart(PSJ.state.selectedDate),-7);PSJ.state.viewMode="week";renderAll()};thisWeekBtn.onclick=()=>{PSJ.state.selectedDate=new Date();PSJ.state.viewMode="week";renderAll()};nextWeekBtn.onclick=()=>{PSJ.state.selectedDate=addDays(weekStart(PSJ.state.selectedDate),7);PSJ.state.viewMode="week";renderAll()};applyDbFilterBtn.onclick=renderDatabase;refreshGpsBtn.onclick=refreshGps;refreshAddressesBtn.onclick=refreshAddresses;refreshAddressesTopBtn.onclick=refreshAddresses;wakeLockBtn.onclick=toggleWakeLock;saveStateBtn.onclick=async()=>{await saveSettings();alert("Saved.")};saveCategoriesBtn.onclick=saveCategories;routeIntervalInput.onchange=()=>PSJ.state.route.intervalSec=Math.max(1,Number(routeIntervalInput.value||5));backupBtn.onclick=backupAll;restoreBtn.onclick=()=>restoreFile.click();restoreFile.onchange=restoreBackup;exportCsvBtn.onclick=()=>downloadFile(exportCSV(visibleRecords()),"psj-visible.csv","text/csv");exportGeojsonBtn.onclick=()=>downloadFile(exportGeoJSON(visibleRecords()),"psj-visible.geojson","application/geo+json");exportDxfBtn.onclick=()=>downloadFile(exportDXF(visibleRecords()),"psj-visible.dxf","application/dxf");rebuildCachesBtn.onclick=async()=>{await rebuildCaches();renderAll()};displaySystem.onchange=()=>{PSJ.state.displaySystem=displaySystem.value;renderAll()};setupCanvasInput();renderCategoryEditor()}
-function openPanel(mode,section){panelTitle.textContent=mode==="book"?"📘 Βιβλίο":"🧭 Πυξίδα";bookTabs.classList.toggle("hidden",mode!=="book");toolTabs.classList.toggle("hidden",mode!=="tools");sidePanel.classList.add("open");showPanelSection(section)}
-function showPanelSection(id){document.querySelectorAll(".panel-section").forEach(s=>s.classList.toggle("active",s.id===id));document.querySelectorAll("[data-panel-tab]").forEach(b=>b.classList.toggle("active",b.dataset.panelTab===id))}
-async function refreshGps(){if(!navigator.geolocation){gpsStatus.textContent="GPS unavailable";return}return new Promise(resolve=>{navigator.geolocation.getCurrentPosition(pos=>{const c=pos.coords;PSJ.state.livePosition={lat:c.latitude,lng:c.longitude,alt:c.altitude||0,accuracy:c.accuracy,altitudeAccuracy:c.altitudeAccuracy,speed:c.speed,heading:c.heading,timestamp:new Date().toISOString()};ensureCoordinateSystem(c.latitude,c.longitude,c.altitude||0);renderAll();resolve()},err=>{gpsStatus.textContent="GPS error: "+err.message;resolve()},{enableHighAccuracy:true,timeout:15000,maximumAge:0})})}
-async function handleAddNow(action){addNowDialog.close();if(action==="point")return chooseCategory(async cat=>saveLivePoint("point",cat,""));if(action==="note")return openManualEditor(null,{mode:"live",type:"point",category:"note",name:"Note"});if(action==="route-start")return startLiveRoute();if(action==="route-pause")return pauseLiveRoute();if(action==="route-resume")return resumeLiveRoute();if(action==="route-end")return endLiveRoute();if(action==="area-vertex")return addLiveAreaVertex();if(action==="area-close")return closeArea(true)}
-function handleAddThen(action){addThenDialog.close();if(action==="random")return openManualEditor(null,{mode:"manual",type:"point"});PSJ.state.pendingAddThen=action;statusLine.textContent="Add Then ενεργό: πάτησε στον χάρτη για "+action}
-function setupCanvasInput(){let down=null,pan=false,last=null;mapCanvas.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY};last={x:e.clientX,y:e.clientY};pan=false;mapCanvas.setPointerCapture(e.pointerId)});mapCanvas.addEventListener("pointermove",e=>{if(!down)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>5)pan=true;if(pan&&!PSJ.state.pendingAddThen){PSJ.state.camera.x-=dx/PSJ.state.camera.z;PSJ.state.camera.y+=dy/PSJ.state.camera.z;drawMap()}last={x:e.clientX,y:e.clientY}});mapCanvas.addEventListener("pointerup",e=>{if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y),r=mapCanvas.getBoundingClientRect();if(moved<8&&PSJ.state.pendingAddThen){const local=screenToLocal(e.clientX-r.left,e.clientY-r.top);const wgs84=localToWgs84(local.x,local.y,local.z);placeManual(PSJ.state.pendingAddThen,{local,wgs84})}down=null;pan=false});mapCanvas.addEventListener("contextmenu",e=>{e.preventDefault();const r=mapCanvas.getBoundingClientRect(),local=screenToLocal(e.clientX-r.left,e.clientY-r.top),wgs84=localToWgs84(local.x,local.y,local.z);openManualEditor({local,wgs84},{mode:"manual",type:"point"})})}
-async function saveLivePoint(type,category,text){await refreshGps();const p=PSJ.state.livePosition;if(!p)return alert("No GPS.");const address=await reverseGeocode(p.lat,p.lng);const geometry={wgs84:{lat:p.lat,lng:p.lng,alt:p.alt,accuracy:p.accuracy,altitudeAccuracy:p.altitudeAccuracy},local:wgs84ToLocal(p.lat,p.lng,p.alt)};let rec=createRecord({type,category,name:category,text,geometry,time:baseTime("live"),source:"add-now",metadata:{address,city:cityFromAddress(address),speed:p.speed,heading:p.heading}});rec=processRecord(rec);await maybeUpdateControlDB(rec);await saveDraft(rec);renderAll()}
-function chooseCategory(cb){categoryChoices.innerHTML=PSJ.state.categories.map(c=>`<button data-cat="${esc(c)}">${esc(c)}</button>`).join("");categoryChoices.querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{categoryDialog.close();cb(b.dataset.cat)});categoryDialog.showModal()}
-async function startLiveRoute(){PSJ.state.route={active:true,paused:false,id:id("ROUTE"),segment:1,points:[],timer:null,intervalSec:Number(routeIntervalInput.value||5)};await sampleRouteVertex("start");PSJ.state.route.timer=setInterval(()=>sampleRouteVertex("vertex"),PSJ.state.route.intervalSec*1000);renderAll()}
-async function sampleRouteVertex(eventName){if(!PSJ.state.route.active||PSJ.state.route.paused)return;await refreshGps();const p=PSJ.state.livePosition;if(!p)return;const address=await reverseGeocode(p.lat,p.lng);PSJ.state.route.points.push({vertexId:id("V"),event:eventName,segment:PSJ.state.route.segment,timestamp:new Date().toISOString(),wgs84:{lat:p.lat,lng:p.lng,alt:p.alt,accuracy:p.accuracy},local:wgs84ToLocal(p.lat,p.lng,p.alt),address,city:cityFromAddress(address)});renderAll()}
-async function pauseLiveRoute(){if(!PSJ.state.route.active)return;if(PSJ.state.route.timer)clearInterval(PSJ.state.route.timer);PSJ.state.route.paused=true;await sampleRouteVertex("pause");renderAll()}
-async function resumeLiveRoute(){if(!PSJ.state.route.active)return;PSJ.state.route.paused=false;PSJ.state.route.segment++;await sampleRouteVertex("resume");PSJ.state.route.timer=setInterval(()=>sampleRouteVertex("vertex"),PSJ.state.route.intervalSec*1000);renderAll()}
-async function endLiveRoute(){if(!PSJ.state.route.active)return alert("No active route.");if(PSJ.state.route.timer)clearInterval(PSJ.state.route.timer);await sampleRouteVertex("end");const vertices=[...PSJ.state.route.points];let rec=createRecord({type:"route",category:"route",name:PSJ.state.route.id,geometry:{vertices},time:baseTime("live"),source:"add-now",metadata:{routeId:PSJ.state.route.id,segments:PSJ.state.route.segment,intervalSec:PSJ.state.route.intervalSec}});rec=processRecord(rec);await saveDraft(rec);PSJ.state.route={active:false,paused:false,id:null,segment:0,points:[],timer:null,intervalSec:Number(routeIntervalInput.value||5)};renderAll()}
-async function addLiveAreaVertex(){await refreshGps();const p=PSJ.state.livePosition;if(!p)return;if(!PSJ.state.area.active)PSJ.state.area={active:true,id:id("AREA"),points:[]};const address=await reverseGeocode(p.lat,p.lng);PSJ.state.area.points.push({vertexId:id("V"),timestamp:new Date().toISOString(),wgs84:{lat:p.lat,lng:p.lng,alt:p.alt,accuracy:p.accuracy},local:wgs84ToLocal(p.lat,p.lng,p.alt),address,city:cityFromAddress(address)});renderAll()}
-async function closeArea(live=false){if(!PSJ.state.area.active||PSJ.state.area.points.length<3)return alert("Need at least 3 vertices.");const vertices=[...PSJ.state.area.points];let rec=createRecord({type:"area",category:"area",name:PSJ.state.area.id,geometry:{vertices},time:baseTime(live?"live":"manual"),source:live?"add-now":"add-then",metadata:{areaId:PSJ.state.area.id}});rec=processRecord(rec);live?await saveDraft(rec):await saveRecord(rec);PSJ.state.area={active:false,id:null,points:[]};renderAll()}
-function placeManual(action,position){if(action==="point")return openManualEditor(position,{mode:"manual",type:"point"});if(action==="note")return openManualEditor(position,{mode:"manual",type:"point",category:"note",name:"Note"});if(action==="route-start"){PSJ.state.manualRoute={active:true,id:id("MROUTE"),points:[manualVertex(position,"start")]};return renderAll()}if(action==="route-vertex"){if(!PSJ.state.manualRoute.active)PSJ.state.manualRoute={active:true,id:id("MROUTE"),points:[]};PSJ.state.manualRoute.points.push(manualVertex(position,"vertex"));return renderAll()}if(action==="route-end"){if(!PSJ.state.manualRoute.active)return alert("No manual route.");PSJ.state.manualRoute.points.push(manualVertex(position,"end"));return finishManualRoute()}if(action==="area-vertex"){if(!PSJ.state.area.active)PSJ.state.area={active:true,id:id("AREA"),points:[]};PSJ.state.area.points.push(manualVertex(position,"area-vertex"));return renderAll()}if(action==="area-close")return closeArea(false)}
-function manualVertex(pos,event){return{vertexId:id("V"),event,timestamp:new Date().toISOString(),wgs84:pos.wgs84,local:pos.local,address:"",city:""}}
-async function finishManualRoute(){const tm=await askManualTime();if(!tm)return;const vertices=[...PSJ.state.manualRoute.points];let rec=createRecord({type:"route",category:"route",name:PSJ.state.manualRoute.id,geometry:{vertices},time:tm,source:"add-then",metadata:{routeId:PSJ.state.manualRoute.id}});rec=processRecord(rec);await saveRecord(rec);PSJ.state.manualRoute={active:false,id:null,points:[]};PSJ.state.pendingAddThen=null;renderAll()}
-function askManualTime(){return new Promise(resolve=>resolve({capturedAt:new Date().toISOString(),calcTimestamp:ymd(PSJ.state.selectedDate)+"T12:00:00",timeSource:"manual",timeConfidence:"estimated"}))}
-function openManualEditor(position,defaults){const pos=position||{local:{x:100000,y:100000,z:1000},wgs84:localToWgs84(100000,100000,1000)};recordEditorTitle.textContent=defaults.mode==="live"?"Add Now note editor":"Add Then editor";recordEditorBody.innerHTML=`<label>Type <select id="edType"><option value="point">point</option><option value="route-event">route-event</option><option value="area">area</option></select></label><label>Category/name <input id="edName" value="${esc(defaults.category||defaults.name||"manual")}"></label><label>Text <textarea id="edText"></textarea></label><label>Calc date/time <input id="edTime" type="datetime-local" value="${ymd(PSJ.state.selectedDate)}T12:00"></label><label>Lat <input id="edLat" type="number" step="any" value="${pos.wgs84.lat}"></label><label>Lng <input id="edLng" type="number" step="any" value="${pos.wgs84.lng}"></label><label>Altitude <input id="edAlt" type="number" step="any" value="${pos.wgs84.alt||0}"></label><label>Address/search <input id="edAddress" placeholder="manual address or search text"></label>`;cancelRecordBtn.onclick=()=>recordEditorDialog.close();saveRecordBtn.onclick=async()=>{const w={lat:Number(edLat.value),lng:Number(edLng.value),alt:Number(edAlt.value)};const geometry={wgs84:w,local:wgs84ToLocal(w.lat,w.lng,w.alt)};let rec=createRecord({type:edType.value,category:edName.value,name:edName.value,text:edText.value,geometry,time:{capturedAt:new Date().toISOString(),calcTimestamp:new Date(edTime.value).toISOString(),timeSource:defaults.mode==="live"?"live":"manual",timeConfidence:defaults.mode==="live"?"exact":"estimated"},source:defaults.mode==="live"?"add-now":"add-then",metadata:{address:edAddress.value,city:cityFromAddress(edAddress.value)}});rec=processRecord(rec);defaults.mode==="live"?await saveDraft(rec):await saveRecord(rec);recordEditorDialog.close();renderAll()};recordEditorDialog.showModal()}
-function renderAll(){drawMap();renderStatus();renderWeekly();renderDatabase();renderTools();renderHidden()}
-function renderStatus(){statusLine.textContent=`${PSJ.state.viewMode.toUpperCase()} · ${ymd(PSJ.state.selectedDate)} · W${weekNo(PSJ.state.selectedDate)} · drafts ${PSJ.state.drafts.length} · route ${PSJ.state.route.active?(PSJ.state.route.paused?"paused":"recording"):"idle"}`}
-function renderWeekly(){const m=weekStart(PSJ.state.selectedDate),days=Array.from({length:7},(_,i)=>ymd(addDays(m,i)));weekLabel.textContent=`Week ${weekNo(PSJ.state.selectedDate)}: ${days[0]} → ${days[6]}`;draftCount.textContent=`${PSJ.state.drafts.length} drafts`;weeklyView.innerHTML=days.map(d=>{const rows=[...PSJ.state.records,...PSJ.state.drafts].filter(r=>(r.time?.calcTimestamp||"").slice(0,10)===d);return`<div class="card"><b>${d}</b> <span class="pill">${rows.length}</span>${rows.map(r=>weeklyRow(r)).join("")}</div>`}).join("")}
-function weeklyRow(r){let body=r.type==="route"?`Route ${esc(r.metadata.routeId||r.name)} · ${r.geometry.vertices.length} vertices · ${(r.metadata.distance2dM||0).toFixed(1)}m · ${routeCities(r)}`:r.type==="area"?`Area ${esc(r.metadata.areaId||r.name)} · ${r.geometry.vertices.length} vertices · ${(r.metadata.areaM2||0).toFixed(1)}m²`:`${esc(r.category||r.name)} ${esc(r.text||"")}`;return`<div class="card ${r.status==="draft"?"draft":""}"><span class="pill">${r.status}</span> <span class="pill">${r.type}</span><br><span class="muted">${body}</span></div>`}
-function routeCities(r){const cs=[];(r.geometry.vertices||[]).forEach(v=>{const c=v.city||cityFromAddress(v.address||"");if(c&&!cs.includes(c))cs.push(c)});return cs.join(" → ")||"-"}
-function renderDatabase(){let rows=[...PSJ.state.records];const scope=dbScope.value,date=new Date(dbDate.value||ymd(PSJ.state.selectedDate));if(scope==="day")rows=rows.filter(r=>(r.time.calcTimestamp||"").slice(0,10)===ymd(date));if(scope==="week"){const a=ymd(weekStart(date)),b=ymd(addDays(weekStart(date),6));rows=rows.filter(r=>{const x=(r.time.calcTimestamp||"").slice(0,10);return x>=a&&x<=b})}if(scope==="month"){const m=ymd(date).slice(0,7);rows=rows.filter(r=>(r.time.calcTimestamp||"").startsWith(m))}if(dbType.value)rows=rows.filter(r=>r.type===dbType.value);dbTable.innerHTML=`<thead><tr><th>Type</th><th>Time truth</th><th>Name/Text</th><th>WGS84</th><th>Local</th><th>Metrics</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.type)}</td><td>${esc(r.time.calcTimestamp)}<br>${esc(r.time.timeSource)}/${esc(r.time.timeConfidence)}</td><td>${esc(r.name||r.category)}<br>${esc(r.text||"")}</td><td>${coordText(r,"wgs84")}</td><td>${coordText(r,"local")}</td><td>${metricText(r)}</td></tr>`).join("")}</tbody>`}
-function coordText(r,sys){if(r.geometry.vertices?.length)return r.geometry.vertices.map(v=>sys==="wgs84"?`${v.wgs84.lat.toFixed(6)},${v.wgs84.lng.toFixed(6)},z${(v.wgs84.alt||0).toFixed(1)}`:`${v.local.x.toFixed(2)},${v.local.y.toFixed(2)},z${(v.local.z||0).toFixed(1)}`).join("<br>");const g=r.geometry[sys];return g?`${g.lat?.toFixed?.(6)||g.x.toFixed(2)}, ${g.lng?.toFixed?.(6)||g.y.toFixed(2)}, z${(g.alt??g.z??0).toFixed(1)}`:""}
-function metricText(r){return r.type==="route"?`2D ${(r.metadata.distance2dM||0).toFixed(1)}m<br>3D ${(r.metadata.distance3dM||0).toFixed(1)}m`:r.type==="area"?`Area ${(r.metadata.areaM2||0).toFixed(1)}m²`:`Quality ${r.metadata.qualityScore||""}`}
-function renderTools(){gpsStatus.textContent=JSON.stringify(PSJ.state.livePosition,null,2);liveToolStatus.textContent=JSON.stringify({route:PSJ.state.route,area:PSJ.state.area},null,2);coordStatus.textContent=JSON.stringify(PSJ.state.coordinateSystem,null,2)}
-async function renderHidden(){const cps=await getAll(PSJ.stores.coord);hiddenDbStatus.textContent=JSON.stringify({controlStoreItems:cps.length,records:PSJ.state.records.length,drafts:PSJ.state.drafts.length},null,2)}
-function renderCategoryEditor(){categoryEditor.innerHTML=PSJ.state.categories.map((c,i)=>`<label>Category ${i+1}<input data-cat-input="${i}" value="${esc(c)}"></label>`).join("")}
-async function saveCategories(){PSJ.state.categories=[...document.querySelectorAll("[data-cat-input]")].map((i,n)=>i.value||`Category ${n+1}`);await saveSettings();renderCategoryEditor()}
-async function refreshAddresses(){for(const r of PSJ.state.records){if(r.geometry.vertices){for(const v of r.geometry.vertices){if(!v.address){v.address=await reverseGeocode(v.wgs84.lat,v.wgs84.lng);v.city=cityFromAddress(v.address)}}}else if(r.geometry.wgs84&&!r.metadata.address){r.metadata.address=await reverseGeocode(r.geometry.wgs84.lat,r.geometry.wgs84.lng);r.metadata.city=cityFromAddress(r.metadata.address)}await put(PSJ.stores.records,r)}await loadState();renderAll();alert("Addresses refreshed.")}
-async function toggleWakeLock(){try{if(PSJ.state.wakeLock){await PSJ.state.wakeLock.release();PSJ.state.wakeLock=null;wakeLockBtn.textContent="Keep awake"}else{PSJ.state.wakeLock=await navigator.wakeLock.request("screen");wakeLockBtn.textContent="Awake on"}}catch(e){alert(e.message)}}
-function fitVisible(){const recs=visibleRecords(),pts=[];for(const r of recs){if(r.geometry.vertices)r.geometry.vertices.forEach(v=>pts.push(v.local));else if(r.geometry.local)pts.push(r.geometry.local)}if(PSJ.state.livePosition)pts.push(wgs84ToLocal(PSJ.state.livePosition.lat,PSJ.state.livePosition.lng,PSJ.state.livePosition.alt));if(!pts.length)return;const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys),rect=mapCanvas.getBoundingClientRect();PSJ.state.camera.x=(minX+maxX)/2;PSJ.state.camera.y=(minY+maxY)/2;PSJ.state.camera.z=Math.max(.002,Math.min(10,Math.min((rect.width-100)/Math.max(1,maxX-minX),(rect.height-160)/Math.max(1,maxY-minY))));drawMap()}
-async function rebuildCaches(){await put(PSJ.stores.mapCache,{key:"last",value:visibleRecords(),updatedAt:new Date().toISOString()});await put(PSJ.stores.weeklyCache,{key:"last",value:PSJ.state.records,updatedAt:new Date().toISOString()})}
-function exportCSV(recs){const h=["id","type","calcTimestamp","source","name","text","geometry","metadata"];return h.join(",")+"\n"+recs.map(r=>[r.id,r.type,r.time.calcTimestamp,r.source,r.name,r.text,JSON.stringify(r.geometry).replaceAll('"','""'),JSON.stringify(r.metadata).replaceAll('"','""')].map(x=>`"${x||""}"`).join(",")).join("\n")}
-function exportGeoJSON(recs){return JSON.stringify({type:"FeatureCollection",features:recs.map(r=>{let geom;if(r.geometry.vertices){const coords=r.geometry.vertices.map(v=>[v.wgs84.lng,v.wgs84.lat,v.wgs84.alt||0]);geom={type:r.type==="area"?"Polygon":"LineString",coordinates:r.type==="area"?[coords.concat([coords[0]])]:coords}}else geom={type:"Point",coordinates:[r.geometry.wgs84.lng,r.geometry.wgs84.lat,r.geometry.wgs84.alt||0]};return{type:"Feature",geometry:geom,properties:{id:r.id,type:r.type,name:r.name,metadata:r.metadata,time:r.time}}})},null,2)}
-function exportDXF(recs){const out=["0","SECTION","2","ENTITIES"];for(const r of recs){if(r.geometry.vertices){out.push("0","LWPOLYLINE","8",r.type,"90",String(r.geometry.vertices.length),"70",r.type==="area"?"1":"0");for(const v of r.geometry.vertices){out.push("10",String(v.local.x),"20",String(v.local.y))}}else if(r.geometry.local){out.push("0","POINT","8",r.type,"10",String(r.geometry.local.x),"20",String(r.geometry.local.y),"30",String(r.geometry.local.z||0))}}out.push("0","ENDSEC","0","EOF");return out.join("\n")}
-function downloadFile(text,name,type){const a=document.createElement("a"),u=URL.createObjectURL(new Blob([text],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-async function backupAll(){downloadFile(JSON.stringify({version:1,records:PSJ.state.records,drafts:PSJ.state.drafts,settings:PSJ.state,exportedAt:new Date().toISOString()},null,2),"psj-backup.json","application/json")}
-async function restoreBackup(){const f=restoreFile.files[0];if(!f)return;const data=JSON.parse(await f.text());if(!confirm("Restore backup and replace local records/drafts?"))return;await clearStore(PSJ.stores.records);await clearStore(PSJ.stores.drafts);for(const r of data.records||[])await put(PSJ.stores.records,r);for(const d of data.drafts||[])await put(PSJ.stores.drafts,d);await loadState();renderAll()}
-boot().catch(e=>alert("Startup error: "+e.message));
+
+const canvas = document.getElementById("map");
+const ctx = canvas.getContext("2d");
+
+let records = [];
+let drafts = [];
+
+let current = {
+  mode: "now",
+  entity: "point",
+  action: "start"
+};
+
+let drawing = null;
+
+function resize(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  draw();
+}
+window.onresize = resize;
+resize();
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  records.forEach(r => drawRecord(r, "green"));
+  drafts.forEach(r => drawRecord(r, "orange"));
+
+  if(drawing){
+    drawRecord(drawing, "blue");
+  }
+}
+
+function drawRecord(r, color){
+  if(r.type === "point"){
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, 5, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  if(r.type === "line" || r.type === "area"){
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    r.points.forEach((p,i)=>{
+      if(i===0) ctx.moveTo(p.x,p.y);
+      else ctx.lineTo(p.x,p.y);
+    });
+    ctx.stroke();
+  }
+}
+
+canvas.addEventListener("click", e => {
+
+  const x = e.clientX;
+  const y = e.clientY;
+
+  if(current.entity === "point"){
+    addPoint(x,y);
+  }
+
+  if(current.entity === "line"){
+    handleLine(x,y);
+  }
+
+  if(current.entity === "area"){
+    handleArea(x,y);
+  }
+
+  draw();
+});
+
+function addPoint(x,y){
+  const rec = { type:"point", x,y, time:new Date() };
+
+  if(current.mode === "now"){
+    drafts.push(rec);
+  } else {
+    drafts.push(rec);
+  }
+
+  updateWeekly();
+}
+
+function handleLine(x,y){
+
+  if(!drawing){
+    drawing = { type:"line", points:[] };
+  }
+
+  drawing.points.push({x,y});
+
+  if(current.action === "end"){
+    drafts.push(drawing);
+    drawing = null;
+    updateWeekly();
+  }
+}
+
+function handleArea(x,y){
+
+  if(!drawing){
+    drawing = { type:"area", points:[] };
+  }
+
+  drawing.points.push({x,y});
+
+  if(current.action === "end"){
+    drafts.push(drawing);
+    drawing = null;
+    updateWeekly();
+  }
+}
+
+function updateWeekly(){
+
+  const days = {};
+
+  drafts.forEach(d=>{
+    const day = d.time.toDateString();
+    if(!days[day]) days[day] = [];
+    days[day].push(d);
+  });
+
+  let html = "";
+
+  Object.keys(days).forEach(day=>{
+    html += "<h4>"+day+"</h4>";
+
+    days[day].forEach((r,i)=>{
+      html += `<div>
+        ${r.type}
+        <button onclick="focus(${i})">show</button>
+        <button onclick="removeDraft(${i})">delete</button>
+      </div>`;
+    });
+  });
+
+  html += `<button onclick="validate()">VALIDATE</button>`;
+
+  document.getElementById("weekly").innerHTML = html;
+}
+
+function focus(i){
+  const r = drafts[i];
+  if(r.type === "point"){
+    alert("Point at "+r.x+","+r.y);
+  }
+}
+
+function removeDraft(i){
+  drafts.splice(i,1);
+  updateWeekly();
+  draw();
+}
+
+function validate(){
+  records.push(...drafts);
+  drafts = [];
+  updateWeekly();
+  draw();
+}
+
+function refreshMap(){
+  draw();
+}
+
+function refreshAddresses(){
+  alert("Address refresh placeholder");
+}
+
+document.getElementById("mode").onchange = e=>{
+  current.mode = e.target.value;
+};
+document.getElementById("entity").onchange = e=>{
+  current.entity = e.target.value;
+};
+document.getElementById("action").onchange = e=>{
+  current.action = e.target.value;
+};
+
+updateWeekly();
+
 </script>
+
 </body>
 </html>
