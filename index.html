@@ -196,6 +196,79 @@
       background:#fffaf0;
     }
 
+
+    .randomWindow{
+      position:absolute;
+      z-index:76;
+      left:22px;
+      top:132px;
+      width:min(94vw,520px);
+      background:var(--panel);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      border-radius:18px;
+      display:none;
+      overflow:hidden;
+      touch-action:none;
+    }
+    .randomWindow.open{display:block}
+    .randomHead{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px;
+      background:#fff8e8;
+      border-bottom:1px solid var(--line);
+      cursor:grab;
+      user-select:none;
+    }
+    .randomBody{
+      padding:10px;
+      max-height:64dvh;
+      overflow:auto;
+      touch-action:auto;
+    }
+    .randomFoot{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      padding:10px;
+      border-top:1px solid var(--line);
+      background:#fffaf0;
+      flex-wrap:wrap;
+    }
+    .randomBody label{display:block;margin-bottom:8px}
+    .randomBody input,.randomBody textarea,.randomBody select{width:100%}
+    .resultList{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+      max-height:190px;
+      overflow:auto;
+      margin-top:8px;
+    }
+    .resultItem{
+      padding:9px 10px;
+      border-bottom:1px solid var(--line);
+      cursor:pointer;
+      font-size:13px;
+    }
+    .resultItem:last-child{border-bottom:0}
+    .resultItem:hover,.resultItem.selected{background:#f8f0df}
+    .resultTitle{font-weight:700}
+    .resultMeta{font-size:12px;color:var(--muted);margin-top:3px}
+    .sourceBadge{
+      display:inline-flex;
+      align-items:center;
+      border-radius:999px;
+      border:1px solid var(--line);
+      padding:2px 7px;
+      font-size:11px;
+      background:#fff;
+      margin-right:4px;
+    }
+
     .mapZoom{
       position:absolute;
       z-index:35;
@@ -249,34 +322,73 @@
     }
     .toolsPod.open{display:flex}
     .compassButton{
-      width:62px;
-      height:62px;
+      width:76px;
+      height:76px;
       border-radius:999px;
       display:grid;
       place-items:center;
       padding:0;
-      background:rgba(255,255,255,.72);
-      border:1px solid var(--line);
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,250,230,.98) 0 45%, rgba(226,201,139,.86) 46% 58%, rgba(102,72,35,.9) 59% 62%, rgba(255,250,230,.92) 63% 100%);
+      border:2px solid #7b5a2e;
       position:relative;
       overflow:hidden;
+      box-shadow:
+        0 10px 22px rgba(35,25,14,.34),
+        0 3px 0 rgba(255,255,255,.7) inset,
+        0 -5px 14px rgba(60,38,12,.22) inset;
+    }
+    .compassButton::before{
+      content:"";
+      position:absolute;
+      inset:9px;
+      border-radius:999px;
+      border:1px dashed rgba(85,61,31,.55);
+      box-shadow:0 0 0 1px rgba(255,255,255,.45) inset;
+    }
+    .compassButton::after{
+      content:"✦";
+      position:absolute;
+      inset:auto;
+      color:rgba(91,62,27,.38);
+      font-size:42px;
+      line-height:1;
+      text-shadow:0 1px 0 rgba(255,255,255,.65);
     }
     .compassNeedle{
       width:0;
       height:0;
-      border-left:8px solid transparent;
-      border-right:8px solid transparent;
-      border-bottom:28px solid var(--sea);
-      transform-origin:50% 70%;
-      transition:transform .18s linear;
+      border-left:9px solid transparent;
+      border-right:9px solid transparent;
+      border-bottom:34px solid #7b1e16;
+      transform-origin:50% 72%;
+      transition:transform .22s ease-out;
+      filter:drop-shadow(0 5px 5px rgba(0,0,0,.35));
+      z-index:2;
+    }
+    .compassNeedle::after{
+      content:"";
+      position:absolute;
+      left:-6px;
+      top:16px;
+      width:12px;
+      height:24px;
+      background:#24333b;
+      clip-path:polygon(50% 100%,0 0,100% 0);
     }
     .compassN{
       position:absolute;
-      top:4px;
+      top:5px;
       left:50%;
       transform:translateX(-50%);
-      font-size:10px;
-      color:var(--ink);
-      font-weight:700;
+      font-family:Georgia, 'Times New Roman', serif;
+      font-size:15px;
+      color:#5a3517;
+      font-weight:800;
+      z-index:3;
+      text-shadow:
+        0 1px 0 rgba(255,248,218,.9),
+        0 3px 5px rgba(36,20,8,.35);
     }
     .podHint{
       font-size:10px;
@@ -464,7 +576,7 @@
       <span class="compassN">N</span>
       <span id="compassNeedle" class="compassNeedle"></span>
     </button>
-    <div class="podHint">drag pod<br>tap compass</div>
+    <div class="podHint">drag compass<br>tap to open</div>
   </div>
 
   <div id="toolsDrawer" class="toolsDrawer">
@@ -492,44 +604,12 @@
       </div>
 
       <div class="statusCard">
-        <strong>Add / record object</strong>
+        <strong>Session safety</strong>
         <div class="hint" style="margin:6px 0 10px">
-          The main map Add button uses this same workflow. Live/GPS records go to Weekly drafts first.
+          New objects are created only from the main map ＋ Add button. Live/Measure records wait as Weekly drafts until submitted.
         </div>
         <div class="row">
-          <button id="btnAddObject" class="primary">Add Object</button>
-          <button id="btnRecord">Record GPS</button>
-          <button id="btnToolbox">Canvas Toolbox</button>
-          <button id="finishLiveSessionBtn" class="good">Finish Live Session</button>
-        </div>
-      </div>
-
-      <div class="statusCard">
-        <strong>Route design / measure</strong>
-        <div class="hint" style="margin:6px 0 10px">Design = manual/canvas. Measure = live/current GPS.</div>
-        <div class="row" style="margin-top:10px">
-          <button id="routeDesignBtn" class="warn">Route Design</button>
-          <button id="routeMeasureBtn" class="warn">Route Measure</button>
-        </div>
-        <div id="routeCommandRow" class="row hidden" style="margin-top:10px">
-          <button data-route-cmd="start">Start</button>
-          <button data-route-cmd="vertex">Vertex</button>
-          <button data-route-cmd="pause">Pause</button>
-          <button data-route-cmd="resume">Resume</button>
-          <button data-route-cmd="end">End</button>
-        </div>
-      </div>
-
-      <div class="statusCard">
-        <strong>Area design / measure</strong>
-        <div class="hint" style="margin:6px 0 10px">Design = manual/canvas. Measure = live/current GPS.</div>
-        <div class="row" style="margin-top:10px">
-          <button id="areaDesignBtn" class="good">Area Design</button>
-          <button id="areaMeasureBtn" class="good">Area Measure</button>
-        </div>
-        <div id="areaCommandRow" class="row hidden" style="margin-top:10px">
-          <button data-area-cmd="vertex">Add Vertex</button>
-          <button data-area-cmd="close">Close Area</button>
+          <button id="finishLiveSessionBtn" class="good">Finish Live Session / Submit Drafts</button>
         </div>
       </div>
 
@@ -561,6 +641,93 @@
     <div class="floatingEditorFoot">
       <button id="floatingEditorCancel">Cancel</button>
       <button id="floatingEditorSave" class="primary">Save</button>
+    </div>
+  </div>
+
+
+  <div id="randomWindow" class="randomWindow">
+    <div id="randomHead" class="randomHead">
+      <strong>Random / Search Location</strong>
+      <div class="spacer"></div>
+      <button id="randomMin">−</button>
+      <button id="randomClose">Close</button>
+    </div>
+    <div class="randomBody">
+      <div class="grid two">
+        <label>Search source
+          <select id="randomSearchSource">
+            <option value="both">Public + My database</option>
+            <option value="public">Public address search</option>
+            <option value="local">My database only</option>
+          </select>
+        </label>
+        <label>Object type
+          <select id="randomObjectType">
+            <option value="habit">Habit point</option>
+            <option value="note">Note point</option>
+            <option value="route-event">Route/event point</option>
+            <option value="route">Route vertex</option>
+            <option value="area">Area vertex</option>
+          </select>
+        </label>
+      </div>
+
+      <label>Search address or existing record
+        <input id="randomSearchInput" type="text" placeholder="Start typing an address, place, note, code, habit, or existing address...">
+      </label>
+      <div class="row">
+        <button id="randomSearchBtn">Search</button>
+        <button id="randomUseTypedAddress">Use Typed Address Only</button>
+      </div>
+      <div id="randomResults" class="resultList hidden"></div>
+
+      <div class="grid two" style="margin-top:10px">
+        <label>Latitude
+          <input id="randomLat" type="number" step="any" placeholder="e.g. 37.9838">
+        </label>
+        <label>Longitude
+          <input id="randomLng" type="number" step="any" placeholder="e.g. 23.7275">
+        </label>
+      </div>
+
+      <label>Address attribute
+        <input id="randomAddress" type="text" placeholder="Selected, typed, or later filled by Refresh Addresses">
+      </label>
+
+      <div class="grid two">
+        <label>Event date
+          <input id="randomDate" type="date">
+        </label>
+        <label>Event time
+          <input id="randomTime" type="time">
+        </label>
+      </div>
+
+      <div class="grid two">
+        <label>Time confidence
+          <select id="randomConfidence">
+            <option value="estimated">estimated</option>
+            <option value="exact">exact</option>
+            <option value="unknown">unknown</option>
+          </select>
+        </label>
+        <label>Habit name / record name
+          <input id="randomName" type="text" placeholder="Optional; for habit point choose habit name">
+        </label>
+      </div>
+
+      <label>Description / note
+        <textarea id="randomText" rows="4" placeholder="Optional extra information to save with this record"></textarea>
+      </label>
+
+      <div class="hint">
+        Public search needs internet. My database search works from your stored records. You can also type coordinates directly and press Record.
+      </div>
+    </div>
+    <div class="randomFoot">
+      <button id="randomGoTo">Go to typed/selected position</button>
+      <button id="randomCancel">Cancel</button>
+      <button id="randomRecord" class="primary">Record</button>
     </div>
   </div>
 
@@ -624,7 +791,7 @@
               <tr>
                 <th>Code</th><th>Type</th><th>Event</th><th>Captured</th><th>Source</th>
                 <th>Name</th><th>Text</th><th>Lat</th><th>Lng</th><th>Address</th>
-                <th>Route km</th><th>Area m²</th><th>Delete</th>
+                <th>Address source</th><th>Route km</th><th>Area m²</th><th>Delete</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -687,12 +854,12 @@
     <div class="addChoice">
       <h4>1. Choose source</h4>
       <div class="row">
-        <button data-add-source="gps" class="primary">Live / Current GPS</button>
-        <button data-add-source="manual">Date / Canvas Point</button>
+        <button data-add-source="gps" class="primary">Measure: current GPS</button>
+        <button data-add-source="manual">Design: date + canvas point</button>
       </div>
     </div>
     <div id="addManualHint" class="hint hidden" style="margin-bottom:10px">
-      For manual/date mode: after choosing the object type, tap or long-hold the map where you want to place it.
+      For Design mode: after choosing the object type, long-press/right-click the map where you want to place it.
     </div>
     <div class="addChoice">
       <h4>2. Choose geometry</h4>
@@ -707,13 +874,13 @@
       <div class="row">
         <button data-add-point="habit">Habit point</button>
         <button data-add-point="note">Note point</button>
-        <button data-add-point="route-event">Route event point</button>
+        <button data-add-point="route-event">Route point</button>
       </div>
     </div>
     <div id="addRouteKinds" class="addChoice hidden">
       <h4>3. Route command</h4>
       <div class="row">
-        <button data-add-route="start">Start / new segment</button>
+        <button data-add-route="start">Start route / new segment</button>
         <button data-add-route="vertex">Add vertex</button>
         <button data-add-route="pause">Pause</button>
         <button data-add-route="resume">Resume / new segment</button>
@@ -889,8 +1056,6 @@ const els = {
   scopeDate:$("scopeDate"),
   scopeDateWrap:$("scopeDateWrap"),
   statusGrid:$("statusGrid"),
-  netPill:$("netPill"),
-  compassPill:$("compassPill"),
   menuTab:$("menuTab"),
   menuDrawer:$("menuDrawer"),
   closeMenu:$("closeMenu"),
@@ -901,10 +1066,7 @@ const els = {
   compassNeedle:$("compassNeedle"),
   closeTools:$("closeTools"),
   hideCompass:$("hideCompass"),
-  btnRecord:$("btnRecord"),
-  btnToolbox:$("btnToolbox"),
   mainAddButton:$("mainAddButton"),
-  btnAddObject:$("btnAddObject"),
   finishLiveSessionBtn:$("finishLiveSessionBtn"),
   pendingCountText:$("pendingCountText"),
   submitPendingBtn:$("submitPendingBtn"),
@@ -917,12 +1079,6 @@ const els = {
   floatingEditorClose:$("floatingEditorClose"),
   floatingEditorCancel:$("floatingEditorCancel"),
   floatingEditorSave:$("floatingEditorSave"),
-  routeDesignBtn:$("routeDesignBtn"),
-  routeMeasureBtn:$("routeMeasureBtn"),
-  routeCommandRow:$("routeCommandRow"),
-  areaDesignBtn:$("areaDesignBtn"),
-  areaMeasureBtn:$("areaMeasureBtn"),
-  areaCommandRow:$("areaCommandRow"),
   addObjectDialog:$("addObjectDialog"),
   cancelAddObject:$("cancelAddObject"),
   confirmAddObject:$("confirmAddObject"),
@@ -931,14 +1087,6 @@ const els = {
   addRouteKinds:$("addRouteKinds"),
   addAreaKinds:$("addAreaKinds"),
   addObjectSummary:$("addObjectSummary"),
-  gpsRouteStart:$("gpsRouteStart"),
-  gpsRoutePause:$("gpsRoutePause"),
-  gpsRouteResume:$("gpsRouteResume"),
-  gpsRouteEnd:$("gpsRouteEnd"),
-  gpsAreaVertex:$("gpsAreaVertex"),
-  gpsAreaClose:$("gpsAreaClose"),
-  btnRoute:$("btnRoute"),
-  btnArea:$("btnArea"),
   btnPinMe:$("btnPinMe"),
   btnPinSelected:$("btnPinSelected"),
   btnFitScope:$("btnFitScope"),
@@ -989,7 +1137,7 @@ const els = {
   infoBody:$("infoBody")
 };
 
-function setStatus(msg){ els.statusLine.dataset.message = msg; }
+function setStatus(msg){ window.__lastStatusMessage = msg; updateStatusLine(); }
 function todayYMD(){ return toYMD(new Date()); }
 function toYMD(d){
   const x = new Date(d);
@@ -1005,7 +1153,7 @@ function esc(s=""){
 function uid(p="id"){ return `${p}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`; }
 function safeNum(v, fb=0){ const n=Number(v); return Number.isFinite(n)?n:fb; }
 function isOnline(){ return navigator.onLine; }
-function updateNetPill(){ els.netPill.textContent = isOnline() ? "Online" : "Offline"; }
+function updateNetPill(){ window.__netStatus = isOnline() ? "Online" : "Offline"; updateStatusLine(); }
 function mondayOfWeek(d){
   const x = new Date(d);
   const day = (x.getDay()+6)%7;
@@ -1222,14 +1370,14 @@ async function initCompass(){
     if(typeof DeviceOrientationEvent!=="undefined" && typeof DeviceOrientationEvent.requestPermission==="function"){
       const g = await DeviceOrientationEvent.requestPermission();
       if(g!=="granted"){
-        els.compassPill.textContent = "Compass denied";
+        if(els.statusGrid) window.__lastStatusMessage = "Compass denied";
         return;
       }
     }
     window.addEventListener("deviceorientationabsolute", onOrientation, true);
     window.addEventListener("deviceorientation", onOrientation, true);
   }catch{
-    els.compassPill.textContent = "Compass unavailable";
+    if(els.statusGrid) window.__lastStatusMessage = "Compass unavailable";
   }
 }
 function onOrientation(e){
@@ -1518,7 +1666,7 @@ function updateStatusLine(){
   const live=livePosition ? `${livePosition.lat.toFixed(5)}, ${livePosition.lng.toFixed(5)}${livePosition.accuracy!=null ? ` ±${Math.round(livePosition.accuracy)}m` : ""}` : "unavailable";
   if(els.statusGrid){
     els.statusGrid.innerHTML = `
-      <div class="k">Mode</div><div>${esc(mode)} · ${esc(context)}</div>
+      <div class="k">Mode</div><div>${esc(mode)} · ${esc(context)} · ${esc(window.__netStatus || "")}</div>
       <div class="k">GPS</div><div>${esc(live)}</div>
       <div class="k">Route</div><div>${esc(rt)}</div>
       <div class="k">Manual route</div><div>${manualRoute.active ? `${manualRoute.points.length} vertices` : "idle"}</div>
@@ -1633,24 +1781,8 @@ function drawPolygon(points,color){
   ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
 }
 function drawCompass(){
-  const w=canvas.getBoundingClientRect().width;
-  const x=w-54, y=86, r=22;
-  ctx.save();
-  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
-  ctx.fillStyle="rgba(255,255,255,.86)";
-  ctx.fill();
-  ctx.strokeStyle="rgba(36,51,59,.14)";
-  ctx.stroke();
-  ctx.fillStyle="#24333b";
-  ctx.font="12px system-ui, sans-serif";
-  ctx.fillText("N",x-4,y-28);
-  if(smoothedCompassHeading!=null && els.toolsPod && els.toolsPod.classList.contains("open")){
-    const a=(smoothedCompassHeading-90)*Math.PI/180;
-    ctx.translate(x,y); ctx.rotate(a);
-    ctx.beginPath(); ctx.moveTo(16,0); ctx.lineTo(-7,-6); ctx.lineTo(-1,0); ctx.lineTo(-7,6); ctx.closePath();
-    ctx.fillStyle="#2f6f7e"; ctx.fill();
-  }
-  ctx.restore();
+  // North/compass is intentionally shown only in the Tools compass pod.
+  // The map canvas stays clean.
 }
 function drawLiveMarker(){
   if(!livePosition) return;
@@ -1746,7 +1878,7 @@ function showRecordInfo(rec){
     <div class="small muted" style="margin-top:8px">Name</div><div>${esc(rec.name||"-")}</div>
     <div class="small muted" style="margin-top:8px">Text</div><div style="white-space:pre-wrap">${esc(rec.text||"-")}</div>
     <div class="small muted" style="margin-top:8px">Coords</div><div>${rec.lat??"-"}, ${rec.lng??"-"}</div>
-    <div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address||m.startAddress||"-")}</div>
+    <div class="small muted" style="margin-top:8px">Address</div><div>${esc(rec.address||m.startAddress||"-")}</div><div class="small muted" style="margin-top:8px">Address source</div><div>${esc(rec.addressSource||"-")}</div>
     <div class="small muted" style="margin-top:8px">Route km</div><div>${rec.distanceKm!=null?Number(rec.distanceKm).toFixed(3):"-"}</div>
     <div class="small muted" style="margin-top:8px">Area m²</div><div>${rec.areaSqM!=null?Number(rec.areaSqM).toFixed(2):"-"}</div>
   `;
@@ -1976,6 +2108,219 @@ async function areaClose(){
 }
 
 
+
+let selectedRandomResult = null;
+
+function initRandomWindowDrag(){
+  if(!els.randomWindow || !els.randomHead) return;
+  let dragging=false,startX=0,startY=0,startLeft=0,startTop=0;
+  els.randomHead.addEventListener("pointerdown", e=>{
+    if(e.target.tagName==="BUTTON") return;
+    dragging=true;
+    els.randomHead.setPointerCapture(e.pointerId);
+    const rect=els.randomWindow.getBoundingClientRect();
+    startX=e.clientX; startY=e.clientY; startLeft=rect.left; startTop=rect.top;
+    els.randomWindow.style.left=`${startLeft}px`;
+    els.randomWindow.style.top=`${startTop}px`;
+  });
+  els.randomHead.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    const dx=e.clientX-startX, dy=e.clientY-startY;
+    els.randomWindow.style.left=`${Math.max(0,Math.min(window.innerWidth-90,startLeft+dx))}px`;
+    els.randomWindow.style.top=`${Math.max(0,Math.min(window.innerHeight-70,startTop+dy))}px`;
+  });
+  els.randomHead.addEventListener("pointerup", e=>{
+    dragging=false;
+    try{els.randomHead.releasePointerCapture(e.pointerId)}catch{}
+  });
+  els.randomHead.addEventListener("pointercancel", e=>{
+    dragging=false;
+    try{els.randomHead.releasePointerCapture(e.pointerId)}catch{}
+  });
+}
+
+function openRandomWindow(prefill={}){
+  selectedRandomResult = null;
+  if(els.addObjectDialog && els.addObjectDialog.open) els.addObjectDialog.close();
+  els.randomDate.value = prefill.date || toYMD(anchorDate);
+  els.randomTime.value = prefill.time || "12:00";
+  els.randomConfidence.value = prefill.confidence || "estimated";
+  els.randomLat.value = prefill.lat ?? "";
+  els.randomLng.value = prefill.lng ?? "";
+  els.randomAddress.value = prefill.address || "";
+  els.randomName.value = prefill.name || "";
+  els.randomText.value = prefill.text || "";
+  els.randomObjectType.value = prefill.type || "note";
+  els.randomSearchInput.value = "";
+  els.randomResults.innerHTML = "";
+  els.randomResults.classList.add("hidden");
+  els.randomWindow.classList.add("open");
+}
+
+function closeRandomWindow(){
+  els.randomWindow.classList.remove("open");
+}
+
+function localSearchResults(q){
+  const query = q.trim().toLowerCase();
+  if(!query) return [];
+  return allRecordsForViews()
+    .filter(r=>{
+      const hay = [
+        r.code, r.type, r.name, r.text, r.address, r.calcTimestamp,
+        r.lat, r.lng, r.meta ? JSON.stringify(r.meta) : ""
+      ].join(" ").toLowerCase();
+      return hay.includes(query);
+    })
+    .slice(0, 12)
+    .map(r=>{
+      let lat = r.lat, lng = r.lng;
+      if((lat == null || lng == null) && Array.isArray(r.points) && r.points.length){
+        lat = r.points[0].lat; lng = r.points[0].lng;
+      }
+      return {
+        source:"local",
+        title:`${r.code || ""} ${r.type || ""}${r.name ? " · " + r.name : ""}`,
+        subtitle:r.address || r.text || r.calcTimestamp || "",
+        lat, lng,
+        address:r.address || "",
+        record:r
+      };
+    })
+    .filter(x=>x.lat != null && x.lng != null);
+}
+
+async function publicSearchResults(q){
+  if(!isOnline() || !q.trim()) return [];
+  try{
+    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=8&q=${encodeURIComponent(q.trim())}`;
+    const res = await fetch(url, {headers:{Accept:"application/json"}});
+    if(!res.ok) return [];
+    const data = await res.json();
+    return data.map(x=>({
+      source:"public",
+      title:x.display_name || x.name || "address result",
+      subtitle:`${x.lat}, ${x.lon}`,
+      lat:Number(x.lat),
+      lng:Number(x.lon),
+      address:x.display_name || "",
+      raw:x
+    }));
+  }catch{
+    return [];
+  }
+}
+
+function renderRandomResults(results){
+  if(!results.length){
+    els.randomResults.innerHTML = `<div class="resultItem"><div class="resultTitle">No results</div><div class="resultMeta">Try another search or type coordinates manually.</div></div>`;
+    els.randomResults.classList.remove("hidden");
+    return;
+  }
+  els.randomResults.innerHTML = results.map((r,i)=>`
+    <div class="resultItem" data-random-result="${i}">
+      <div class="resultTitle"><span class="sourceBadge">${r.source === "public" ? "public" : "my database"}</span>${esc(r.title || "")}</div>
+      <div class="resultMeta">${esc(r.subtitle || "")}</div>
+    </div>
+  `).join("");
+  els.randomResults.classList.remove("hidden");
+  els.randomResults.querySelectorAll("[data-random-result]").forEach(el=>{
+    el.onclick=()=>{
+      const r = results[Number(el.dataset.randomResult)];
+      selectedRandomResult = r;
+      els.randomResults.querySelectorAll(".resultItem").forEach(x=>x.classList.remove("selected"));
+      el.classList.add("selected");
+      els.randomLat.value = r.lat;
+      els.randomLng.value = r.lng;
+      els.randomAddress.value = r.address || r.title || "";
+      if(r.record){
+        els.randomName.value = r.record.name || "";
+        if(!els.randomText.value) els.randomText.value = r.record.text || "";
+      }
+    };
+  });
+}
+
+async function runRandomSearch(){
+  const q = els.randomSearchInput.value || "";
+  const source = els.randomSearchSource.value;
+  let results = [];
+  if(source === "local" || source === "both") results.push(...localSearchResults(q));
+  if(source === "public" || source === "both") results.push(...await publicSearchResults(q));
+  renderRandomResults(results);
+}
+
+function randomTimeMeta(){
+  const d = els.randomDate.value || toYMD(anchorDate);
+  const t = els.randomTime.value || "00:00";
+  return {
+    capturedAt:new Date().toISOString(),
+    eventDate:d,
+    eventStartTime:t,
+    eventEndTime:"",
+    calcTimestamp:isoFromParts(d,t),
+    timeSource:"manual",
+    timeConfidence:els.randomConfidence.value || "estimated"
+  };
+}
+
+async function recordRandomObject(){
+  const lat = Number(els.randomLat.value);
+  const lng = Number(els.randomLng.value);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)){
+    alert("Type valid latitude and longitude, or choose a search result.");
+    return;
+  }
+  setProjectionOriginIfMissing(lat,lng);
+  const objectType = els.randomObjectType.value;
+  const tm = randomTimeMeta();
+  const address = els.randomAddress.value.trim();
+  const addressSource = selectedRandomResult
+    ? (selectedRandomResult.source === "public" ? "address-search" : "database-search")
+    : (address ? "manual-text" : "blank");
+
+  if(objectType === "route"){
+    await manualRouteVertexAt(lat,lng);
+    closeRandomWindow();
+    return;
+  }
+  if(objectType === "area"){
+    await areaAddVertexAt(lat,lng);
+    closeRandomWindow();
+    return;
+  }
+
+  const rec = {
+    ...makeBaseRecord(objectType, tm),
+    lat,lng,
+    address,
+    addressSource,
+    name:els.randomName.value.trim(),
+    text:els.randomText.value.trim(),
+    meta:{
+      randomInput:true,
+      selectedSource:selectedRandomResult ? selectedRandomResult.source : "",
+      selectedRecordCode:selectedRandomResult && selectedRandomResult.record ? selectedRandomResult.record.code : ""
+    }
+  };
+  if(objectType === "habit" && !rec.name) rec.name = habits[0] || "Habit 1";
+  await storeRecord(rec);
+  await refreshRecords();
+  fitWorldPoints([llToXY(lat,lng)],80);
+  closeRandomWindow();
+}
+
+function goToRandomTypedPosition(){
+  const lat = Number(els.randomLat.value);
+  const lng = Number(els.randomLng.value);
+  if(!Number.isFinite(lat) || !Number.isFinite(lng)){
+    alert("Type valid coordinates first.");
+    return;
+  }
+  setProjectionOriginIfMissing(lat,lng);
+  fitWorldPoints([llToXY(lat,lng)],80);
+}
+
 let addState = {source:null, geometry:null, point:null, route:null, area:null};
 
 function updateAddObjectSummary(){
@@ -2024,6 +2369,21 @@ document.querySelectorAll("[data-add-area]").forEach(b=>{
     updateAddObjectSummary();
   };
 });
+
+if(els.btnRandomObject) els.btnRandomObject.onclick=()=>openRandomWindow();
+if(els.addRandomSourceBtn) els.addRandomSourceBtn.onclick=()=>openRandomWindow();
+if(els.randomClose) els.randomClose.onclick=closeRandomWindow;
+if(els.randomCancel) els.randomCancel.onclick=closeRandomWindow;
+if(els.randomMin) els.randomMin.onclick=()=>els.randomWindow.classList.toggle("open");
+if(els.randomSearchBtn) els.randomSearchBtn.onclick=runRandomSearch;
+if(els.randomSearchInput) els.randomSearchInput.addEventListener("keydown", e=>{ if(e.key==="Enter") runRandomSearch(); });
+if(els.randomUseTypedAddress) els.randomUseTypedAddress.onclick=()=>{
+  els.randomAddress.value = els.randomSearchInput.value.trim();
+  selectedRandomResult = null;
+};
+if(els.randomRecord) els.randomRecord.onclick=recordRandomObject;
+if(els.randomGoTo) els.randomGoTo.onclick=goToRandomTypedPosition;
+
 els.cancelAddObject.onclick=()=>els.addObjectDialog.close();
 
 els.confirmAddObject.onclick=async()=>{
@@ -2046,7 +2406,7 @@ els.confirmAddObject.onclick=async()=>{
       else if(addState.route === "pause") await routePause();
       else if(addState.route === "resume") await routeResume();
       else if(addState.route === "end") await routeEnd();
-      else if(addState.route === "vertex") await captureRouteSample();
+      else if(addState.route === "vertex") { if(!route.active) alert("Start a measured route first."); else await captureRouteSample(); }
       else alert("Choose route command.");
       return;
     }
@@ -2338,6 +2698,7 @@ function renderDatabasePanel(){
       <td>${r.lat??""}</td>
       <td>${r.lng??""}</td>
       <td>${esc(r.address||(r.meta?.startAddress||"")||"")}</td>
+      <td>${esc(r.addressSource||"")}</td>
       <td>${r.distanceKm!=null?Number(r.distanceKm).toFixed(3):""}</td>
       <td>${r.areaSqM!=null?Number(r.areaSqM).toFixed(2):""}</td>
       <td><button data-del-id="${r.id}" class="danger">Delete</button></td>
@@ -2361,10 +2722,12 @@ async function refreshMissingAddresses(){
     let changed=false;
     if(["habit","note","route-event"].includes(r.type) && !r.address && r.lat!=null && r.lng!=null){
       r.address=await reverseGeocode(r.lat,r.lng);
+      if(r.address) r.addressSource="refresh-reverse";
       changed=!!r.address;
     }
     if(r.type==="area" && !r.address && Array.isArray(r.points) && r.points.length){
       r.address=await reverseGeocode(r.points[0].lat,r.points[0].lng);
+      if(r.address) r.addressSource="refresh-reverse";
       changed=changed||!!r.address;
     }
     if(changed){
@@ -2417,7 +2780,7 @@ async function doRestoreBackup(file){
   fitScope();
 }
 function exportRecordsToCSV(list){
-  const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","routeId","areaId","distanceKm","areaSqM","color","meta"];
+  const headers=["code","type","calcTimestamp","capturedAt","timeSource","timeConfidence","name","text","lat","lng","address","addressSource","routeId","areaId","distanceKm","areaSqM","color","meta"];
   return [headers.join(","), ...list.map(r=>headers.map(h=>{
     let v=r[h]??"";
     if(typeof v==="object") v=JSON.stringify(v);
@@ -2488,85 +2851,10 @@ els.btnWeekScope.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=
 els.btnMonthScope.onclick=()=>{if(!warnIfPendingBeforeChange())return;isLiveMode=false;scope="month";anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);setModeButtons();fitScope();updateStatusLine();};
 els.scopeDate.onchange=()=>{anchorDate=new Date(`${els.scopeDate.value||todayYMD()}T12:00:00`);if(!isLiveMode)fitScope();renderWeeklyPanel();updateStatusLine();};
 
-els.btnRecord.onclick=()=>els.recordDialog.showModal();
-els.btnToolbox.onclick=()=>els.actionDialog.showModal();
 els.mainAddButton.onclick=openAddObjectDialog;
-els.btnAddObject.onclick=openAddObjectDialog;
 els.finishLiveSessionBtn.onclick=submitPendingRecords;
 els.submitPendingBtn.onclick=submitPendingRecords;
 els.clearPendingBtn.onclick=clearPendingRecords;
-els.btnRoute.onclick=()=>els.recordDialog.showModal();
-els.btnArea.onclick=()=>els.recordDialog.showModal();
-
-let activeRouteToolMode = null; // "design" or "measure"
-let activeAreaToolMode = null;  // "design" or "measure"
-
-els.routeDesignBtn.onclick=()=>{
-  activeRouteToolMode="design";
-  els.routeCommandRow.classList.remove("hidden");
-  alert("Route Design: choose a command, then place it on the canvas if needed.");
-};
-els.routeMeasureBtn.onclick=()=>{
-  activeRouteToolMode="measure";
-  els.routeCommandRow.classList.remove("hidden");
-  alert("Route Measure: commands use current GPS position and go to Weekly drafts first.");
-};
-els.routeCommandRow.querySelectorAll("[data-route-cmd]").forEach(b=>{
-  b.onclick=async()=>{
-    const cmd=b.dataset.routeCmd;
-    if(activeRouteToolMode==="measure"){
-      if(cmd==="start") await routeStart();
-      else if(cmd==="pause") await routePause();
-      else if(cmd==="resume") await routeResume();
-      else if(cmd==="end") await routeEnd();
-      else if(cmd==="vertex") await captureRouteSample();
-      return;
-    }
-    if(activeRouteToolMode==="design"){
-      if(cmd==="start") window.__pendingTool="manual-route-start";
-      else if(cmd==="vertex" || cmd==="resume") window.__pendingTool="manual-route-vertex";
-      else if(cmd==="end") window.__pendingTool="manual-route-end";
-      else if(cmd==="pause") { alert("Design pause saved as a gap. Use resume/vertex to begin the next segment."); return; }
-      els.toolsDrawer.classList.remove("open");
-      alert("Now long-press/right-click the canvas to place this route command.");
-    }
-  };
-});
-
-els.areaDesignBtn.onclick=()=>{
-  activeAreaToolMode="design";
-  els.areaCommandRow.classList.remove("hidden");
-  alert("Area Design: choose Add Vertex, then place vertices on the canvas.");
-};
-els.areaMeasureBtn.onclick=()=>{
-  activeAreaToolMode="measure";
-  els.areaCommandRow.classList.remove("hidden");
-  alert("Area Measure: GPS vertices go to Weekly drafts first.");
-};
-els.areaCommandRow.querySelectorAll("[data-area-cmd]").forEach(b=>{
-  b.onclick=async()=>{
-    const cmd=b.dataset.areaCmd;
-    if(activeAreaToolMode==="measure"){
-      if(cmd==="vertex") await areaAddGPSVertex();
-      else if(cmd==="close") await areaClose();
-      return;
-    }
-    if(activeAreaToolMode==="design"){
-      if(cmd==="vertex") window.__pendingTool="area-vertex";
-      else if(cmd==="close") window.__pendingTool="area-close";
-      els.toolsDrawer.classList.remove("open");
-      if(cmd==="vertex") alert("Now long-press/right-click the canvas to place an area vertex.");
-      else await areaClose();
-    }
-  };
-});
-
-els.gpsRouteStart.onclick=routeStart;
-els.gpsRoutePause.onclick=routePause;
-els.gpsRouteResume.onclick=routeResume;
-els.gpsRouteEnd.onclick=routeEnd;
-els.gpsAreaVertex.onclick=areaAddGPSVertex;
-els.gpsAreaClose.onclick=areaClose;
 els.btnPinMe.onclick=pinToMe;
 els.btnPinSelected.onclick=pinToSelected;
 els.btnFitScope.onclick=fitScope;
@@ -2702,6 +2990,7 @@ window.addEventListener("resize",resizeCanvas);
 
 async function boot(){
   initFloatingEditorDrag();
+  initRandomWindowDrag();
   initToolsPodDrag();
   updateNetPill();
   window.addEventListener("online",updateNetPill);
