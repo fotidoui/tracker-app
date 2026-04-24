@@ -709,6 +709,22 @@
       gap:8px;
     }
     @media (max-width:640px){.menuGrid{grid-template-columns:1fr}}
+  
+    /* UI service patch: keep all controls clickable above canvas */
+    button, input, select, textarea, dialog { pointer-events:auto; }
+    #mapWrap{z-index:0;}
+    .menuTab,.toolsTab,.mainAddCluster,.mapZoom,.toolsPod,.menuDrawer,.toolsDrawer,.routeFloat,.floatingEditor,.randomWindow{pointer-events:auto;}
+    .menuDrawer:not(.open), .toolsDrawer:not(.open){pointer-events:none;}
+    .mainAddCluster{z-index:120!important;}
+    .mapZoom{z-index:110!important;}
+    .menuTab{right:0!important;left:auto!important;top:42%!important;border-radius:14px 0 0 14px!important;z-index:130!important;}
+    .toolsTab{right:0!important;left:auto!important;top:56%!important;border-radius:14px 0 0 14px!important;z-index:130!important;}
+    .menuDrawer{right:0!important;left:auto!important;transform:translateX(105%)!important;border-left:1px solid var(--line)!important;border-right:0!important;}
+    .menuDrawer.open{transform:translateX(0)!important;}
+    .toolsDrawer{right:0!important;left:auto!important;transform:translateX(105%)!important;border-left:1px solid var(--line)!important;border-right:0!important;}
+    .toolsDrawer.open{transform:translateX(0)!important;}
+    .toolsPod{right:12px!important;left:auto!important;}
+
   </style>
 </head>
 <body>
@@ -3857,9 +3873,9 @@ function renderAll(){
   drawCanvas();
 }
 
-els.menuTab.onclick=()=>{els.toolsDrawer.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.menuDrawer.classList.add("open");};
+els.menuTab.onclick=()=>{els.toolsDrawer.classList.remove("open"); els.toolsPod?.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.menuDrawer.classList.add("open");};
 els.closeMenu.onclick=()=>els.menuDrawer.classList.remove("open");
-els.toolsTab.onclick=()=>els.toolsPod.classList.toggle("open");
+els.toolsTab.onclick=()=>{els.menuDrawer?.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.toolsPod.classList.toggle("open");};
 els.compassButton.onclick=()=>{els.menuDrawer.classList.remove("open"); els.randomWindow?.classList.remove("open"); els.toolsDrawer.classList.add("open");};
 els.closeTools.onclick=()=>els.toolsDrawer.classList.remove("open");
 els.hideCompass.onclick=()=>{els.toolsPod.classList.remove("open"); els.toolsDrawer.classList.remove("open");};
@@ -4049,7 +4065,47 @@ function resizeCanvas(){
 }
 window.addEventListener("resize",resizeCanvas);
 
+
+function initClickSafetyPatch(){
+  document.addEventListener("click", function(e){
+    const btn = e.target.closest && e.target.closest("button");
+    if(!btn) return;
+    const id = btn.id;
+    // Safety fallback for the core desktop controls. Capture phase keeps canvas/pan logic from swallowing these.
+    if(id === "menuTab"){
+      e.preventDefault(); e.stopPropagation();
+      els.toolsDrawer?.classList.remove("open");
+      els.toolsPod?.classList.remove("open");
+      els.randomWindow?.classList.remove("open");
+      els.menuDrawer?.classList.add("open");
+    }else if(id === "toolsTab"){
+      e.preventDefault(); e.stopPropagation();
+      els.menuDrawer?.classList.remove("open");
+      els.randomWindow?.classList.remove("open");
+      els.toolsPod?.classList.toggle("open");
+    }else if(id === "mainAddNowButton"){
+      e.preventDefault(); e.stopPropagation();
+      if(typeof openAddNow === "function") openAddNow();
+    }else if(id === "mainAddThenButton"){
+      e.preventDefault(); e.stopPropagation();
+      if(typeof openAddThen === "function") openAddThen();
+    }else if(id === "closeMenu"){
+      e.preventDefault(); e.stopPropagation();
+      els.menuDrawer?.classList.remove("open");
+    }else if(id === "closeTools"){
+      e.preventDefault(); e.stopPropagation();
+      els.toolsDrawer?.classList.remove("open");
+    }else if(id === "compassButton"){
+      e.preventDefault(); e.stopPropagation();
+      els.menuDrawer?.classList.remove("open");
+      els.randomWindow?.classList.remove("open");
+      els.toolsDrawer?.classList.add("open");
+    }
+  }, true);
+}
+
 async function boot(){
+  initClickSafetyPatch();
   initFloatingEditorDrag();
   initRandomWindowDrag();
   initToolsPodDrag();
