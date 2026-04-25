@@ -54,6 +54,7 @@ function weekNo(d){d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())
 function isoLocal(d){d=new Date(d);if(isNaN(d))d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function recDate(r){return(r.time?.eventAt||r.createdAt||'').slice(0,10)}
 function recWeek(r){return weekKey(recDate(r)||new Date())}
+function visibleBase(){const rows=Array.isArray(app.base)?app.base:[];const d=new Date(app.settings.selectedAt||new Date());const m=app.settings.viewMode||"week";if(m==="live")return rows;if(m==="day")return rows.filter(r=>recDate(r)===ymd(d));if(m==="week")return rows.filter(r=>recWeek(r)===weekKey(d));if(m==="month")return rows.filter(r=>String(recDate(r)).startsWith(ymd(d).slice(0,7)));return rows;}
 function safeNum(v,f=0){const n=Number(v);return Number.isFinite(n)?n:f}
 function typePrefix(type){return({point:'01',note:'02',route:'03',area:'04',object:'05',current:'06',controlPoint:'07',gpsSample:'08'}[type]||'99')}
 function makeCode(type,eventAt=new Date().toISOString()){const d=new Date(eventAt);const mm=String(d.getMonth()+1).padStart(2,'0'),yy=String(d.getFullYear()).slice(-2);const seq=String(app.base.filter(r=>{const t=new Date(r.time?.eventAt||r.createdAt||0);return r.type===type&&t.getFullYear()===d.getFullYear()&&t.getMonth()===d.getMonth()}).length+1).padStart(3,'0');return `${typePrefix(type)}-${seq}-${mm}-${yy}`}
