@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Personal Spatial Journal — Core v3.2</title>
+<title>Personal Spatial Journal — Core v3.4</title>
 <style>
 :root{--bg:#fbf6ea;--paper:#fffaf0;--card:#fff;--ink:#24333b;--muted:#69767c;--line:#d8ccb2;--sea:#2f6f7e;--green:#718455;--red:#d95d5d;--orange:#c57449;--violet:#7658a6;--shadow:0 14px 34px rgba(36,51,59,.18)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
@@ -54,7 +54,8 @@ function weekNo(d){d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())
 function isoLocal(d){d=new Date(d);if(isNaN(d))d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function recDate(r){return(r.time?.eventAt||r.createdAt||'').slice(0,10)}
 function recWeek(r){return weekKey(recDate(r)||new Date())}
-function visibleBase(){const rows=Array.isArray(app.base)?app.base:[];const d=new Date(app.settings.selectedAt||new Date());const m=app.settings.viewMode||"week";if(m==="live")return rows;if(m==="day")return rows.filter(r=>recDate(r)===ymd(d));if(m==="week")return rows.filter(r=>recWeek(r)===weekKey(d));if(m==="month")return rows.filter(r=>String(recDate(r)).startsWith(ymd(d).slice(0,7)));return rows;}
+function getVisibleRecords(){const rows=Array.isArray(app.base)?app.base:[];const d=new Date(app.settings.selectedAt||new Date());const m=app.settings.viewMode||"week";if(m==="live")return rows;if(m==="day")return rows.filter(r=>recDate(r)===ymd(d));if(m==="week")return rows.filter(r=>recWeek(r)===weekKey(d));if(m==="month")return rows.filter(r=>String(recDate(r)).startsWith(ymd(d).slice(0,7)));return rows;}
+window.getVisibleRecords=getVisibleRecords;window.visibleBase=getVisibleRecords;
 function safeNum(v,f=0){const n=Number(v);return Number.isFinite(n)?n:f}
 function typePrefix(type){return({point:'01',note:'02',route:'03',area:'04',object:'05',current:'06',controlPoint:'07',gpsSample:'08'}[type]||'99')}
 function makeCode(type,eventAt=new Date().toISOString()){const d=new Date(eventAt);const mm=String(d.getMonth()+1).padStart(2,'0'),yy=String(d.getFullYear()).slice(-2);const seq=String(app.base.filter(r=>{const t=new Date(r.time?.eventAt||r.createdAt||0);return r.type===type&&t.getFullYear()===d.getFullYear()&&t.getMonth()===d.getMonth()}).length+1).padStart(3,'0');return `${typePrefix(type)}-${seq}-${mm}-${yy}`}
@@ -126,9 +127,72 @@ async function updateAvatarView(){
   app.avatarView={id:'avatar',source,wgs:app.live.wgs,local:{...app.live.local},accuracyM:app.live.wgs.accuracy||25,scaleRingM:app.settings.scaleRing,capturedAt:app.live.capturedAt};
   try{await put('avatarView',app.avatarView)}catch{}
 }
-async function buildViewCaches(){const rows=visibleBase();app.mapView=rows.map(r=>({id:'MAP-'+r.id,recordId:r.id,code:r.code||'',type:r.type,source:r.source||'',geometry:r.type==='point'?{wgs:r.wgs,local:r.local}:{vertices:r.vertices,center:r.center||null},metrics:r.metrics||{},time:r.time,label:r.category||r.routeId||r.areaId||r.code||r.id}));const weekRows=app.base.filter(r=>recWeek(r)===weekKey(app.settings.selectedAt));app.weeklyView=weekRows.map(r=>({id:'WEEK-'+r.id,recordId:r.id,code:r.code||'',type:r.type,day:recDate(r),title:r.category||r.routeId||r.areaId||r.code||r.id,metrics:r.metrics||{},time:r.time,summary:weeklySummaryOf(r)}));await clearStore('mapView');for(const x of app.mapView)await put('mapView',x);await clearStore('weeklyView');for(const x of app.weeklyView)await put('weeklyView',x)}
+async function buildViewCaches(){const rows=getVisibleRecords();app.mapView=rows.map(r=>({id:'MAP-'+r.id,recordId:r.id,code:r.code||'',type:r.type,source:r.source||'',geometry:r.type==='point'?{wgs:r.wgs,local:r.local}:{vertices:r.vertices,center:r.center||null},metrics:r.metrics||{},time:r.time,label:r.category||r.routeId||r.areaId||r.code||r.id}));const weekRows=app.base.filter(r=>recWeek(r)===weekKey(app.settings.selectedAt));app.weeklyView=weekRows.map(r=>({id:'WEEK-'+r.id,recordId:r.id,code:r.code||'',type:r.type,day:recDate(r),title:r.category||r.routeId||r.areaId||r.code||r.id,metrics:r.metrics||{},time:r.time,summary:weeklySummaryOf(r)}));await clearStore('mapView');for(const x of app.mapView)await put('mapView',x);await clearStore('weeklyView');for(const x of app.weeklyView)await put('weeklyView',x)}
 function weeklySummaryOf(r){if(r.type==='point')return `${r.category||'Point'} · ${r.wgs.lat.toFixed(6)}, ${r.wgs.lng.toFixed(6)}`;if(r.type==='route'){const a=r.vertices[0],b=r.vertices.at(-1);return `Route ${((r.metrics.distance2dM||0)/1000).toFixed(3)} km · ${r.vertices.length} vertices · ${a?.wgs.lat.toFixed(6)},${a?.wgs.lng.toFixed(6)} → ${b?.wgs.lat.toFixed(6)},${b?.wgs.lng.toFixed(6)}`;}if(r.type==='area')return `Area ${(r.metrics.areaM2||0).toFixed(1)} m²`;return r.type}
 async function saveBase(r){await put('base',r);const i=app.base.findIndex(x=>x.id===r.id);if(i>=0)app.base[i]=r;else app.base.push(r);await buildViewCaches();renderAll();return r}
+
+async function buildGeo(){
+  const recent=(app.tempGnss||[]).filter(g=>g?.wgs && g.wgs.accuracy!=null && g.wgs.accuracy<=12).slice(-80);
+  const pool=recent.length>=3 ? recent : (app.tempGnss||[]).filter(g=>g?.wgs).slice(-20);
+  if(pool.length<1){alert('Δεν υπάρχουν ακόμη GNSS δείγματα για control point. Πάτα Refresh GPS ή περίμενε λίγο.');return}
+  const avg={
+    lat:pool.reduce((s,g)=>s+Number(g.wgs.lat||0),0)/pool.length,
+    lng:pool.reduce((s,g)=>s+Number(g.wgs.lng||0),0)/pool.length,
+    alt:pool.reduce((s,g)=>s+Number(g.wgs.alt||0),0)/pool.length,
+    accuracy:pool.reduce((s,g)=>s+Number(g.wgs.accuracy||0),0)/pool.length
+  };
+  const local=wgsToLocal(avg.lat,avg.lng,avg.alt);
+  const item={
+    id:id('GEO'),
+    code:makeCode('controlPoint',new Date().toISOString()),
+    type:'controlPoint',
+    source:'geo-control',
+    wgs:avg,
+    local,
+    samples:pool.length,
+    stability:{
+      samples:pool.length,
+      avgAccuracy:avg.accuracy,
+      durationSec: pool.length>1 ? Math.abs(new Date(pool.at(-1).capturedAt)-new Date(pool[0].capturedAt))/1000 : 0
+    },
+    createdAt:new Date().toISOString()
+  };
+  await put('geo',item);
+  app.geo.push(item);
+  renderAll();
+}
+async function setOriginHere(){
+  const av=app.avatarView || app.live;
+  if(!av || !av.wgs){alert('Δεν υπάρχει ακόμη avatar/GPS θέση για ορισμό origin.');return}
+  if(!confirm('Να οριστεί η τρέχουσα θέση ως νέο origin του προσωπικού συστήματος; Τα υπάρχοντα local XYZ θα επανυπολογιστούν από τα WGS.')) return;
+  app.crs.origin={lat:Number(av.wgs.lat),lng:Number(av.wgs.lng),alt:Number(av.wgs.alt||0)};
+  app.camera.x=app.crs.falseEasting;
+  app.camera.y=app.crs.falseNorthing;
+  function recalcRecord(r){
+    if(r.type==='point' && r.wgs) r.local=wgsToLocal(r.wgs.lat,r.wgs.lng,r.wgs.alt||0);
+    if(Array.isArray(r.vertices)){
+      r.vertices.forEach(v=>{
+        if(v.wgs) v.local=wgsToLocal(v.wgs.lat,v.wgs.lng,v.wgs.alt||0);
+      });
+    }
+    process(r);
+    return r;
+  }
+  app.base=app.base.map(recalcRecord);
+  for(const r of app.base) await put('base',r);
+  app.geo=app.geo.map(g=>{
+    if(g.wgs) g.local=wgsToLocal(g.wgs.lat,g.wgs.lng,g.wgs.alt||0);
+    return g;
+  });
+  for(const g of app.geo) await put('geo',g);
+  if(app.live?.wgs) app.live.local=wgsToLocal(app.live.wgs.lat,app.live.wgs.lng,app.live.wgs.alt||0);
+  if(app.displayLive?.wgs) app.displayLive.local=wgsToLocal(app.displayLive.wgs.lat,app.displayLive.wgs.lng,app.displayLive.wgs.alt||0);
+  await updateAvatarView();
+  await buildViewCaches();
+  await put('settings',{id:'settings',settings:app.settings,categories:app.categories,crs:app.crs,camera:app.camera});
+  renderAll();
+}
+
 function draw(){
   const r=ui.canvas.getBoundingClientRect();
   if(app.follow&&app.avatarView){app.camera.x=app.avatarView.local.x;app.camera.y=app.avatarView.local.y}
@@ -149,7 +213,7 @@ function avatar(o){const p=localToScreen(o.local.x,o.local.y);const acc=Math.max
 function resize(){const dpr=window.devicePixelRatio||1,r=ui.canvas.getBoundingClientRect();ui.canvas.width=Math.max(1,Math.floor(r.width*dpr));ui.canvas.height=Math.max(1,Math.floor(r.height*dpr));ctx2d.setTransform(dpr,0,0,dpr,0,0);draw()}
 function fitRecords(records){const pts=[];records.forEach(r=>{if(r.type==='point')pts.push(r.local);else (r.vertices||[]).forEach(v=>pts.push(v.local));if(r.center)pts.push(r.center.local)});if(app.avatarView)pts.push(app.avatarView.local);fitPoints(pts)}
 function fitPoints(pts){if(!pts.length)return;const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),r=ui.canvas.getBoundingClientRect(),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);app.camera.x=(minX+maxX)/2;app.camera.y=(minY+maxY)/2;app.camera.z=Math.max(.002,Math.min(15,Math.min((r.width-120)/Math.max(1,maxX-minX),(r.height-220)/Math.max(1,maxY-minY))));app.follow=false;ui.follow.textContent='Follow off';ui.follow.classList.remove('on');draw()}
-function fit(){fitRecords(visibleBase())}
+function fit(){fitRecords(getVisibleRecords())}
 function fitSelected(){const r=app.base.find(x=>x.id===app.selectedRecordId);if(r)fitRecords([r]);else alert('Δεν έχει επιλεγεί element. Πάτα Show on map από Weekly ή διάλεξε element.');}
 function pin(){if(app.avatarView){app.camera.x=app.avatarView.local.x;app.camera.y=app.avatarView.local.y;draw()}}
 function animate(){
@@ -204,7 +268,7 @@ function exportCSV(){const h=['id','code','type','source','eventAt','capturedAt'
 function exportGeoJSON(){return JSON.stringify({type:'FeatureCollection',features:app.base.map(r=>{let g;if(r.type==='point')g={type:'Point',coordinates:[r.wgs.lng,r.wgs.lat,r.wgs.alt||0]};else{const cs=(r.vertices||[]).map(v=>[v.wgs.lng,v.wgs.lat,v.wgs.alt||0]);g={type:r.type==='area'?'Polygon':'LineString',coordinates:r.type==='area'?[cs.concat([cs[0]])]:cs}}return{type:'Feature',geometry:g,properties:{id:r.id,code:r.code,type:r.type,source:r.source,category:r.category,metrics:r.metrics,time:r.time}}})},null,2)}
 function exportDXF(){const out=['0','SECTION','2','ENTITIES'];app.base.forEach(r=>{if(r.type==='point')out.push('0','POINT','8',r.type,'10',String(r.local.x),'20',String(r.local.y),'30',String(r.local.z||0));else{out.push('0','LWPOLYLINE','8',r.type,'90',String((r.vertices||[]).length),'70',r.type==='area'?'1':'0');(r.vertices||[]).forEach(v=>out.push('10',String(v.local.x),'20',String(v.local.y)))}});out.push('0','ENDSEC','0','EOF');return out.join('\n')}
 function download(t,n,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([t],{type}));a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-function backup(){download(JSON.stringify({version:'3.2',base:app.base,tempGnss:app.tempGnss,geo:app.geo,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,crs:app.crs,camera:app.camera},null,2),'psj-backup-v32.json','application/json')}
+function backup(){download(JSON.stringify({version:'3.4',base:app.base,tempGnss:app.tempGnss,geo:app.geo,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,crs:app.crs,camera:app.camera},null,2),'psj-backup-v34.json','application/json')}
 async function restore(){const f=ui.restoreFile.files[0];if(!f)return;let j;try{j=JSON.parse(await f.text())}catch{alert('Invalid JSON');return}if(!Array.isArray(j.base)){alert('Backup missing base array');return}if(!confirm('Restore backup?'))return;for(const s of ['base','tempGnss','geo','avatarView','mapView','weeklyView','routeCalc'])await clearStore(s);for(const x of j.base||[])await put('base',x);for(const x of j.tempGnss||[])await put('tempGnss',x);for(const x of j.geo||[])await put('geo',x);if(j.avatarView)await put('avatarView',j.avatarView);app.settings=j.settings||app.settings;app.categories=j.categories||app.categories;app.crs=j.crs||app.crs;app.camera=j.camera||app.camera;await put('settings',{id:'settings',settings:app.settings,categories:app.categories,crs:app.crs,camera:app.camera});await load();renderAll()}
 function openCtx(x,y){ui.ctx.style.left=Math.min(x,window.innerWidth-210)+'px';ui.ctx.style.top=Math.min(y,window.innerHeight-170)+'px';ui.ctx.style.display='block'}
 function handleCanvasTapLocal(l){app.contextLocal=l;const continuingRoute=app.activeRoute&&ui.toolMode.value==='then'&&ui.toolEntity.value==='line';const continuingArea=app.activeArea&&ui.toolMode.value==='then'&&ui.toolEntity.value==='area';if(app.armed||continuingRoute||continuingArea){execAt(l);if(!continuingRoute&&!continuingArea)app.armed=false;renderAll()}}
@@ -225,6 +289,7 @@ async function boot(){
   requestAnimationFrame(animate);
 }
 boot().catch(e=>alert('Startup error: '+(e.message||e)));
+
 </script>
 </body>
 </html>
