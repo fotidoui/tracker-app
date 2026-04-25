@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Personal Spatial Journal — Core v4.2</title>
+<title>Personal Spatial Journal — Core v4.3</title>
 <style>
-:root{--bg:#fbf6ea;--paper:#fffaf0;--card:#fff;--ink:#24333b;--muted:#69767c;--line:#d8ccb2;--sea:#2f6f7e;--green:#718455;--red:#d95d5d;--orange:#c57449;--violet:#7658a6;--shadow:0 14px 34px rgba(36,51,59,.18)}
+:root{--bg:#f8ead2;--paper:#fff7e8;--card:#fffdf7;--ink:#253238;--muted:#6d746f;--line:#d9bf8f;--sea:#1f6f78;--green:#6f8a4f;--red:#c94b45;--orange:#d1814f;--violet:#6d5aa7;--terracotta:#b85f3a;--olive:#798c54;--sand:#efd7a7;--shadow:0 14px 34px rgba(55,42,28,.18)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
 button,input,select,textarea{font:inherit;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);padding:8px 10px}button{cursor:pointer;touch-action:manipulation}.primary{background:var(--sea);border-color:var(--sea);color:#fff}.danger{background:#fff0ef}.hidden{display:none!important}.small{font-size:12px}.muted{color:var(--muted)}
 #app{position:relative;width:100vw;height:100dvh;overflow:hidden;background:linear-gradient(#fffaf2,#f6efdf)}#map{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:none;display:block}
@@ -37,6 +37,7 @@ dialog{width:min(94vw,840px);border:1px solid var(--line);border-radius:18px;bac
 </div>
 <dialog id="recordDialog"><div class="dh"><strong id="recordTitle">Record</strong></div><div class="db" id="recordBody"></div><div class="df"><button id="recordCancelBtn">Cancel</button><button id="recordSaveBtn" class="primary">Save</button></div></dialog>
 <script>
+
 "use strict";
 const $=id=>document.getElementById(id);
 const ui={canvas:$('map'),info:$('infoText'),needle:$('northNeedle'),book:$('bookBtn'),weekly:$('weeklyBtn'),compass:$('compassBtn'),hammer:$('hammerBtn'),sideDock:$('sideDock'),zoomBox:$('zoom'),zoomIn:$('zoomInBtn'),zoomOut:$('zoomOutBtn'),fit:$('fitBtn'),fitElement:$('fitElementBtn'),pin:$('pinBtn'),follow:$('followBtn'),layersBtn:$('layersBtn'),liveMode:$('liveModeBtn'),liveActionBar:$('liveActionBar'),liveCommand:$('liveCommand'),liveCommandBtn:$('liveCommandBtn'),toggleToolbar:$('toggleToolbarBtn'),addThen:$('addThenBtn'),addNow:$('addNowBtn'),quickEntity:$('quickEntity'),inspect:$('inspectBtn'),ctx:$('contextMenu'),menuPanel:$('menuPanel'),toolsPanel:$('toolsPanel'),settingsPanel:$('settingsPanel'),weeklyPanel:$('weeklyPanel'),toolMode:$('toolMode'),toolEntity:$('toolEntity'),toolAction:$('toolAction'),toolStatus:$('toolStatus'),applyTool:$('applyToolBtn'),undoVertex:$('undoVertexBtn'),finishShape:$('finishShapeBtn'),refreshGps:$('refreshGpsBtn'),wake:$('wakeBtn'),setOrigin:$('setOriginBtn'),toolsInfo:$('toolsInfo'),mainDbView:$('mainDbView'),geoDbView:$('geoDbView'),tempGnssJson:$('tempGnssJson'),avatarViewJson:$('avatarViewJson'),routeCalcJson:$('routeCalcJson'),mapViewJson:$('mapViewJson'),weeklyViewJson:$('weeklyViewJson'),processorJson:$('processorJson'),refreshAddr:$('refreshAddrBtn'),buildGeo:$('buildGeoBtn'),clearTempGnss:$('clearTempGnssBtn'),backup:$('backupBtn'),restore:$('restoreBtn'),restoreFile:$('restoreFile'),exportCsv:$('exportCsvBtn'),exportGeojson:$('exportGeojsonBtn'),exportDxf:$('exportDxfBtn'),selectedAt:$('selectedAtInput'),viewMode:$('viewModeInput'),gnssInterval:$('gnssIntervalInput'),routeInterval:$('routeIntervalInput'),gnssCap:$('gnssCapInput'),scaleRing:$('scaleRingInput'),categoryEditor:$('categoryEditor'),objectPresetEditor:$('objectPresetEditor'),saveSettings:$('saveSettingsBtn'),weeklyLabel:$('weeklyLabel'),weeklyTable:$('weeklyTable'),weeklyCards:$('weeklyCards'),prevWeek:$('prevWeekBtn'),thisWeek:$('thisWeekBtn'),nextWeek:$('nextWeekBtn'),recordDialog:$('recordDialog'),recordTitle:$('recordTitle'),recordBody:$('recordBody'),recordCancel:$('recordCancelBtn'),recordSave:$('recordSaveBtn'),tiltBubble:$('tiltBubble'),headingArrow:$('headingArrow'),compass3dText:$('compass3dText')};
@@ -102,7 +103,7 @@ function describeGap(last,current){
 
 function vertexWgs(w,extra={}){const local=wgsToLocal(w.lat,w.lng,w.alt||0);return{id:id('V'),source:extra.source||'unknown',wgs:{lat:w.lat,lng:w.lng,alt:w.alt||0,accuracy:w.accuracy??null},local,event:extra.event||'vertex',segment:extra.segment||1,address:extra.address||'',city:extra.city||'',capturedAt:extra.capturedAt||new Date().toISOString()}}
 function vertexLocal(l,extra={}){return vertexWgs(localToWgs(l.x,l.y,l.z),{...extra,source:extra.source||'manual-canvas'})}
-function process(r){if(r.type==='point'){r.local=r.local||wgsToLocal(r.wgs.lat,r.wgs.lng,r.wgs.alt||0);r.metrics={quality:r.wgs.accuracy==null?20:Math.max(5,100-r.wgs.accuracy*4)}}if(r.type==='route')r.metrics={distance2dM:dist2(r.vertices||[]),distance3dM:dist3(r.vertices||[]),vertexCount:(r.vertices||[]).length};if(r.type==='area'){r.center=centroid(r.vertices||[]);r.metrics={areaM2:areaM2(r.vertices||[]),vertexCount:(r.vertices||[]).length}}return r}
+function process(r){if(r.type==='point'){r.local=r.local||wgsToLocal(r.wgs.lat,r.wgs.lng,r.wgs.alt||0);r.metrics={quality:r.wgs.accuracy==null?20:Math.max(5,100-r.wgs.accuracy*4)}}if(r.type==='route'){const verts=r.vertices||[];r.metrics={distance2dM:dist2(verts),distance3dM:dist3(verts),vertexCount:verts.length,gapCount:verts.filter(v=>v.gapBefore).length,correctedDistanceM:dist2(verts.filter(v=>v.estimated!==false))};}if(r.type==='area'){r.center=centroid(r.vertices||[]);r.metrics={areaM2:areaM2(r.vertices||[]),vertexCount:(r.vertices||[]).length}}return r}
 function makePoint(mode,cat,text,wgs,local,eventAt,address='',source=null){if(!wgs&&local)wgs=localToWgs(local.x,local.y,local.z);if(!local&&wgs)local=wgsToLocal(wgs.lat,wgs.lng,wgs.alt||0);return process({id:id('REC'),code:makeCode('point',eventAt),type:'point',source:source||(mode==='now'?'gps-current':'manual-canvas'),category:cat,text,wgs,local,address,city:cityFromAddr(address),icon:'',objectPreset:'',time:{capturedAt:new Date().toISOString(),eventAt,timeSource:mode==='now'?'live':'manual',timeConfidence:mode==='now'?'exact':'estimated'},createdAt:new Date().toISOString()})}
 function makeRoute(mode,rid,verts,eventAt,trackingMode='manual'){return process({id:id('REC'),code:makeCode('route',eventAt),type:'route',source:trackingMode==='gps-sampled'?'gps-route':'manual-canvas',trackingMode,routeInterval:app.settings.routeInterval,routeId:rid,vertices:verts,time:{capturedAt:new Date().toISOString(),eventAt,timeSource:mode==='now'?'live':'manual',timeConfidence:mode==='now'?'exact':'estimated'},createdAt:new Date().toISOString()})}
 function makeArea(mode,aid,verts,eventAt,trackingMode='manual'){return process({id:id('REC'),code:makeCode('area',eventAt),type:'area',source:trackingMode==='gps-sampled'?'gps-area':'manual-canvas',trackingMode,areaId:aid,vertices:verts,time:{capturedAt:new Date().toISOString(),eventAt,timeSource:mode==='now'?'live':'manual',timeConfidence:mode==='now'?'exact':'estimated'},createdAt:new Date().toISOString()})}
@@ -455,7 +456,42 @@ function pointEditor(mode,v){
   };
   ui.recordDialog.showModal();
 }
-async function lineCmd(mode,v,a){if(a==='start'||!app.activeRoute){app.activeRoute={id:id('ROUTE'),mode,segment:1,vertices:[],trackingMode:mode==='now'?'gps-sampled':'manual',startedAt:new Date().toISOString()};if(mode==='now'){if(app.live){app.activeRoute.vertices.push(vertexWgs(app.live.wgs,{event:'start',segment:1,source:'gps-route'}))}restartRouteTimer()}else{v.event='start';v.segment=1;app.activeRoute.vertices.push(v)}await saveRouteCalc();ui.toolAction.value='vertex';app.armed=false;actions();renderAll();return}if(a==='pause'){if(mode==='now')stopRouteTimer();if(v){v.event='pause';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}await saveRouteCalc();renderAll();return}if(a==='resume'){app.activeRoute.segment++;if(v){v.event='resume';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}if(mode==='now')restartRouteTimer();await saveRouteCalc();renderAll();return}if(a==='vertex'){if(mode==='now'){await maybeSampleRouteFromLive()}else{v.event='vertex';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}await saveRouteCalc();renderAll();return}if(a==='end'){if(mode==='now'){stopRouteTimer();if(app.live)app.activeRoute.vertices.push(vertexWgs(app.live.wgs,{event:'end',segment:app.activeRoute.segment,source:'gps-route'}))}else if(v){v.event='end';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}if(app.activeRoute.vertices.length<2){alert('Η route χρειάζεται τουλάχιστον 2 σημεία.');return}await saveBase(makeRoute(mode,app.activeRoute.id,[...app.activeRoute.vertices],(mode==='now'?new Date():new Date(app.settings.selectedAt)).toISOString(),app.activeRoute.trackingMode));app.activeRoute=null;await clearRouteCalc();actions();renderAll()}}
+async function lineCmd(mode,v,a){
+  if(a==='start'||!app.activeRoute){
+    app.activeRoute={id:id('ROUTE'),mode,segment:1,vertices:[],trackingMode:mode==='now'?'gps-sampled':'manual',startedAt:new Date().toISOString(),paused:false};
+    if(mode==='now'){
+      const first=routeSamplePointFromAvatar()||(app.live?vertexWgs(app.live.wgs,{event:'start',segment:1,source:'gps-route'}):null);
+      if(first){first.event='start';first.segment=1;app.activeRoute.vertices.push(first);}
+      restartRouteTimer();
+    }else{v.event='start';v.segment=1;app.activeRoute.vertices.push(v)}
+    await saveRouteCalc();ui.toolAction.value='vertex';app.armed=false;actions();renderAll();return;
+  }
+  if(a==='pause'){
+    app.activeRoute.paused=true;if(mode==='now')stopRouteTimer();
+    if(v){v.event='pause';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}
+    await saveRouteCalc();actions();renderAll();return;
+  }
+  if(a==='resume'){
+    app.activeRoute.paused=false;app.activeRoute.segment++;
+    if(v){v.event='resume';v.segment=app.activeRoute.segment;v.gapBefore=true;v.gapInfo='manual resume';app.activeRoute.vertices.push(v)}
+    if(mode==='now')restartRouteTimer();
+    await saveRouteCalc();actions();renderAll();return;
+  }
+  if(a==='vertex'){
+    if(mode==='now')await maybeSampleRouteFromLive();else{v.event='vertex';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}
+    await saveRouteCalc();renderAll();return;
+  }
+  if(a==='end'){
+    if(mode==='now'){
+      stopRouteTimer();
+      const ev=routeSamplePointFromAvatar()||(app.live?vertexWgs(app.live.wgs,{event:'end',segment:app.activeRoute.segment,source:'gps-route'}):null);
+      if(ev){ev.event='end';ev.segment=app.activeRoute.segment;app.activeRoute.vertices.push(ev);}
+    }else if(v){v.event='end';v.segment=app.activeRoute.segment;app.activeRoute.vertices.push(v)}
+    if(app.activeRoute.vertices.length<2){alert('Η route χρειάζεται τουλάχιστον 2 σημεία.');return}
+    await saveBase(makeRoute(mode,app.activeRoute.id,[...app.activeRoute.vertices],(mode==='now'?new Date():new Date(app.settings.selectedAt)).toISOString(),app.activeRoute.trackingMode));
+    app.activeRoute=null;await clearRouteCalc();actions();renderAll();
+  }
+}
 async function areaCmd(mode,v,a){if(a==='start'||!app.activeArea){app.activeArea={id:id('AREA'),mode,vertices:[],trackingMode:'manual'};v.event='start';app.activeArea.vertices.push(v);ui.toolAction.value='vertex';app.armed=false;actions();renderAll();return}if(a==='vertex'){v.event='vertex';app.activeArea.vertices.push(v);renderAll();return}if(a==='close'){if(v){v.event='close';app.activeArea.vertices.push(v)}if(app.activeArea.vertices.length<3){alert('Χρειάζονται 3 κορυφές.');return}await saveBase(makeArea(mode,app.activeArea.id,[...app.activeArea.vertices],(mode==='now'?new Date():new Date(app.settings.selectedAt)).toISOString(),app.activeArea.trackingMode));app.activeArea=null;actions();renderAll()}}
 function finishShape(){if(app.activeRoute){ui.toolEntity.value='line';ui.toolAction.value='end';execAt(app.contextLocal||null)}else if(app.activeArea){ui.toolEntity.value='area';ui.toolAction.value='close';execAt(app.contextLocal||null)}}
 function undo(){if(app.activeRoute?.vertices.length){app.activeRoute.vertices.pop();saveRouteCalc()}else if(app.activeArea?.vertices.length)app.activeArea.vertices.pop();renderAll()}
@@ -480,7 +516,7 @@ function metricShort(r){if(r.type==='route')return `${((r.metrics?.distance2dM||
 function metrics(r){if(r.type==='route')return`${((r.metrics.distance2dM||0)/1000).toFixed(3)} km 2D<br>${((r.metrics.distance3dM||0)/1000).toFixed(3)} km 3D`;if(r.type==='area')return`${(r.metrics.areaM2||0).toFixed(1)} m²`;return`quality ${r.metrics?.quality||''}`}
 function tableRows(rows){return`<div class="tableWrap"><table><thead><tr><th>Code</th><th>Type</th><th>Source</th><th>TimeTruth</th><th>Name</th><th>Coords</th><th>Metrics</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.code||'')}</td><td>${esc(r.type)}</td><td>${esc(r.source||'')}</td><td><details class="compactCell"><summary>${esc((r.time?.eventAt||'').slice(0,16))}</summary><div class="cellMore">captured ${esc(r.time?.capturedAt||'')}<br>event ${esc(r.time?.eventAt||'')}</div></details></td><td>${esc(r.category||r.routeId||r.areaId||'')}</td><td><details class="compactCell"><summary>${r.type==='point'?'1 point':((r.vertices||[]).length+' vertices')}</summary><div class="cellMore">${coords(r)}</div></details></td><td><details class="compactCell"><summary>${metricShort(r)}</summary><div class="cellMore">${metrics(r)}</div></details></td></tr>`).join('')}</tbody></table></div>`}
 function geoTable(){return`<div class="tableWrap"><table><thead><tr><th>Code</th><th>ID</th><th>Samples</th><th>WGS</th><th>Local</th></tr></thead><tbody>${app.geo.map(g=>`<tr><td>${esc(g.code||'')}</td><td>${esc(g.id)}</td><td>${esc(g.samples||'')}</td><td>${g.wgs.lat.toFixed(6)},${g.wgs.lng.toFixed(6)}</td><td>${g.local.x.toFixed(2)},${g.local.y.toFixed(2)}</td></tr>`).join('')}</tbody></table></div>`}
-function miniTable(rows){const arr=Array.isArray(rows)?rows:(rows?[rows]:[]);if(!arr.length)return '<div class="card muted">Άδειο.</div>';const keys=[...new Set(arr.flatMap(o=>Object.keys(o||{})))].slice(0,8);return `<div class="tableWrap"><table><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${arr.map(o=>`<tr>${keys.map(k=>`<td>${esc(typeof o[k]==='object'?JSON.stringify(o[k]):o[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
+function miniTable(rows){const arr=Array.isArray(rows)?rows:(rows?[rows]:[]);if(!arr.length)return '<div class="card muted">Άδειο.</div>';const keys=[...new Set(arr.flatMap(o=>Object.keys(o||{})))].slice(0,8);const cell=v=>{const raw=(typeof v==='object'&&v!==null)?JSON.stringify(v):String(v??'');const short=raw.length>32?raw.slice(0,32)+'…':raw;return raw.length>32?`<details class="compactCell"><summary>${esc(short)}</summary><div class="cellMore">${esc(raw)}</div></details>`:esc(short)};return `<div class="tableWrap"><table class="compactTable"><thead><tr>${keys.map(k=>`<th>${esc(k)}</th>`).join('')}</tr></thead><tbody>${arr.map(o=>`<tr>${keys.map(k=>`<td>${cell(o[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`}
 function tableAndJson(data){const rows=Array.isArray(data)?data:(data?[data]:[]);return miniTable(rows)+`<pre>${esc(JSON.stringify(data,null,2))}</pre>`}
 function renderDbs(){ui.mainDbView.innerHTML=app.mainView==='json'?`<pre>${esc(JSON.stringify(app.base,null,2))}</pre>`:tableRows(app.base);ui.geoDbView.innerHTML=app.geoView==='json'?`<pre>${esc(JSON.stringify(app.geo,null,2))}</pre>`:geoTable();ui.tempGnssJson.innerHTML=tableAndJson(app.tempGnss.slice(-100));ui.avatarViewJson.innerHTML=tableAndJson(app.avatarView);ui.routeCalcJson.innerHTML=tableAndJson(app.routeCalc);ui.mapViewJson.innerHTML=tableAndJson(app.mapView);ui.weeklyViewJson.innerHTML=tableAndJson(app.weeklyView);ui.processorJson.textContent=JSON.stringify({logic:['GPS -> tempGnss','avatarView = stable/jitter-controlled position + last 20 raw GNSS trail','mainBase -> mapView + weeklyView','active route -> routeCalc -> mainBase on End','geo -> control points / future transforms'],crs:app.crs,activeRoute:app.activeRoute,activeArea:app.activeArea,selectedRecordId:app.selectedRecordId},null,2)}
 function renderWeekly(){
@@ -512,7 +548,7 @@ function weeklyCardHtml(r){
 function renderSettings(){ui.selectedAt.value=isoLocal(app.settings.selectedAt);ui.viewMode.value=app.settings.viewMode;ui.gnssInterval.value=app.settings.gnssInterval;ui.routeInterval.value=app.settings.routeInterval;ui.gnssCap.value=app.settings.gnssCap;ui.scaleRing.value=app.settings.scaleRing;ui.categoryEditor.innerHTML=app.categories.map((c,i)=>`<label>Category ${i+1}<input data-cat="${i}" value="${esc(c)}"></label>`).join('');if(ui.objectPresetEditor)ui.objectPresetEditor.innerHTML=app.objectPresets.map((p,i)=>`<div class="presetEditorRow"><label>Icon<input data-obj-icon="${i}" value="${esc(p.icon||'📍')}"></label><label>Name<input data-obj-name="${i}" value="${esc(p.name||'Object')}"></label></div>`).join('')}
 function renderAll(){renderInfo();renderDbs();renderWeekly();renderSettings();draw();renderCompass3d();ui.toolsInfo.textContent=JSON.stringify({live:app.live,lastError:app.lastError,avatarView:app.avatarView,activeRoute:app.activeRoute,activeArea:app.activeArea,compass:app.compass,motion:app.motion},null,2)}
 async function saveSettings(){app.settings.selectedAt=new Date(ui.selectedAt.value||app.settings.selectedAt).toISOString();app.settings.viewMode=ui.viewMode.value;app.settings.gnssInterval=Math.max(1,safeNum(ui.gnssInterval.value,5));app.settings.routeInterval=Math.max(1,safeNum(ui.routeInterval.value,5));app.settings.gnssCap=Math.max(50,safeNum(ui.gnssCap.value,1000));app.settings.scaleRing=Math.max(1,safeNum(ui.scaleRing.value,10));app.categories=[...document.querySelectorAll('[data-cat]')].map((i,n)=>i.value||`Category ${n+1}`);app.objectPresets=app.objectPresets.map((p,i)=>({icon:document.querySelector(`[data-obj-icon="${i}"]`)?.value||p.icon||'📍',name:document.querySelector(`[data-obj-name="${i}"]`)?.value||p.name||'Object'}));await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera});await buildViewCaches();restartTimer();restartRouteTimer();updateLiveUI();renderAll()}
-async function load(){app.base=await all('base');app.tempGnss=await all('tempGnss');app.geo=await all('geo');const av=(await all('avatarView')).find(x=>x.id==='avatar');app.avatarView=av||null;const rc=(await all('routeCalc')).find(x=>x.id==='active');app.routeCalc=rc||null;if(rc?.kind==='route'){app.activeRoute={id:rc.routeId,mode:rc.mode,segment:rc.segment||1,vertices:rc.vertices||[],trackingMode:rc.trackingMode||'gps-sampled'}}const s=(await all('settings')).find(x=>x.id==='settings');if(s){app.settings={...app.settings,...s.settings};app.categories=s.categories||app.categories;app.objectPresets=s.objectPresets||app.objectPresets;app.crs=s.crs||app.crs;app.camera=s.camera||app.camera}await buildViewCaches()}
+async function load(){app.base=await all('base');app.tempGnss=await all('tempGnss');app.geo=await all('geo');const av=(await all('avatarView')).find(x=>x.id==='avatar');app.avatarView=av||null;const rc=(await all('routeCalc')).find(x=>x.id==='active');app.routeCalc=rc||null;if(rc?.kind==='route'){app.activeRoute={id:rc.routeId,mode:rc.mode,segment:rc.segment||1,vertices:rc.vertices||[],trackingMode:rc.trackingMode||'gps-sampled',paused:!!rc.paused,startedAt:rc.startedAt}}const s=(await all('settings')).find(x=>x.id==='settings');if(s){app.settings={...app.settings,...s.settings};app.categories=s.categories||app.categories;app.objectPresets=s.objectPresets||app.objectPresets;app.crs=s.crs||app.crs;app.camera=s.camera||app.camera}await buildViewCaches()}
 async function refreshAddresses(){for(const r of app.base){if(r.type==='point'&&!r.address){r.address=await reverse(r.wgs.lat,r.wgs.lng);r.city=cityFromAddr(r.address);process(r)}if(r.vertices){for(const v of r.vertices){if(!v.address){v.address=await reverse(v.wgs.lat,v.wgs.lng);v.city=cityFromAddr(v.address)}}process(r)}await put('base',r)}await buildViewCaches();renderAll();alert('Addresses refreshed where possible.')}
 function closePanels(){ui.menuPanel.classList.remove('open');ui.toolsPanel.classList.remove('open');ui.settingsPanel.classList.remove('open');ui.weeklyPanel.classList.remove('open')}
 function openOnly(panel){closePanels();panel.classList.add('open')}
@@ -524,7 +560,7 @@ function exportCSV(){const h=['id','code','type','source','eventAt','capturedAt'
 function exportGeoJSON(){return JSON.stringify({type:'FeatureCollection',features:app.base.map(r=>{let g;if(r.type==='point')g={type:'Point',coordinates:[r.wgs.lng,r.wgs.lat,r.wgs.alt||0]};else{const cs=(r.vertices||[]).map(v=>[v.wgs.lng,v.wgs.lat,v.wgs.alt||0]);g={type:r.type==='area'?'Polygon':'LineString',coordinates:r.type==='area'?[cs.concat([cs[0]])]:cs}}return{type:'Feature',geometry:g,properties:{id:r.id,code:r.code,type:r.type,source:r.source,category:r.category,metrics:r.metrics,time:r.time}}})},null,2)}
 function exportDXF(){const out=['0','SECTION','2','ENTITIES'];app.base.forEach(r=>{if(r.type==='point')out.push('0','POINT','8',r.type,'10',String(r.local.x),'20',String(r.local.y),'30',String(r.local.z||0));else{out.push('0','LWPOLYLINE','8',r.type,'90',String((r.vertices||[]).length),'70',r.type==='area'?'1':'0');(r.vertices||[]).forEach(v=>out.push('10',String(v.local.x),'20',String(v.local.y)))}});out.push('0','ENDSEC','0','EOF');return out.join('\n')}
 function download(t,n,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([t],{type}));a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-function backup(){download(JSON.stringify({version:'3.9',base:app.base,tempGnss:app.tempGnss,geo:app.geo,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera},null,2),'psj-backup-v39.json','application/json')}
+function backup(){download(JSON.stringify({version:'4.3',base:app.base,tempGnss:app.tempGnss,geo:app.geo,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera},null,2),'psj-backup-v43.json','application/json')}
 async function restore(){const f=ui.restoreFile.files[0];if(!f)return;let j;try{j=JSON.parse(await f.text())}catch{alert('Invalid JSON');return}if(!Array.isArray(j.base)){alert('Backup missing base array');return}if(!confirm('Restore backup?'))return;for(const s of ['base','tempGnss','geo','avatarView','mapView','weeklyView','routeCalc'])await clearStore(s);for(const x of j.base||[])await put('base',x);for(const x of j.tempGnss||[])await put('tempGnss',x);for(const x of j.geo||[])await put('geo',x);if(j.avatarView)await put('avatarView',j.avatarView);app.settings=j.settings||app.settings;app.categories=j.categories||app.categories;app.objectPresets=j.objectPresets||app.objectPresets;app.crs=j.crs||app.crs;app.camera=j.camera||app.camera;await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera});await load();renderAll()}
 
 function contextItemsHtml(){
@@ -548,6 +584,51 @@ function handleContextAction(action){
   }
 }
 function openCtx(x,y){ui.ctx.innerHTML=contextItemsHtml();ui.ctx.style.left=Math.min(x,window.innerWidth-210)+'px';ui.ctx.style.top=Math.min(y,window.innerHeight-170)+'px';ui.ctx.style.display='block'}
+
+async function saveRouteCalc(){
+  if(!app.activeRoute){return;}
+  app.routeCalc={
+    id:'active',kind:'route',mode:app.activeRoute.mode,
+    trackingMode:app.activeRoute.trackingMode||'manual',routeId:app.activeRoute.id,
+    segment:app.activeRoute.segment||1,paused:!!app.activeRoute.paused,
+    vertices:app.activeRoute.vertices||[],metrics:process({type:'route',vertices:app.activeRoute.vertices||[]}).metrics,
+    startedAt:app.activeRoute.startedAt||new Date().toISOString(),updatedAt:new Date().toISOString()
+  };
+  try{await put('routeCalc',app.routeCalc)}catch(e){console.warn('routeCalc save failed',e)}
+}
+async function clearRouteCalc(){app.routeCalc=null;try{await clearStore('routeCalc')}catch(e){console.warn('routeCalc clear failed',e)}}
+function stopRouteTimer(){if(app.routeTimer){clearInterval(app.routeTimer);app.routeTimer=null;}}
+function restartRouteTimer(){
+  stopRouteTimer();
+  if(!app.activeRoute||app.activeRoute.mode!=='now'||app.activeRoute.paused)return;
+  app.routeTimer=setInterval(()=>{maybeSampleRouteFromLive().catch(e=>console.warn('route sample failed',e));},Math.max(1,Number(app.settings.routeInterval||5))*1000);
+}
+function routeSamplePointFromAvatar(){
+  const av=app.avatarView, src=av||app.live;
+  if(!src||!src.wgs||!src.local)return null;
+  const w={lat:Number(src.wgs.lat),lng:Number(src.wgs.lng),alt:Number(src.wgs.alt||0),accuracy:Number(src.wgs.accuracy||src.accuracyM||25)};
+  const v=vertexWgs(w,{event:'gps-sample',segment:app.activeRoute?.segment||1,source:'gps-route-corrected',capturedAt:src.capturedAt||new Date().toISOString()});
+  v.local={...src.local};v.wgs={...w};v.estimated=true;
+  if(av?.rawWgs){v.rawWgs={...av.rawWgs};v.rawLocal={...av.rawLocal};}
+  return v;
+}
+async function maybeSampleRouteFromLive(){
+  if(!app.activeRoute||app.activeRoute.mode!=='now'||app.activeRoute.paused)return;
+  const v=routeSamplePointFromAvatar();if(!v)return;
+  const last=app.activeRoute.vertices.at(-1);
+  if(last){
+    const dt=Math.abs(new Date(v.capturedAt)-new Date(last.capturedAt))/1000;
+    const d=Math.hypot(v.local.x-last.local.x,v.local.y-last.local.y);
+    if(dt<1)return;
+    const stationary=app.avatarView?.stationary===true||app.motion?.stationary===true;
+    const minMove=stationary?Math.max(1.5,(v.wgs.accuracy||25)*0.20):0.35;
+    if(d<minMove&&dt<Math.max(5,Number(app.settings.routeInterval||5)*1.5))return;
+    if(shouldMarkRouteGap(last,v)){v.gapBefore=true;v.gapInfo=describeGap(last,v);v.segment=(last.segment||1)+1;app.activeRoute.segment=v.segment;}else v.segment=app.activeRoute.segment||1;
+  }
+  app.activeRoute.vertices.push(v);app.activeRoute.trackingMode='gps-sampled';
+  await saveRouteCalc();await buildViewCaches();renderAll();
+}
+
 function handleCanvasTapLocal(l){app.contextLocal=l;if(app.inspectMode){const r=findNearestRecord(l);if(r)inspectRecord(r);else alert('Δεν βρέθηκε element κοντά στο σημείο επιλογής.');return}const continuingRoute=app.activeRoute&&ui.toolMode.value==='then'&&ui.toolEntity.value==='line';const continuingArea=app.activeArea&&ui.toolMode.value==='then'&&ui.toolEntity.value==='area';if(app.armed||continuingRoute||continuingArea){execAt(l);if(!continuingRoute&&!continuingArea)app.armed=false;renderAll()}}
 function restartTimer(){if(app.timer)clearInterval(app.timer);app.timer=setInterval(refreshGps,Math.max(1,app.settings.gnssInterval)*1000)}
 function toggleToolRail(collapsed){
