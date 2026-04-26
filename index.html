@@ -31,15 +31,33 @@ dialog{width:min(94vw,840px);border:1px solid var(--line);border-radius:18px;bac
 #designDock.open #designActionBar{display:flex}
 #inspectBtn{margin-top:0!important}
 @media(max-width:760px){#liveDock{left:6px!important;top:118px!important;min-width:86px!important;width:86px!important}#designDock{left:6px!important;top:170px!important;min-width:86px!important;width:86px!important}#liveActionBar,#designActionBar{left:calc(100% + 6px)!important;min-width:112px!important;max-width:124px!important}}
+
+/* v51 bottom toolbar layout */
+#topInfo{left:auto!important;right:72px!important;top:8px!important;width:min(58vw,560px)!important;background:rgba(255,250,240,.68)!important;backdrop-filter:blur(8px);border:1px solid rgba(168,120,56,.42)!important;box-shadow:0 8px 22px rgba(18,13,8,.12)!important}
+#bottomToolbar{position:absolute;z-index:28;left:50%;bottom:calc(10px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px;border:1px solid rgba(168,120,56,.45);border-radius:18px;background:rgba(255,243,212,.62);backdrop-filter:blur(10px);box-shadow:0 12px 30px rgba(18,13,8,.18);max-width:min(96vw,780px)}
+.toolbarRow{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}.toolbarRow button,.toolbarRow select{padding:7px 9px;border-radius:12px;font-size:13px;min-width:54px}.secondaryRow button{font-size:12px;padding:6px 8px}.dropDock{position:relative;display:flex}.choiceBar{position:absolute;left:0;bottom:calc(100% + 8px);display:none;gap:5px;align-items:center;padding:7px;border:1px solid var(--line);border-radius:14px;background:rgba(255,250,240,.94);box-shadow:var(--shadow);white-space:nowrap}.dropDock.open .choiceBar,.choiceBar.open{display:flex}.choiceBar select{min-width:140px}.sideCards{position:absolute;z-index:29;right:10px;top:92px;display:flex;flex-direction:column;gap:8px}.weekIcon{font-size:20px}.weekIcon small{position:absolute;bottom:1px;font-size:9px;color:var(--ink);background:rgba(255,250,240,.75);border-radius:8px;padding:0 3px}#layerPanel{right:12px!important;top:auto!important;bottom:112px!important;background:rgba(255,250,240,.94)!important;backdrop-filter:blur(8px)}#mapDock,#designDock #designActionBar{display:initial}.hidden{display:none!important}
+#designDock{position:relative!important;left:auto!important;top:auto!important;min-width:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;display:flex!important;gap:0!important}#liveDock{position:relative!important;left:auto!important;top:auto!important;min-width:0!important;padding:0!important;border:0!important;box-shadow:none!important;background:transparent!important;display:flex!important}#toolRail{width:auto!important;max-height:none!important;overflow:visible!important;border:0!important;background:transparent!important;box-shadow:none!important;padding:0!important;flex-direction:row!important}.icons{display:contents!important}#toggleToolbarBtn{display:none!important}#zoom{display:contents!important}.toolGroup{display:contents!important;border:0!important;padding:0!important}
+@media(max-width:760px){#topInfo{right:62px!important;width:min(68vw,360px)!important;font-size:11px}#bottomToolbar{bottom:calc(6px + env(safe-area-inset-bottom));padding:6px;gap:5px}.toolbarRow{gap:4px}.toolbarRow button,.toolbarRow select{font-size:12px;padding:6px 7px;min-width:auto}.secondaryRow button{font-size:11px;padding:5px 7px}.sideCards{right:6px;top:82px;gap:6px}.choiceBar{left:50%;transform:translateX(-50%);max-width:92vw;overflow:auto}.choiceBar select{min-width:120px}#layerPanel{bottom:104px!important;right:6px!important}}
 </style>
 </head>
 <body>
 <div id="app">
 <canvas id="map"></canvas>
 <div id="topInfo"><div id="infoText">Loading…</div></div>
-<div id="liveDock" class="liveOff"><button id="liveModeBtn" data-help="Live mode: ενεργοποιεί την ζωντανή θέση και εμφανίζει τις εντολές Add για GPS καταγραφή.">Live off</button><button id="addNowBtn" class="primary hidden" data-help="Add: χρησιμοποιεί την τρέχουσα GPS/διορθωμένη θέση. Εμφανίζεται μόνο στο Live mode.">Add</button><div id="liveActionBar"><select id="liveCommand" data-help="Επιλογή live εντολής: σημείο τώρα, start route/area, pause/resume/end."></select><button id="liveCommandBtn" data-help="Εκτελεί την επιλεγμένη live εντολή.">Εκτέλεση live εντολής</button></div></div><div id="designDock"><select id="quickEntity" title="Τι θα σχεδιάσεις" data-help="Διάλεξε τι θα σχεδιάσεις με Design: σημείο, route ή area."><option value="point">Point</option><option value="line">Route</option><option value="area">Area</option></select><button id="addThenBtn" class="primary" data-help="Design: ανοίγει τις επιλογές σχεδίασης. Μετά επιλέγεις Point, Route ή Area και πατάς στον καμβά.">Design</button><div id="designActionBar" aria-label="Design choices"><button data-design-entity="point">Point</button><button data-design-entity="line">Route</button><button data-design-entity="area">Area</button></div><button id="inspectBtn" class="hand" data-help="Select: πάτα μετά πάνω σε element του χάρτη για να δεις/επιλέξεις την εγγραφή.">✋ Select</button></div><div id="mapDock"><div id="toolRail"><div id="zoom" class="toolGroup"><button id="zoomInBtn" data-help="Μεγέθυνση καμβά.">+</button><button id="zoomOutBtn" data-help="Σμίκρυνση καμβά.">−</button><button id="fitBtn" data-help="Fit: φέρνει avatar και ορατά elements στο κάδρο.">Fit</button><button id="fitElementBtn" data-help="Element: φέρνει στο κάδρο το επιλεγμένο element.">Element</button><button id="pinBtn" data-help="Pin: κεντράρει στο avatar και ενεργοποιεί follow.">Pin</button><button id="followBtn" class="on" data-help="Follow: κρατά τον χάρτη κεντραρισμένο στο avatar. Απενεργοποιείται όταν σύρεις τον χάρτη.">Follow on</button><button id="layersBtn" data-help="Layers: άνοιγμα/κλείσιμο layer επιλογών.">Layers</button></div></div><div id="sideDock"><button id="toggleToolbarBtn" title="Απόκρυψη/εμφάνιση εργαλειοθήκης">☰</button><div class="icons"><button id="bookBtn" class="icon" title="Βάσεις" data-help="Βιβλίο: άνοιγμα βάσεων, exports και layer δεδομένων.">📘</button><button id="weeklyBtn" class="icon" title="Weekly" data-help="Weekly: εβδομαδιαίος πίνακας και καρτέλες με show/edit/delete.">📅</button><button id="compassBtn" class="icon" title="Πυξίδα / Tools" data-help="Πυξίδα: CRS heading, κλίση/αισθητήρες και εργαλεία γεωγραφικού συστήματος."><div id="northNeedle"></div><small>N</small>🧭</button><button id="hammerBtn" class="icon" title="Settings" data-help="Σφυρί: ρυθμίσεις interval, categories και object presets.">🔨</button></div></div></div><div id="layerPanel"><b>Layers</b><label><input type="checkbox" data-layer="grid" checked> Grid</label><label><input type="checkbox" data-layer="map" checked> Map elements</label><label><input type="checkbox" data-layer="active" checked> Active route/area</label><label><input type="checkbox" data-layer="trail" checked> GPS trail</label><label><input type="checkbox" data-layer="avatar" checked> Avatar</label></div>
-<div id="layerHud" class="layerHud">Layers: <b>grid</b> · <b>mapView</b> · <b>active</b> · <b>avatarView</b></div>
-<div id="scaleHud"><div class="scaleMini"><div class="scaleRingMini"></div><div class="scaleText">Scale<br><b>—</b></div></div></div>
+<div id="bottomToolbar" aria-label="Map toolbar">
+  <div class="toolbarRow primaryRow">
+    <div id="viewDock" class="dropDock"><button id="liveModeBtn" data-help="Προβολή χάρτη: Live, Day, Week ή Month. Το avatar μένει πάντα ορατό.">Live</button><div id="viewChoiceBar" class="choiceBar"><button data-view-choice="live">Live</button><button data-view-choice="day">Day</button><button data-view-choice="week">Week</button><button data-view-choice="month">Month</button></div></div>
+    <div id="liveDock" class="dropDock"><button id="addNowBtn" class="primary" data-help="Add: εισαγωγή από την τρέχουσα θέση avatar στο προσωπικό γεωγραφικό σύστημα.">Add</button><div id="liveActionBar" class="choiceBar"><select id="liveCommand" data-help="Επιλογή Add: σημείο, route ή area με βάση την τρέχουσα θέση."></select><button id="liveCommandBtn" data-help="Εκτέλεση Add με την επιλεγμένη εντολή.">Add</button></div></div>
+    <div id="designDock" class="dropDock"><select id="quickEntity" class="hidden" aria-hidden="true"><option value="point">Point</option><option value="line">Route</option><option value="area">Area</option></select><button id="addThenBtn" class="primary" data-help="Design: σχεδίαση πάνω στον καμβά. Πρώτα διαλέγεις Point, Route ή Area και μετά πατάς στον χάρτη.">Design</button><div id="designActionBar" class="choiceBar"><button data-design-entity="point">Point</button><button data-design-entity="line">Route</button><button data-design-entity="area">Area</button></div></div>
+    <button id="inspectBtn" class="hand" data-help="Select: πάτα μετά πάνω σε element του χάρτη για πληροφορίες.">Select</button>
+    <button id="followBtn" class="on" data-help="Follow: κρατά τον χάρτη κεντραρισμένο στο avatar. Σβήνει όταν σύρεις τον χάρτη.">Follow</button>
+  </div>
+  <div class="toolbarRow secondaryRow" id="toolRail">
+    <button id="zoomInBtn" data-help="Μεγέθυνση καμβά.">+</button><button id="zoomOutBtn" data-help="Σμίκρυνση καμβά.">−</button><button id="fitBtn" data-help="Fit: φέρνει avatar και ορατά στοιχεία στο κάδρο.">Fit</button><button id="fitElementBtn" data-help="Element: φέρνει στο κάδρο το επιλεγμένο element.">Element</button><button id="pinBtn" data-help="Pin: κεντράρει στο avatar και ενεργοποιεί follow.">Pin</button><button id="layersBtn" data-help="Layers: άνοιγμα layer επιλογών.">Layers</button>
+  </div>
+</div>
+<button id="toggleToolbarBtn" class="hidden" aria-hidden="true">☰</button><div id="sideDock" class="sideCards"><button id="bookBtn" class="icon" title="Βάσεις" data-help="Βιβλίο: βάσεις, exports και layer δεδομένων.">📘</button><button id="weeklyBtn" class="icon weekIcon" title="Weekly" data-help="Weekly: εβδομαδιαίος πίνακας και καρτέλες με show/edit/delete.">📅<small id="weekBadge">W--</small></button><button id="compassBtn" class="icon" title="Πυξίδα / Tools" data-help="Πυξίδα: CRS heading, κλίση/αισθητήρες και εργαλεία γεωγραφικού συστήματος."><div id="northNeedle"></div><small>N</small>🧭</button><button id="hammerBtn" class="icon" title="Settings" data-help="Σφυρί: ρυθμίσεις interval, categories και object presets.">🔨</button></div>
+<div id="layerPanel"><b>Layers</b><label><input type="checkbox" data-layer="grid" checked> Grid</label><label><input type="checkbox" data-layer="map" checked> Map elements</label><label><input type="checkbox" data-layer="active" checked> Active route/area</label><label><input type="checkbox" data-layer="trail" checked> GPS trail</label><label><input type="checkbox" data-layer="avatar" checked> Avatar</label></div>
 <div id="contextMenu"><button data-context="point">Σημείο</button><button data-context="line">Γραμμή</button><button data-context="area">Περιοχή</button></div>
 <aside id="menuPanel" class="panel"><div class="panelHead"><strong>📘 Βάσεις / Layers</strong><button id="closeMenuBtn">Κλείσιμο</button></div><div class="tabs"><button data-menu-tab="mainDb" class="active">Βασική</button><button data-menu-tab="geoDb">Γεωγραφικό σύστημα</button><button data-menu-tab="correctionLogDb">Corrections</button><button data-menu-tab="tempGnssDb">Temp GNSS</button><button data-menu-tab="avatarViewDb">Avatar View</button><button data-menu-tab="routeCalcDb">Route Calc</button><button data-menu-tab="mapViewDb">Map View</button><button data-menu-tab="weeklyViewDb">Weekly View</button><button data-menu-tab="processorDb">Processor</button><button data-menu-tab="backupDb">Backup / Export</button></div><div class="panelBody">
 <section id="mainDb" class="sec active"><div class="row"><button data-view-main="table" class="active">Table</button><button data-view-main="json">JSON</button><button id="refreshAddrBtn">Refresh Addresses</button></div><div id="mainDbView"></div></section>
@@ -72,7 +90,7 @@ function weekNo(d){d=asDate(d);d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),
 function isoLocal(d){d=new Date(d);if(isNaN(d))d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
 function recDate(r){return(r.time?.eventAt||r.createdAt||'').slice(0,10)}
 function recWeek(r){return weekKey(recDate(r)||new Date())}
-function getVisibleRecords(){const rows=Array.isArray(app.base)?app.base:[];const d=new Date(app.settings.selectedAt||new Date());const m=app.settings.viewMode||"week";if(m==="live")return rows;if(m==="day")return rows.filter(r=>recDate(r)===ymd(d));if(m==="week")return rows.filter(r=>recWeek(r)===weekKey(d));if(m==="month")return rows.filter(r=>String(recDate(r)).startsWith(ymd(d).slice(0,7)));return rows;}
+function getVisibleRecords(){const rows=Array.isArray(app.base)?app.base:[];const d=new Date(app.settings.selectedAt||new Date());const m=app.settings.viewMode||"week";if(m==="live")return rows.filter(r=>recDate(r)===ymd(new Date()));if(m==="day")return rows.filter(r=>recDate(r)===ymd(d));if(m==="week")return rows.filter(r=>recWeek(r)===weekKey(d));if(m==="month")return rows.filter(r=>String(recDate(r)).startsWith(ymd(d).slice(0,7)));return rows;}
 window.getVisibleRecords=getVisibleRecords;window.visibleBase=getVisibleRecords;
 function safeNum(v,f=0){const n=Number(v);return Number.isFinite(n)?n:f}
 function typePrefix(type){return({point:'01',note:'02',route:'03',area:'04',object:'05',current:'06',controlPoint:'07',gpsSample:'08'}[type]||'99')}
@@ -98,7 +116,7 @@ function areaM2(v){if(v.length<3)return 0;let a=0;for(let i=0;i<v.length;i++){co
 function centroid(v){const n=v.length||1,l={x:v.reduce((s,p)=>s+p.local.x,0)/n,y:v.reduce((s,p)=>s+p.local.y,0)/n,z:v.reduce((s,p)=>s+p.local.z,0)/n};return{local:l,wgs:localToWgs(l.x,l.y,l.z)}}
 function northAngle(wgs){const a=wgsToLocal(wgs.lat,wgs.lng,wgs.alt||0),b=wgsToLocal(wgs.lat+0.0001,wgs.lng,wgs.alt||0);return Math.atan2(b.x-a.x,b.y-a.y)*180/Math.PI}
 function cityFromAddr(a=''){const parts=String(a||'').split(',').map(x=>x.trim()).filter(Boolean);return parts.find(p=>!/^[0-9]/.test(p)&&!/\d{4,}/.test(p))||parts[0]||''}
-async function reverse(lat,lng){if(!navigator.onLine)return'';try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`);if(!r.ok)return'';const j=await r.json();return j.display_name||''}catch{return''}}
+async function reverse(lat,lng){if(!navigator.onLine)return'';try{const url=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}&zoom=18&addressdetails=1&accept-language=el,en`;const r=await fetch(url,{headers:{'Accept':'application/json'}});if(!r.ok){app.lastError='Address lookup failed: '+r.status;return''}const j=await r.json();return j.display_name||''}catch(e){app.lastError='Address lookup error: '+(e.message||e);return''}}
 async function hydrateAddressForRecord(r,mode='critical'){
   if(!navigator.onLine||!r)return r;
   try{
@@ -236,11 +254,9 @@ function updateComputedCompass(obs){
   }
   app.compass.geoNorthDeg=angleNormDeg(geoNorth);
   if(course!=null) app.compass.courseHeadingDeg=course;
-  const sensorFresh=app.compass.lastAt && (Date.now()-new Date(app.compass.lastAt).getTime()<4000);
-  if(sensorFresh && app.compass.sensorHeadingDeg!=null && app.settings.viewMode==='live'){
-    app.compass.fusedHeadingDeg=angleNormDeg(app.compass.sensorHeadingDeg);
-    app.compass.source='device+crs';
-  }else if(app.compass.courseHeadingDeg!=null){
+  // v51: η κύρια βελόνα Βορρά δεν ακολουθεί τον μαγνητικό αισθητήρα, γιατί μέσα/έξω μπορεί να γυρίζει ή να αντιστρέφεται.
+  // Χρησιμοποιούμε CRS north και, για heading κίνησης, course από τα διορθωμένα GPS σημεία. Ο αισθητήρας μένει μόνο ως ένδειξη στο 3D panel.
+  if(app.compass.courseHeadingDeg!=null){
     app.compass.fusedHeadingDeg=angleNormDeg(app.compass.courseHeadingDeg);
     app.compass.source='movement+crs';
   }else{
@@ -549,20 +565,44 @@ function beginDraw(mode){
   actions();
   app.inspectMode=false;
   ui.inspect.classList.remove('on');
-  if(mode==='now' && app.settings.viewMode!=='live'){alert('Το Add λειτουργεί μόνο όταν είναι ενεργό το Live mode.');return;}
   app.armed=true;
   if(mode==='now') execAt(null);
   else renderInfo();
 }
+function viewLabel(mode){return ({live:'Live',day:'Day',week:'Week',month:'Month',all:'All'}[mode]||'Live')}
+function updateWeekBadge(){const b=$('weekBadge');if(b)b.textContent='W'+weekNo(new Date());}
 function updateLiveUI(){
-  const live=app.settings.viewMode==='live';
-  ui.liveMode.textContent=live?'Live on':'Live off';
-  ui.liveMode.classList.toggle('on',live);
-  if(ui.liveDock)ui.liveDock.classList.toggle('liveOff',!live);
-  ui.addNow.classList.toggle('hidden',!live);
-  ui.liveActionBar.classList.toggle('open',live);
+  const mode=app.settings.viewMode||'live';
+  ui.liveMode.textContent=viewLabel(mode);
+  ui.liveMode.classList.toggle('on',mode==='live');
+  ui.addNow.classList.remove('hidden');
   updateLiveCommands();
+  updateWeekBadge();
 }
+function toggleViewChoices(force){const d=$('viewDock');if(!d)return;d.classList.toggle('open',force==null?!d.classList.contains('open'):!!force)}
+async function chooseViewMode(mode){
+  toggleViewChoices(false);
+  const now=new Date();
+  if(mode==='day'){
+    const v=prompt('Ποια ημέρα; YYYY-MM-DD',ymd(app.settings.selectedAt||now));
+    if(!v)return; app.settings.selectedAt=new Date(v+'T12:00:00').toISOString();
+  }else if(mode==='week'){
+    const v=prompt('Δώσε ημερομηνία μέσα στην εβδομάδα που θες; YYYY-MM-DD',ymd(app.settings.selectedAt||now));
+    if(!v)return; app.settings.selectedAt=weekStart(new Date(v+'T12:00:00')).toISOString();
+  }else if(mode==='month'){
+    const v=prompt('Ποιος μήνας; YYYY-MM',ymd(app.settings.selectedAt||now).slice(0,7));
+    if(!v)return; app.settings.selectedAt=new Date(v+'-01T12:00:00').toISOString();
+  }else if(mode==='live'){
+    app.settings.selectedAt=now.toISOString();
+  }
+  app.settings.viewMode=mode;
+  if(ui.viewMode)ui.viewMode.value=mode;
+  if(ui.selectedAt)ui.selectedAt.value=isoLocal(app.settings.selectedAt);
+  await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera}).catch(()=>{});
+  await buildViewCaches();
+  renderAll();
+}
+function toggleAddChoices(force){const d=$('liveDock');if(!d)return;d.classList.toggle('open',force==null?!d.classList.contains('open'):!!force);ui.liveActionBar.classList.toggle('open',d.classList.contains('open'))}
 function updateLiveCommands(){
   if(!ui.liveCommand)return;
   let opts=[];
@@ -572,7 +612,7 @@ function updateLiveCommands(){
   ui.liveCommand.innerHTML=opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');if(ui.liveCommandBtn)ui.liveCommandBtn.textContent=opts[0]?.[1]||'Live command';
 }
 async function runLiveCommand(){
-  if(app.settings.viewMode!=='live'){alert('Άνοιξε πρώτα Live mode.');return;}
+  // Add λειτουργεί ανεξάρτητα από το view mode: χρησιμοποιεί πάντα την τρέχουσα avatar θέση.
   const c=ui.liveCommand.value;
   ui.toolMode.value='now';
   if(c==='point'){ui.toolEntity.value='point';actions();return execAt(null)}
@@ -677,21 +717,21 @@ function pointEditor(mode,v){
       <label>Icon key<input id="edIcon" maxlength="24" placeholder="π.χ. rune-church"></label>
       <label>Object preset/name<input id="edPreset" placeholder="π.χ. Εκκλησία"></label>
     </div>
-    <div id="noteFields"><label>Note<textarea id="edText" rows="3" placeholder="Σημείωση για point τύπου Note"></textarea></label></div>
+    <div id="noteFields"><label>Comment / Note<textarea id="edText" rows="3" placeholder="Σχόλιο για το σημείο ή κείμενο αν είναι Note"></textarea></label></div>
     <div class="grid3">
       <label>Lat<input id="edLat" type="number" step="any" value="${v.wgs.lat}" ${locked?'readonly':''}></label>
       <label>Lng<input id="edLng" type="number" step="any" value="${v.wgs.lng}" ${locked?'readonly':''}></label>
       <label>Alt<input id="edAlt" type="number" step="any" value="${v.wgs.alt||0}" ${locked?'readonly':''}></label>
     </div>
     <label>Address<input id="edAddr" placeholder="auto when online / refresh later"></label>
-    <p class="small muted">Τα notes αποθηκεύονται μόνο όταν ο τύπος σημείου είναι Note. Τα Object παίρνουν icon/preset και σχεδιάζονται ως vector σύμβολα στον χάρτη.</p>`;
+    <p class="small muted">Το σχόλιο αποθηκεύεται σε όλα τα σημειακά objects. Αν ο τύπος είναι Note, το σημείο εμφανίζεται ως σημείωμα με δικό του smart icon.</p>`;
   function syncPointTypeUI(){
     const cat=($('edCat')?.value||'');
     const isObj=cat==='Object';
     const isNote=cat==='Note';
     $('objectPresetBlock').style.display=isObj?'block':'none';
     $('objectFields').style.display=isObj?'grid':'none';
-    $('noteFields').style.display=isNote?'block':'none';
+    $('noteFields').style.display='block';
   }
   $('edCat').onchange=syncPointTypeUI;
   bindObjectPresetPicker();
@@ -703,7 +743,7 @@ function pointEditor(mode,v){
     const eventAt=new Date($('edAt').value).toISOString();
     let cat=$('edCat').value, text='', addr=$('edAddr').value;
     const icon=$('edIcon').value.trim(), preset=$('edPreset').value.trim();
-    if(cat==='Note') text=$('edText').value;
+    text=$('edText').value;
     if(cat==='Object' && preset && !icon) $('edIcon').value='rune';
     if(!addr && navigator.onLine) addr=await reverse(w.lat,w.lng);
     const rec=makePoint(mode,cat,text,w,null,eventAt,addr,v.source);
@@ -765,7 +805,7 @@ function renderCompass3d(){
     const h=Number(app.compass.fusedHeadingDeg||0).toFixed(0);
     const b=app.compass.tiltBeta==null?'—':Number(app.compass.tiltBeta).toFixed(1);
     const g=app.compass.tiltGamma==null?'—':Number(app.compass.tiltGamma).toFixed(1);
-    ui.compass3dText.textContent=`heading ${h}° · source ${src} · tilt β ${b} / γ ${g}`;
+    ui.compass3dText.textContent=`heading ${h}° · source ${src} · tilt β ${b} / γ ${g} · magnetic sensor only shown, not used for main North needle`;
   }
 }
 function renderInfo(){const real=new Date(),sel=new Date(app.settings.selectedAt),w=app.live?.wgs,l=app.live?.local;ui.info.innerHTML=`<b>Real:</b> ${real.toLocaleString()} · <b>Selected:</b> ${sel.toLocaleString()} · <b>Mode:</b> ${esc(app.settings.viewMode)} · <b>W${weekNo(sel)}</b><br><b>WGS84:</b> ${w?`${w.lat.toFixed(6)}, ${w.lng.toFixed(6)}, z${(w.alt||0).toFixed(1)}`:'no GPS'} · <b>Local:</b> ${l?`${l.x.toFixed(2)}, ${l.y.toFixed(2)}, z${l.z.toFixed(1)}`:'—'} · <b>Acc:</b> ${w?.accuracy?.toFixed?.(1)??'—'}m<br><b>GNSS:</b> ${app.settings.gnssInterval}s · <b>Route:</b> ${app.settings.routeInterval}s · <b>Tool:</b> ${ui.toolMode.value}/${ui.toolEntity.value}/${ui.toolAction.value} · <b>Armed:</b> ${app.armed?'yes':'no'} ${app.lastError?'<br><b>Error:</b> '+esc(app.lastError):''}`;ui.toolStatus.value=app.armed?'armed':'idle'}
@@ -780,14 +820,14 @@ function renderDbs(){ui.mainDbView.innerHTML=app.mainView==='json'?`<pre>${esc(J
 function renderWeekly(){
   const st=weekStart(app.settings.selectedAt),days=Array.from({length:7},(_,i)=>addDays(st,i)),rows=app.base.filter(r=>recWeek(r)===weekKey(app.settings.selectedAt));
   ui.weeklyLabel.textContent=`W${weekNo(app.settings.selectedAt)} ${ymd(days[0])} → ${ymd(days[6])}`;
-  let h=`<div class="tableWrap"><table><thead><tr><th>Ημέρα</th><th>Points</th><th>Routes</th><th>Areas</th><th>Elements</th></tr></thead><tbody>`;
+  let h=`<div class="tableWrap"><table><thead><tr><th>Ημέρα</th><th>Points</th><th>Routes</th><th>Areas</th><th>Objects</th></tr></thead><tbody>`;
   days.forEach((d,i)=>{
     const day=ymd(d),dayRows=rows.filter(r=>recDate(r)===day);
     const pts=dayRows.filter(r=>r.type==='point'),routes=dayRows.filter(r=>r.type==='route'),areas=dayRows.filter(r=>r.type==='area');
     const routeKm=(routes.reduce((s,r)=>s+(r.metrics.distance2dM||0),0)/1000).toFixed(3);
     const areaM=areas.reduce((s,r)=>s+(r.metrics.areaM2||0),0).toFixed(1);
     const cell=(summary,items)=>`<details class="compactCell"><summary>${esc(String(summary||'—'))}</summary><div class="cellMore">${items.length?items.map(x=>`${esc(x.code||'')} ${esc(x.icon||'')} ${esc(x.category||x.routeId||x.areaId||x.type)} · ${esc(metricShort(x))}`).join('<br>'):'—'}</div></details>`;
-    h+=`<tr><th>${['Δε','Τρ','Τε','Πε','Πα','Σα','Κυ'][i]}<br>${day}</th><td>${cell(pts.length?pts.length+' σημεία':'—',pts)}</td><td>${cell(routes.length?routeKm+' km':'—',routes)}</td><td>${cell(areas.length?areaM+' m²':'—',areas)}</td><td>${cell(dayRows.length?dayRows.length+' elements':'—',dayRows)}</td></tr>`;
+    h+=`<tr><th>${['Δε','Τρ','Τε','Πε','Πα','Σα','Κυ'][i]}<br>${day}</th><td>${cell(pts.length?pts.length+' σημεία':'—',pts)}</td><td>${cell(routes.length?routeKm+' km':'—',routes)}</td><td>${cell(areas.length?areaM+' m²':'—',areas)}</td><td>${cell(pts.length?pts.length+' objects':'—',pts)}</td></tr>`;
   });
   h+='</tbody></table></div>';
   ui.weeklyTable.innerHTML=h;
@@ -804,10 +844,22 @@ function weeklyCardHtml(r){
   return`<div class="card">${miniMapSvg(r)}<span class="pill">${esc(r.type)}</span> <b>${esc(r.icon||'')} ${esc(r.category||r.routeId||r.areaId||r.objectPreset||r.code||r.id)}</b> <span class="pill">${esc(r.code||'')}</span><br><span class="small muted">${esc(r.time?.eventAt||'')} · source: ${esc(r.source||'')} · mode: ${esc(r.trackingMode||'')}</span><details><summary class="small">Λεπτομέρειες</summary><p class="small">${details}</p>${r.address&&r.type!=='point'?`<p class="small"><b>Address:</b> ${esc(r.address)}</p>`:''}${r.text?`<p>${esc(r.text)}</p>`:''}</details><div class="row"><button data-show="${esc(r.id)}">Show on map</button><button data-edit="${esc(r.id)}">Edit</button><button class="danger" data-delete="${esc(r.id)}">Delete</button></div></div>`
 }
 function renderSettings(){ui.selectedAt.value=isoLocal(app.settings.selectedAt);ui.viewMode.value=app.settings.viewMode;ui.gnssInterval.value=app.settings.gnssInterval;ui.routeInterval.value=app.settings.routeInterval;ui.gnssCap.value=app.settings.gnssCap;ui.scaleRing.value=app.settings.scaleRing;ui.categoryEditor.innerHTML=app.categories.map((c,i)=>`<label>Category ${i+1}<input data-cat="${i}" value="${esc(c)}"></label>`).join('');if(ui.objectPresetEditor)ui.objectPresetEditor.innerHTML=app.objectPresets.map((p,i)=>`<div class="presetEditorRow"><label>Icon<input data-obj-icon="${i}" value="${esc(p.icon||'📍')}"></label><label>Name<input data-obj-name="${i}" value="${esc(p.name||'Object')}"></label></div>`).join('')}
-function renderAll(){renderInfo();renderDbs();renderWeekly();renderSettings();draw();renderCompass3d();ui.toolsInfo.textContent=JSON.stringify({live:app.live,lastError:app.lastError,avatarView:app.avatarView,activeRoute:app.activeRoute,activeArea:app.activeArea,compass:app.compass,motion:app.motion},null,2)}
+function renderAll(){updateLiveUI();renderInfo();renderDbs();renderWeekly();renderSettings();draw();renderCompass3d();ui.toolsInfo.textContent=JSON.stringify({live:app.live,lastError:app.lastError,avatarView:app.avatarView,activeRoute:app.activeRoute,activeArea:app.activeArea,compass:app.compass,motion:app.motion},null,2)}
 async function saveSettings(){app.settings.selectedAt=new Date(ui.selectedAt.value||app.settings.selectedAt).toISOString();app.settings.viewMode=ui.viewMode.value;app.settings.gnssInterval=Math.max(1,safeNum(ui.gnssInterval.value,5));app.settings.routeInterval=Math.max(1,safeNum(ui.routeInterval.value,5));app.settings.gnssCap=Math.max(50,safeNum(ui.gnssCap.value,1000));app.settings.scaleRing=Math.max(1,safeNum(ui.scaleRing.value,10));app.categories=[...document.querySelectorAll('[data-cat]')].map((i,n)=>i.value||`Category ${n+1}`);app.objectPresets=app.objectPresets.map((p,i)=>({icon:document.querySelector(`[data-obj-icon="${i}"]`)?.value||p.icon||'📍',name:document.querySelector(`[data-obj-name="${i}"]`)?.value||p.name||'Object'}));await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera});await buildViewCaches();restartTimer();restartRouteTimer();updateLiveUI();renderAll()}
 async function load(){app.base=await all('base');app.tempGnss=await all('tempGnss');app.geo=await all('geo');app.correctionLog=await all('correctionLog').catch(()=>[]);const av=(await all('avatarView')).find(x=>x.id==='avatar');app.avatarView=av||null;const rc=(await all('routeCalc')).find(x=>x.id==='active');app.routeCalc=rc||null;if(rc?.kind==='route'){app.activeRoute={id:rc.routeId,mode:rc.mode,segment:rc.segment||1,vertices:rc.vertices||[],trackingMode:rc.trackingMode||'gps-sampled',paused:!!rc.paused,startedAt:rc.startedAt}}const s=(await all('settings')).find(x=>x.id==='settings');if(s){app.settings={...app.settings,...s.settings};app.categories=s.categories||app.categories;app.objectPresets=s.objectPresets||app.objectPresets;app.crs=s.crs||app.crs;app.camera=s.camera||app.camera}await buildViewCaches()}
-async function refreshAddresses(){for(const r of app.base){if(r.type==='point'&&!r.address){r.address=await reverse(r.wgs.lat,r.wgs.lng);r.city=cityFromAddr(r.address);process(r)}if(r.vertices){for(const v of r.vertices){if(!v.address){v.address=await reverse(v.wgs.lat,v.wgs.lng);v.city=cityFromAddr(v.address)}}process(r)}await put('base',r)}await buildViewCaches();renderAll();alert('Addresses refreshed where possible.')}
+async function refreshAddresses(){
+  let changed=0, tried=0;
+  for(const r of app.base){
+    if(r.type==='point'&&r.wgs&&!r.address){tried++;r.address=await reverse(r.wgs.lat,r.wgs.lng);r.city=cityFromAddr(r.address);if(r.address)changed++;process(r)}
+    if(r.vertices){
+      for(const v of r.vertices){if(v?.wgs&&!v.address){tried++;v.address=await reverse(v.wgs.lat,v.wgs.lng);v.city=cityFromAddr(v.address);if(v.address)changed++;}}
+      if(!r.address){const v=r.vertices[0]; if(v?.address){r.address=v.address;r.city=v.city||cityFromAddr(v.address)}}
+      process(r)
+    }
+    await put('base',r)
+  }
+  await buildViewCaches();renderAll();alert(`Addresses refreshed: ${changed}/${tried}. ${app.lastError?app.lastError:''}`)
+}
 function closePanels(){ui.menuPanel.classList.remove('open');ui.toolsPanel.classList.remove('open');ui.settingsPanel.classList.remove('open');ui.weeklyPanel.classList.remove('open')}
 function openOnly(panel){closePanels();panel.classList.add('open')}
 function showMenuTab(idv){document.querySelectorAll('[data-menu-tab]').forEach(b=>b.classList.toggle('active',b.dataset.menuTab===idv));document.querySelectorAll('#menuPanel .sec').forEach(s=>s.classList.toggle('active',s.id===idv))}
@@ -950,7 +1002,7 @@ function setupLongPressHelp(){
   });
 }
 
-function setup(){ui.book.onclick=()=>openOnly(ui.menuPanel);ui.compass.onclick=()=>openOnly(ui.toolsPanel);ui.hammer.onclick=()=>openOnly(ui.settingsPanel);ui.weekly.onclick=()=>{app.settings.selectedAt=new Date().toISOString();buildViewCaches().then(()=>{renderAll();openOnly(ui.weeklyPanel)})};['closeMenuBtn','closeToolsBtn','closeSettingsBtn','closeWeeklyBtn'].forEach(idv=>$(idv).onclick=closePanels);document.querySelectorAll('[data-menu-tab]').forEach(b=>b.onclick=()=>showMenuTab(b.dataset.menuTab));document.querySelectorAll('[data-view-main]').forEach(b=>b.onclick=()=>{app.mainView=b.dataset.viewMain;renderAll()});document.querySelectorAll('[data-view-geo]').forEach(b=>b.onclick=()=>{app.geoView=b.dataset.viewGeo;renderAll()});ui.toolEntity.onchange=actions;ui.toolMode.onchange=actions;ui.toolAction.onchange=renderAll;ui.applyTool.onclick=arm;ui.undoVertex.onclick=undo;ui.finishShape.onclick=finishShape;ui.zoomIn.onclick=()=>{app.camera.z*=1.25;draw()};ui.zoomOut.onclick=()=>{app.camera.z/=1.25;draw()};ui.fit.onclick=fit;ui.fitElement.onclick=fitSelected;ui.layersBtn.onclick=()=>$('layerPanel').classList.toggle('open');ui.liveMode.onclick=()=>{toggleDesignChoices(false);app.settings.viewMode=app.settings.viewMode==='live'?'week':'live';ui.viewMode.value=app.settings.viewMode;buildViewCaches().then(()=>{updateLiveUI();renderAll()})};ui.liveCommandBtn.onclick=runLiveCommand;ui.toggleToolbar.onclick=()=>toggleToolRail(!app.toolbarCollapsed);document.querySelectorAll('[data-layer]').forEach(cb=>{cb.onchange=()=>{app.layers[cb.dataset.layer]=cb.checked;draw()}});ui.pin.onclick=pin;ui.follow.onclick=()=>{setFollow(!app.follow);draw()};ui.addThen.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices()};document.querySelectorAll('[data-design-entity]').forEach(b=>b.onclick=()=>chooseDesignEntity(b.dataset.designEntity));ui.addNow.onclick=()=>runLiveCommand();ui.inspect.onclick=toggleInspect;ui.refreshGps.onclick=refreshGps;ui.setOrigin.onclick=setOriginHere;ui.wake.onclick=async()=>{try{if(app.wake){await app.wake.release();app.wake=null;ui.wake.textContent='Keep awake'}else{app.wake=await navigator.wakeLock.request('screen');ui.wake.textContent='Awake on'}}catch(e){alert(e.message)}};ui.refreshAddr.onclick=refreshAddresses;ui.buildGeo.onclick=buildGeo;if(ui.controlGuide)ui.controlGuide.onclick=showControlPointGuide;ui.clearTempGnss.onclick=async()=>{if(confirm('Clear temp GNSS?')){await clearStore('tempGnss');app.tempGnss=[];renderAll()}};ui.backup.onclick=backup;ui.restore.onclick=()=>ui.restoreFile.click();ui.restoreFile.onchange=restore;ui.exportCsv.onclick=()=>download(exportCSV(),'psj.csv','text/csv');ui.exportGeojson.onclick=()=>download(exportGeoJSON(),'psj.geojson','application/geo+json');ui.exportDxf.onclick=()=>download(exportDXF(),'psj.dxf','application/dxf');ui.saveSettings.onclick=saveSettings;ui.selectedAt.onchange=saveSettings;ui.viewMode.onchange=()=>{saveSettings();updateLiveUI()};ui.gnssInterval.onchange=saveSettings;ui.routeInterval.onchange=saveSettings;ui.gnssCap.onchange=saveSettings;ui.scaleRing.onchange=saveSettings;ui.prevWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),-7));ui.thisWeek.onclick=()=>setWeeklyDate(new Date());ui.nextWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),7));ui.ctx.onclick=e=>{const b=e.target.closest('[data-context]');if(b)handleContextAction(b.dataset.context)};let down=null,last=null,pan=false,longTimer=null;ui.canvas.addEventListener('pointerdown',e=>{ui.ctx.style.display='none';down={x:e.clientX,y:e.clientY};last={x:e.clientX,y:e.clientY};pan=false;longTimer=setTimeout(()=>{const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY);down=null},650);try{ui.canvas.setPointerCapture(e.pointerId)}catch{}});ui.canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>8){pan=true;clearTimeout(longTimer)}if(pan){app.follow=false;ui.follow.textContent='Follow off';ui.follow.classList.remove('on');app.camera.x-=dx/app.camera.z;app.camera.y+=dy/app.camera.z;draw()}last={x:e.clientX,y:e.clientY}});ui.canvas.addEventListener('pointerup',e=>{clearTimeout(longTimer);if(!down)return;const mv=Math.hypot(e.clientX-down.x,e.clientY-down.y),r=ui.canvas.getBoundingClientRect();if(mv<8){const l=screenToLocal(e.clientX-r.left,e.clientY-r.top);handleCanvasTapLocal(l)}down=null;pan=false});ui.canvas.addEventListener('contextmenu',e=>{e.preventDefault();const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY)});window.addEventListener('resize',resize);window.addEventListener('pagehide',()=>{put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera}).catch(()=>{});saveRouteCalc().catch(()=>{})});setupLongPressHelp()}
+function setup(){ui.book.onclick=()=>openOnly(ui.menuPanel);ui.compass.onclick=()=>openOnly(ui.toolsPanel);ui.hammer.onclick=()=>openOnly(ui.settingsPanel);ui.weekly.onclick=()=>{app.settings.selectedAt=new Date().toISOString();buildViewCaches().then(()=>{renderAll();openOnly(ui.weeklyPanel)})};['closeMenuBtn','closeToolsBtn','closeSettingsBtn','closeWeeklyBtn'].forEach(idv=>$(idv).onclick=closePanels);document.querySelectorAll('[data-menu-tab]').forEach(b=>b.onclick=()=>showMenuTab(b.dataset.menuTab));document.querySelectorAll('[data-view-main]').forEach(b=>b.onclick=()=>{app.mainView=b.dataset.viewMain;renderAll()});document.querySelectorAll('[data-view-geo]').forEach(b=>b.onclick=()=>{app.geoView=b.dataset.viewGeo;renderAll()});ui.toolEntity.onchange=actions;ui.toolMode.onchange=actions;ui.toolAction.onchange=renderAll;ui.applyTool.onclick=arm;ui.undoVertex.onclick=undo;ui.finishShape.onclick=finishShape;ui.zoomIn.onclick=()=>{app.camera.z*=1.25;draw()};ui.zoomOut.onclick=()=>{app.camera.z/=1.25;draw()};ui.fit.onclick=fit;ui.fitElement.onclick=fitSelected;ui.layersBtn.onclick=()=>$('layerPanel').classList.toggle('open');ui.liveMode.onclick=()=>{toggleDesignChoices(false);toggleAddChoices(false);toggleViewChoices()};document.querySelectorAll('[data-view-choice]').forEach(b=>b.onclick=()=>chooseViewMode(b.dataset.viewChoice));ui.liveCommandBtn.onclick=async()=>{await runLiveCommand();toggleAddChoices(false)};ui.toggleToolbar.onclick=()=>toggleToolRail(!app.toolbarCollapsed);document.querySelectorAll('[data-layer]').forEach(cb=>{cb.onchange=()=>{app.layers[cb.dataset.layer]=cb.checked;draw()}});ui.pin.onclick=pin;ui.follow.onclick=()=>{setFollow(!app.follow);draw()};ui.addThen.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices()};document.querySelectorAll('[data-design-entity]').forEach(b=>b.onclick=()=>chooseDesignEntity(b.dataset.designEntity));ui.addNow.onclick=()=>{toggleDesignChoices(false);toggleAddChoices()};ui.inspect.onclick=toggleInspect;ui.refreshGps.onclick=refreshGps;ui.setOrigin.onclick=setOriginHere;ui.wake.onclick=async()=>{try{if(app.wake){await app.wake.release();app.wake=null;ui.wake.textContent='Keep awake'}else{app.wake=await navigator.wakeLock.request('screen');ui.wake.textContent='Awake on'}}catch(e){alert(e.message)}};ui.refreshAddr.onclick=refreshAddresses;ui.buildGeo.onclick=buildGeo;if(ui.controlGuide)ui.controlGuide.onclick=showControlPointGuide;ui.clearTempGnss.onclick=async()=>{if(confirm('Clear temp GNSS?')){await clearStore('tempGnss');app.tempGnss=[];renderAll()}};ui.backup.onclick=backup;ui.restore.onclick=()=>ui.restoreFile.click();ui.restoreFile.onchange=restore;ui.exportCsv.onclick=()=>download(exportCSV(),'psj.csv','text/csv');ui.exportGeojson.onclick=()=>download(exportGeoJSON(),'psj.geojson','application/geo+json');ui.exportDxf.onclick=()=>download(exportDXF(),'psj.dxf','application/dxf');ui.saveSettings.onclick=saveSettings;ui.selectedAt.onchange=saveSettings;ui.viewMode.onchange=()=>{saveSettings();updateLiveUI()};ui.gnssInterval.onchange=saveSettings;ui.routeInterval.onchange=saveSettings;ui.gnssCap.onchange=saveSettings;ui.scaleRing.onchange=saveSettings;ui.prevWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),-7));ui.thisWeek.onclick=()=>setWeeklyDate(new Date());ui.nextWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),7));ui.ctx.onclick=e=>{const b=e.target.closest('[data-context]');if(b)handleContextAction(b.dataset.context)};let down=null,last=null,pan=false,longTimer=null;ui.canvas.addEventListener('pointerdown',e=>{ui.ctx.style.display='none';down={x:e.clientX,y:e.clientY};last={x:e.clientX,y:e.clientY};pan=false;longTimer=setTimeout(()=>{const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY);down=null},650);try{ui.canvas.setPointerCapture(e.pointerId)}catch{}});ui.canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>8){pan=true;clearTimeout(longTimer)}if(pan){app.follow=false;ui.follow.textContent='Follow off';ui.follow.classList.remove('on');app.camera.x-=dx/app.camera.z;app.camera.y+=dy/app.camera.z;draw()}last={x:e.clientX,y:e.clientY}});ui.canvas.addEventListener('pointerup',e=>{clearTimeout(longTimer);if(!down)return;const mv=Math.hypot(e.clientX-down.x,e.clientY-down.y),r=ui.canvas.getBoundingClientRect();if(mv<8){const l=screenToLocal(e.clientX-r.left,e.clientY-r.top);handleCanvasTapLocal(l)}down=null;pan=false});ui.canvas.addEventListener('contextmenu',e=>{e.preventDefault();const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY)});window.addEventListener('resize',resize);window.addEventListener('pagehide',()=>{put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera}).catch(()=>{});saveRouteCalc().catch(()=>{})});setupLongPressHelp()}
 async function boot(){
   await openDb();
   await load();
