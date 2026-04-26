@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Personal Spatial Journal — v70 Modern Tools + Scale + Leveler</title>
+<title>Personal Spatial Journal — v71 Functional Tools + Weekly Fix</title>
 <style>
 :root{--bg:#efe6d2;--ink:#2b2418;--ink2:#fff8e8;--muted:#76664d;--bronze:#8a6135;--blue:#7fa8a0;--blue2:#3d6e72;--gold:#c5a05a;--red:#8f3f35;--green:#66764b;--umber:#5c4528;--sfumato:#d8c8a8;--glass:rgba(255,248,232,.10);--shadow:0 16px 36px rgba(35,26,12,.30)}
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink)}
@@ -43,6 +43,30 @@ dialog{width:min(94vw,780px);border:0;border-radius:20px;background:rgba(255,250
 #toolArc{left:28px!important;bottom:calc(132px + env(safe-area-inset-bottom))!important}.toolArcIcon{background:transparent!important;border:0!important;box-shadow:none!important;color:#0f172a!important;text-shadow:0 3px 10px rgba(255,255,255,.95),0 14px 18px rgba(15,23,42,.28)!important;filter:drop-shadow(0 16px 14px rgba(15,23,42,.30))!important;font-size:30px!important}.toolArcIcon:nth-child(1).open{transform:translate(112px,-22px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(2).open{transform:translate(154px,-68px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(3).open{transform:translate(160px,-128px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(4).open{transform:translate(128px,-184px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(5).open{transform:translate(70px,-216px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(6).open{transform:translate(8px,-204px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(7).open{transform:translate(-38px,-158px) scale(1) rotateX(16deg)!important}
 @media(max-width:760px){#infoText{right:8px!important;left:8px!important;top:7px!important;text-align:right!important;font-size:10.5px!important}#scaleLegend{top:56px!important;right:8px!important;left:auto!important}.scaleBox{width:120px!important}#compassHub{right:10px!important;bottom:calc(92px + env(safe-area-inset-bottom))!important;width:100px!important;height:100px!important}.orb{width:92px!important;height:92px!important}.headingNeedle{left:40px!important;top:5px!important;height:82px!important;transform-origin:50% 41px!important}.northNeedle{left:44px!important;top:10px!important;height:72px!important;transform-origin:50% 36px!important}.compassN{left:39px!important;top:-11px!important}#toolboxHub{left:10px!important;bottom:calc(92px + env(safe-area-inset-bottom))!important;width:100px!important;height:100px!important}.toolboxOrb{width:92px!important;height:92px!important}.toolArcIcon{font-size:27px!important}.toolArcIcon:nth-child(1).open{transform:translate(96px,-18px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(2).open{transform:translate(128px,-60px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(3).open{transform:translate(130px,-112px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(4).open{transform:translate(104px,-158px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(5).open{transform:translate(54px,-184px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(6).open{transform:translate(4px,-172px) scale(1) rotateX(16deg)!important}.toolArcIcon:nth-child(7).open{transform:translate(-30px,-132px) scale(1) rotateX(16deg)!important}.panel{width:100vw!important}.panelBody{padding:10px!important}}
 
+/* v71 functional polish: restore toolbar + reliable tool hub */
+:root{--bg:#f6f7f8;--ink:#151b23;--muted:#667085;--blue:#2563eb;--cyan:#22c7d6;--panel:rgba(255,255,255,.86);--line:rgba(15,23,42,.12);--shadow:0 18px 45px rgba(15,23,42,.20)}
+#bottomToolbar{z-index:64!important;left:50%!important;bottom:calc(10px + env(safe-area-inset-bottom))!important;display:grid!important;grid-template-rows:auto auto!important;gap:6px!important;pointer-events:none!important;max-width:98vw!important}
+#bottomToolbar .toolRow{display:flex!important;gap:6px!important;flex-wrap:nowrap!important;justify-content:center!important;pointer-events:auto!important;max-width:98vw!important;background:transparent!important;box-shadow:none!important}
+.floatBtn{min-width:48px!important;height:38px!important;padding:6px 10px!important;border-radius:999px!important;background:rgba(15,23,42,.74)!important;color:#fff!important;border:1px solid rgba(255,255,255,.20)!important;box-shadow:0 10px 24px rgba(15,23,42,.22),inset 0 1px rgba(255,255,255,.20)!important;backdrop-filter:blur(12px)!important;font-weight:750!important;font-size:13px!important;text-shadow:none!important}
+.floatBtn.smallBtn{min-width:38px!important;width:38px!important;padding:0!important;background:rgba(255,255,255,.82)!important;color:#111827!important;border:1px solid rgba(15,23,42,.12)!important}
+.floatBtn.active{background:linear-gradient(145deg,#2563eb,#0891b2)!important;color:#fff!important;outline:0!important}
+.popover{z-index:120!important;background:rgba(255,255,255,.94)!important;color:#151b23!important;border:1px solid rgba(15,23,42,.10)!important;border-radius:16px!important;padding:8px!important;box-shadow:0 22px 48px rgba(15,23,42,.24)!important;backdrop-filter:blur(18px)!important}
+.popover button,.popover label{background:#fff!important;color:#151b23!important;border:1px solid rgba(15,23,42,.10)!important;border-radius:12px!important;padding:8px 10px!important;box-shadow:0 6px 14px rgba(15,23,42,.08)!important}
+#toolboxHub{z-index:65!important;left:14px!important;bottom:calc(98px + env(safe-area-inset-bottom))!important;width:88px!important;height:88px!important;filter:drop-shadow(0 16px 24px rgba(15,23,42,.25))!important}
+.toolboxOrb{width:78px!important;height:78px!important;border-radius:24px!important;background:radial-gradient(circle at 30% 22%,#ffffff,#e5eef6 28%,#6b7d92 62%,#1f2937 100%)!important;box-shadow:inset 9px 9px 18px rgba(255,255,255,.55),inset -16px -16px 24px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.55)!important;transform:rotateX(18deg) rotateZ(-4deg)!important}
+.toolArcIcon{z-index:66!important;width:50px!important;height:50px!important;border:0!important;border-radius:50%!important;background:radial-gradient(circle at 30% 25%,#fff,#dbeafe 38%,#2563eb 100%)!important;color:#0f172a!important;box-shadow:0 14px 22px rgba(15,23,42,.28),inset 4px 4px 10px rgba(255,255,255,.55),inset -7px -8px 13px rgba(0,0,0,.16)!important;text-shadow:0 1px rgba(255,255,255,.55)!important}
+#toolArc{z-index:66!important;left:22px!important;bottom:calc(126px + env(safe-area-inset-bottom))!important}
+.toolArcIcon:nth-child(1).open{transform:translate(86px,-10px) scale(1)!important}.toolArcIcon:nth-child(2).open{transform:translate(120px,-52px) scale(1)!important}.toolArcIcon:nth-child(3).open{transform:translate(132px,-104px) scale(1)!important}.toolArcIcon:nth-child(4).open{transform:translate(112px,-154px) scale(1)!important}.toolArcIcon:nth-child(5).open{transform:translate(70px,-188px) scale(1)!important}.toolArcIcon:nth-child(6).open{transform:translate(18px,-198px) scale(1)!important}.toolArcIcon:nth-child(7).open{transform:translate(-30px,-174px) scale(1)!important}
+#compassHub{z-index:65!important}.orb{background:radial-gradient(circle at 32% 25%,#fff,#dbeafe 30%,#2563eb 72%,#0f172a 100%)!important;border:1px solid rgba(255,255,255,.55)!important;box-shadow:inset 8px 8px 18px rgba(255,255,255,.48),inset -14px -16px 24px rgba(0,0,0,.28),0 18px 26px rgba(15,23,42,.25)!important}.headingNeedle{background:linear-gradient(#ffefe0,#f97316)!important}.northNeedle{background:#0f172a!important}.compassN{color:#fff!important;text-shadow:0 2px 8px rgba(0,0,0,.6)!important}
+.panel{background:rgba(255,255,255,.92)!important;color:#151b23!important;border-left:1px solid rgba(15,23,42,.10)!important;backdrop-filter:blur(20px)!important}.panelHead,.panelNav{border-color:rgba(15,23,42,.10)!important}.card,summary,.tableWrap,pre{background:rgba(255,255,255,.70)!important;border-color:rgba(15,23,42,.10)!important}
+@media(max-width:760px){.floatBtn{min-width:44px!important;font-size:12px!important;padding:6px 8px!important}.floatBtn.smallBtn{width:36px!important;min-width:36px!important}#toolboxHub{left:10px!important;width:78px!important;height:78px!important}.toolboxOrb{width:68px!important;height:68px!important}.toolArcIcon{width:45px!important;height:45px!important;font-size:24px!important}#toolArc{left:14px!important}.toolArcIcon:nth-child(1).open{transform:translate(76px,-8px) scale(1)!important}.toolArcIcon:nth-child(2).open{transform:translate(108px,-46px) scale(1)!important}.toolArcIcon:nth-child(3).open{transform:translate(118px,-94px) scale(1)!important}.toolArcIcon:nth-child(4).open{transform:translate(100px,-140px) scale(1)!important}.toolArcIcon:nth-child(5).open{transform:translate(62px,-172px) scale(1)!important}.toolArcIcon:nth-child(6).open{transform:translate(16px,-182px) scale(1)!important}.toolArcIcon:nth-child(7).open{transform:translate(-28px,-158px) scale(1)!important}}
+
+
+/* v71 final safety: keep both toolbar rows visible and prevent old hide rules */
+#bottomToolbar .toolRow:first-child{display:flex!important}
+#bottomToolbar .toolRow:nth-child(2){display:flex!important}
+#bottomToolbar .toolRow{visibility:visible!important}
+#followBtn,#addBtn,#designBtn,#selectBtn,#viewBtn{display:inline-flex!important;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
@@ -258,6 +282,110 @@ const _v68_setup=setup;setup=function(){_v68_setup();if(ui.toolboxHub)ui.toolbox
     if(ui.toolSelectBtn)ui.toolSelectBtn.onclick=()=>{toggleToolArc(false);clampPopover(ui.selectPop,ui.toolSelectBtn)};
     const scale=document.getElementById('scaleLegend');
     if(scale){scale.title='Tap to set scale radius';scale.onclick=e=>{e.preventDefault();e.stopPropagation();const current=Math.round(niceScale());const raw=prompt('Ακτίνα κλίμακας σε μέτρα (r)',String(current));if(raw===null)return;const m=Number(String(raw).replace(',','.'));if(Number.isFinite(m)&&m>0){app.scaleLockM=m;app.camera.z=20/m;draw();showHint('Scale radius set: r = '+fmtM(m))}};}
+  };
+})();
+
+/* v71 stable interaction layer: fixes toolbox buttons, Select modes, Pin/Zoom/Fit, and weekly navigation */
+(function(){
+  function safeOn(el, ev, fn){ if(!el) return; el['on'+ev]=null; el.addEventListener(ev, fn); }
+  function q(id){ return document.getElementById(id); }
+  window.clampPopover = function(pop, anchor){
+    if(!pop || !anchor) return;
+    document.querySelectorAll('.popover.open').forEach(p=>{ if(p!==pop) p.classList.remove('open'); });
+    const was=pop.classList.contains('open');
+    pop.classList.toggle('open', !was);
+    if(was) return;
+    pop.style.left='0px'; pop.style.top='0px';
+    const ar=anchor.getBoundingClientRect();
+    const pr=pop.getBoundingClientRect();
+    let left=ar.left + ar.width/2 - pr.width/2;
+    let top=ar.top - pr.height - 10;
+    if(top<8) top=ar.bottom+10;
+    left=Math.max(8, Math.min(innerWidth-pr.width-8, left));
+    top=Math.max(8, Math.min(innerHeight-pr.height-8, top));
+    pop.style.left=left+'px'; pop.style.top=top+'px';
+  };
+  window.closePops=function(){document.querySelectorAll('.popover.open').forEach(p=>p.classList.remove('open'));};
+  window.toggleToolArc=function(force=null){
+    app.toolArcOpen = force===null ? !app.toolArcOpen : !!force;
+    document.querySelectorAll('.toolArcIcon').forEach(b=>b.classList.toggle('open', app.toolArcOpen));
+  };
+  function pinAvatar(){
+    const l=app.avatarView?.correctedLocal || app.avatarView?.estimatedLocal;
+    if(l){ app.camera.x=l.x; app.camera.y=l.y; app.follow=true; ui.followBtn?.classList.add('active'); draw(); showHint('Pinned to avatar / Follow on'); }
+  }
+  function ensurePinButton(){
+    const row=document.querySelector('#bottomToolbar .toolRow:nth-child(2)');
+    if(row && !q('pinBtnV71')){
+      const b=document.createElement('button'); b.id='pinBtnV71'; b.className='floatBtn'; b.textContent='Pin';
+      row.insertBefore(b, row.firstChild);
+    }
+  }
+  window.renderWeeklyPanel=function(){
+    const st=weekStart(app.settings.selectedAt);
+    const days=Array.from({length:7},(_,i)=>addDays(st,i));
+    const rows=app.base.filter(r=>recWeek(r)===ymd(st));
+    ui.panelTitle.textContent='Weekly';
+    ui.panelBody.innerHTML='<div class="row weekNav"><button id="prevWeekBtn">←</button><b>W'+weekNo(st)+' · '+ymd(days[0])+' → '+ymd(days[6])+'</b><button id="nextWeekBtn">→</button></div><details open><summary>Πίνακας εβδομάδας</summary>'+weeklyTable(days,rows)+'</details><details><summary>Κάρτες στοιχείων ('+rows.length+')</summary>'+(rows.map(weeklyCard).join('')||'<p>No records.</p>')+'</details>';
+    const change=(n,e)=>{ if(e){e.preventDefault();e.stopPropagation();} const base=weekStart(app.settings.selectedAt); app.settings.selectedAt=addDays(base,n*7).toISOString(); buildViews(); renderWeeklyPanel(); };
+    const p=q('prevWeekBtn'), nx=q('nextWeekBtn');
+    if(p) p.onclick=e=>change(-1,e);
+    if(nx) nx.onclick=e=>change(1,e);
+  };
+  function wireSelect(){
+    document.querySelectorAll('[data-select]').forEach(b=>{
+      b.onclick=e=>{e.preventDefault();e.stopPropagation();app.selectMode=b.dataset.select;app.mode=null;closePops();showHint(app.selectMode==='box'?'Select window: drag rectangle on canvas':'Select one: tap object on canvas');};
+    });
+  }
+  function wireAddDesign(){
+    document.querySelectorAll('[data-add]').forEach(b=>{
+      b.onclick=e=>{e.preventDefault();e.stopPropagation();app.selectMode=null;setTool('add',b.dataset.add);};
+    });
+    document.querySelectorAll('[data-design]').forEach(b=>{
+      b.onclick=e=>{e.preventDefault();e.stopPropagation();app.selectMode=null;setTool('design',b.dataset.design);};
+    });
+  }
+  window.setup=function(){
+    window.addEventListener('resize',resize);
+    ensurePinButton();
+    safeOn(ui.viewBtn,'click',e=>{e.stopPropagation();clampPopover(ui.viewPop,ui.viewBtn)});
+    safeOn(ui.addBtn,'click',e=>{e.stopPropagation();clampPopover(ui.addPop,ui.addBtn)});
+    safeOn(ui.designBtn,'click',e=>{e.stopPropagation();clampPopover(ui.designPop,ui.designBtn)});
+    safeOn(ui.selectBtn,'click',e=>{e.stopPropagation();clampPopover(ui.selectPop,ui.selectBtn)});
+    safeOn(ui.layersBtn,'click',e=>{e.stopPropagation();clampPopover(ui.layersPop,ui.layersBtn)});
+    safeOn(q('pinBtnV71'),'click',pinAvatar);
+    safeOn(ui.followBtn,'click',()=>{app.follow=!app.follow;ui.followBtn.classList.toggle('active',app.follow);showHint(app.follow?'Follow on':'Follow off')});
+    safeOn(ui.zoomIn,'click',()=>{app.camera.z*=1.25;draw()});
+    safeOn(ui.zoomOut,'click',()=>{app.camera.z/=1.25;draw()});
+    safeOn(ui.fit,'click',()=>{fitAll();draw()});
+    safeOn(ui.fitSel,'click',()=>{fitSelected();draw()});
+    q('prevDateBtn')&&(q('prevDateBtn').onclick=e=>{e.preventDefault();showSelectedDateStep(-1)});
+    q('nextDateBtn')&&(q('nextDateBtn').onclick=e=>{e.preventDefault();showSelectedDateStep(1)});
+    q('todayDateBtn')&&(q('todayDateBtn').onclick=e=>{e.preventDefault();app.settings.selectedAt=new Date().toISOString();buildViews();renderAll()});
+    document.querySelectorAll('[data-view]').forEach(b=>b.onclick=e=>{e.preventDefault();app.settings.viewMode=b.dataset.view;closePops();buildViews();renderAll();showHint('View: '+b.dataset.view)});
+    wireAddDesign(); wireSelect();
+    ['Trail','Controls','Objects','Routes','Areas'].forEach(n=>{const el=q('layer'+n);if(el)el.onchange=e=>{app.layers[n.toLowerCase()]=e.target.checked;renderAll()}});
+    if(ui.toolboxHub){ ui.toolboxHub.onclick=e=>{e.stopPropagation();toggleToolArc();}; }
+    const tv=q('toolViewBtn'), tl=q('toolLayersBtn');
+    if(tv) tv.onclick=e=>{e.stopPropagation();toggleToolArc(false);clampPopover(ui.viewPop,tv)};
+    if(ui.toolAddBtn) ui.toolAddBtn.onclick=e=>{e.stopPropagation();toggleToolArc(false);clampPopover(ui.addPop,ui.toolAddBtn)};
+    if(ui.toolDesignBtn) ui.toolDesignBtn.onclick=e=>{e.stopPropagation();toggleToolArc(false);clampPopover(ui.designPop,ui.toolDesignBtn)};
+    if(ui.toolSelectBtn) ui.toolSelectBtn.onclick=e=>{e.stopPropagation();toggleToolArc(false);clampPopover(ui.selectPop,ui.toolSelectBtn)};
+    if(ui.measureLineBtn) ui.measureLineBtn.onclick=e=>{e.stopPropagation();toggleToolArc(false);app.selectMode=null;startMeasure('distance')};
+    if(ui.measurePathBtn) ui.measurePathBtn.onclick=e=>{e.stopPropagation();toggleToolArc(false);app.selectMode=null;startMeasure('path')};
+    if(tl) tl.onclick=e=>{e.stopPropagation();toggleToolArc(false);clampPopover(ui.layersPop,tl)};
+    ui.hub.onclick=e=>{e.stopPropagation();toggleArc()};
+    let lp; ui.hub.addEventListener('pointerdown',()=>{lp=setTimeout(()=>setPanel('compass'),650)}); ui.hub.addEventListener('pointerup',()=>clearTimeout(lp));
+    ui.hub.addEventListener('contextmenu',e=>{e.preventDefault();setPanel('compass')});
+    ui.arcBase.onclick=()=>setPanel('base'); ui.arcWeekly.onclick=()=>setPanel('weekly'); ui.arcSettings.onclick=()=>setPanel('settings');
+    ui.panelClose.onclick=()=>ui.panel.classList.remove('open'); ui.calClose.onclick=()=>ui.calDialog.close();
+    document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>setPanel(b.dataset.panel));
+    ui.canvas.addEventListener('pointerdown',canvasDown); ui.canvas.addEventListener('pointermove',canvasMove); ui.canvas.addEventListener('pointerup',canvasUp);
+    ui.canvas.addEventListener('contextmenu',e=>{e.preventDefault();if(app.active)finishActive(screenToLocal(e.offsetX,e.offsetY))});
+    document.addEventListener('click',e=>{ if(!e.target.closest('.popover')&&!e.target.closest('#bottomToolbar')&&!e.target.closest('#toolArc')&&!e.target.closest('#toolboxHub')) closePops(); if(ui.panel.classList.contains('open')&&e.target===ui.canvas) ui.panel.classList.remove('open'); });
+    document.addEventListener('click',e=>{const cell=e.target.closest('.expandCell'); if(cell) cell.classList.toggle('open')});
+    window.addEventListener('deviceorientation',e=>{app.orientation={alpha:e.alpha,beta:e.beta||0,gamma:e.gamma||0,source:'deviceorientation'}; if(e.alpha!==null){app.avatarView.heading=computeHeading({heading:null,speed:0},app.avatarView.correctedLocal)}});
+    window.addEventListener('pagehide',saveSettings);
   };
 })();
 
