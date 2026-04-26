@@ -1083,7 +1083,7 @@ function closeAllChoiceBars(except=null){
   ['liveActionBar','designActionBar','viewChoiceBar'].forEach(id=>{const b=$(id);if(b && !(except&&b.closest('#'+except)))b.classList.remove('open')});
 }
 
-function renderAll(){const __scroll=captureScrollState();updateLiveUI();renderInfo();renderDbs();renderWeekly();renderSettings();restoreScrollState(__scroll);draw();renderCompass3d();ui.toolsInfo.textContent=JSON.stringify({live:app.live,lastError:app.lastError,avatarView:app.avatarView,activeRoute:app.activeRoute,activeArea:app.activeArea,compass:app.compass,motion:app.motion},null,2)}
+function renderAll(){const __scroll=captureScrollState();updateLiveUI();renderInfo();renderDbs();renderWeekly();renderSettings();restoreScrollState(__scroll);draw();renderCompass3d();ui.toolsInfo.textContent=JSON.stringify({live:app.live,lastError:app.lastError,avatarView:app.avatarView,activeRoute:app.activeRoute,activeArea:app.activeArea,compass:app.compass,motion:app.motion,positionSolver:app.avatarView?.solver},null,2)}
 async function saveSettings(){app.settings.selectedAt=new Date(ui.selectedAt.value||app.settings.selectedAt).toISOString();app.settings.viewMode=ui.viewMode.value;app.settings.gnssInterval=Math.max(1,safeNum(ui.gnssInterval.value,5));app.settings.routeInterval=Math.max(1,safeNum(ui.routeInterval.value,5));app.settings.gnssCap=Math.max(50,safeNum(ui.gnssCap.value,1000));app.settings.scaleRing=Math.max(1,safeNum(ui.scaleRing.value,10));app.categories=[...document.querySelectorAll('[data-cat]')].map((i,n)=>i.value||`Category ${n+1}`);app.objectPresets=app.objectPresets.map((p,i)=>({icon:document.querySelector(`[data-obj-icon="${i}"]`)?.value||p.icon||'📍',name:document.querySelector(`[data-obj-name="${i}"]`)?.value||p.name||'Object'}));await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera});await buildViewCaches();restartTimer();restartRouteTimer();updateLiveUI();renderAll()}
 async function load(){app.base=await all('base');app.tempGnss=await all('tempGnss');app.geo=await all('geo');app.correctionLog=await all('correctionLog').catch(()=>[]);const av=(await all('avatarView')).find(x=>x.id==='avatar');app.avatarView=av||null;const rc=(await all('routeCalc')).find(x=>x.id==='active');app.routeCalc=rc||null;if(rc?.kind==='route'){app.activeRoute={id:rc.routeId,mode:rc.mode,segment:rc.segment||1,vertices:rc.vertices||[],trackingMode:rc.trackingMode||'gps-sampled',paused:!!rc.paused,startedAt:rc.startedAt}}const s=(await all('settings')).find(x=>x.id==='settings');if(s){app.settings={...app.settings,...s.settings};app.categories=s.categories||app.categories;app.objectPresets=s.objectPresets||app.objectPresets;app.crs=s.crs||app.crs;app.camera=s.camera||app.camera}await buildViewCaches()}
 async function refreshAddresses(){
@@ -1109,7 +1109,7 @@ function exportCSV(){const h=['id','code','type','source','eventAt','capturedAt'
 function exportGeoJSON(){return JSON.stringify({type:'FeatureCollection',features:app.base.map(r=>{let g;if(r.type==='point')g={type:'Point',coordinates:[r.wgs.lng,r.wgs.lat,r.wgs.alt||0]};else{const cs=(r.vertices||[]).map(v=>[v.wgs.lng,v.wgs.lat,v.wgs.alt||0]);g={type:r.type==='area'?'Polygon':'LineString',coordinates:r.type==='area'?[cs.concat([cs[0]])]:cs}}return{type:'Feature',geometry:g,properties:{id:r.id,code:r.code,type:r.type,source:r.source,category:r.category,metrics:r.metrics,time:r.time}}})},null,2)}
 function exportDXF(){const out=['0','SECTION','2','ENTITIES'];app.base.forEach(r=>{if(r.type==='point')out.push('0','POINT','8',r.type,'10',String(r.local.x),'20',String(r.local.y),'30',String(r.local.z||0));else{out.push('0','LWPOLYLINE','8',r.type,'90',String((r.vertices||[]).length),'70',r.type==='area'?'1':'0');(r.vertices||[]).forEach(v=>out.push('10',String(v.local.x),'20',String(v.local.y)))}});out.push('0','ENDSEC','0','EOF');return out.join('\n')}
 function download(t,n,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([t],{type}));a.href=u;a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
-function backup(){download(JSON.stringify({version:'5.3',base:app.base,tempGnss:app.tempGnss,geo:app.geo,correctionLog:app.correctionLog,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera},null,2),'psj-backup-v53.json','application/json')}
+function backup(){download(JSON.stringify({version:'5.8',base:app.base,tempGnss:app.tempGnss,geo:app.geo,correctionLog:app.correctionLog,avatarView:app.avatarView,mapView:app.mapView,weeklyView:app.weeklyView,settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera},null,2),'psj-backup-v58.json','application/json')}
 async function restore(){const f=ui.restoreFile.files[0];if(!f)return;let j;try{j=JSON.parse(await f.text())}catch{alert('Invalid JSON');return}if(!Array.isArray(j.base)){alert('Backup missing base array');return}if(!confirm('Restore backup?'))return;for(const s of ['base','tempGnss','geo','correctionLog','avatarView','mapView','weeklyView','routeCalc'])await clearStore(s);for(const x of j.base||[])await put('base',x);for(const x of j.tempGnss||[])await put('tempGnss',x);for(const x of j.geo||[])await put('geo',x);for(const x of j.correctionLog||[])await put('correctionLog',x);if(j.avatarView)await put('avatarView',j.avatarView);app.settings=j.settings||app.settings;app.categories=j.categories||app.categories;app.objectPresets=j.objectPresets||app.objectPresets;app.crs=j.crs||app.crs;app.camera=j.camera||app.camera;await put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera});await load();renderAll()}
 
 function contextItemsHtml(){
@@ -1382,6 +1382,109 @@ async function updateAvatarView(){
   if(stationary&&driftM>0.05){const log={id:id('COR'),type:'stationary-drift',rawWgs:latestWgs,rawLocal:latestLocal,estimatedWgs:targetWgs,estimatedLocal:targetLocal,dx:latestLocal.x-targetLocal.x,dy:latestLocal.y-targetLocal.y,dz:(latestLocal.z||0)-(targetLocal.z||0),driftM,accuracyM:latestWgs.accuracy||null,altitudeAccuracyM:latestWgs.altitudeAccuracy??null,capturedAt:app.live.capturedAt,geoContext:geoContextFor(targetLocal,latestWgs)};app.correctionLog.push(log);if(app.correctionLog.length>1000)app.correctionLog.shift();try{await put('correctionLog',log)}catch{}}
   try{await maybeAutoBuildControlPoint(app.avatarView)}catch(e){console.warn('auto control learning error',e)}
 }
+
+
+/* =========================
+   v58 POSITION SOLVER LAYER
+   Safe additive layer: raw GNSS stays untouched. The solver produces estimated/corrected positions and falls back to raw/local if it lacks anchors.
+   ========================= */
+function finiteNum(v,f=0){const n=Number(v);return Number.isFinite(n)?n:f}
+function cloneLocal(l){return {x:finiteNum(l?.x),y:finiteNum(l?.y),z:finiteNum(l?.z,app.crs.falseUp)}}
+function cloneWgs(w){return {lat:finiteNum(w?.lat),lng:finiteNum(w?.lng),alt:finiteNum(w?.alt||0),accuracy:w?.accuracy??null,altitudeAccuracy:w?.altitudeAccuracy??null,speed:w?.speed??null,heading:w?.heading??null}}
+function solverStationary(rawWgs,rawLocal){
+  const recent=(app.avatarHistory||[]).slice(-12).filter(x=>x?.local&&x?.wgs);
+  let spreadM=0,inferredSpeedMps=0,stationary=false;
+  if(recent.length>=4){
+    const cx=recent.reduce((s,x)=>s+x.local.x,0)/recent.length;
+    const cy=recent.reduce((s,x)=>s+x.local.y,0)/recent.length;
+    const cz=recent.reduce((s,x)=>s+(x.local.z||0),0)/recent.length;
+    spreadM=Math.max(...recent.map(x=>Math.hypot(x.local.x-cx,x.local.y-cy,((x.local.z||0)-cz)*0.15)));
+    const first=recent[0],last=recent.at(-1);
+    const dt=Math.max(1,(new Date(last.capturedAt)-new Date(first.capturedAt))/1000);
+    inferredSpeedMps=distanceM(first.wgs,last.wgs)/dt;
+    const acc=Math.max(1,finiteNum(rawWgs.accuracy,25));
+    const gpsSpeed=Number.isFinite(Number(rawWgs.speed))?Number(rawWgs.speed):inferredSpeedMps;
+    const sensorStill=app.motion?.stationary===true;
+    const speedStill=gpsSpeed<0.45 && inferredSpeedMps<0.55;
+    const spreadOk=spreadM<=Math.max(4,acc*0.9);
+    stationary=(sensorStill&&spreadM<=Math.max(6,acc*1.1))||(speedStill&&spreadOk);
+  }
+  return {stationary,spreadM,inferredSpeedMps};
+}
+function controlPointCorrectionField(local,maxDist=260){
+  const controls=(app.geo||[]).filter(g=>g?.local&&g?.residuals?.weightedMean);
+  if(!controls.length)return {used:0,dx:0,dy:0,dz:0,sigma:{x:null,y:null,z:null,horizontal:null},confidence:0,nearestDistanceM:null,points:[],mode:'no-control'};
+  const rows=[];
+  controls.forEach(g=>{
+    const d=Math.hypot(g.local.x-local.x,g.local.y-local.y,(finiteNum(g.local.z)-finiteNum(local.z))*0.10);
+    if(d>maxDist)return;
+    const wm=g.residuals.weightedMean||{};
+    const sig=g.residuals.sigma||{};
+    const sigmaH=Math.max(0.5,finiteNum(sig.horizontal,finiteNum(g.stability?.avgAccuracy,20)));
+    const confidence=Math.max(0.05,Math.min(0.95,finiteNum(g.confidence,g.stability?.confidence||0.45)));
+    const weight=confidence/(1+d*d/(Math.max(2,sigmaH)*Math.max(2,sigmaH)));
+    rows.push({id:g.id,code:g.code||'',distanceM:d,weight,confidence,sigmaH,dx:finiteNum(wm.dx),dy:finiteNum(wm.dy),dz:finiteNum(wm.dz)});
+  });
+  if(!rows.length)return {used:0,dx:0,dy:0,dz:0,sigma:{x:null,y:null,z:null,horizontal:null},confidence:0,nearestDistanceM:null,points:[],mode:'no-near-control'};
+  const wsum=rows.reduce((s,r)=>s+r.weight,0)||1;
+  const dx=rows.reduce((s,r)=>s+r.dx*r.weight,0)/wsum;
+  const dy=rows.reduce((s,r)=>s+r.dy*r.weight,0)/wsum;
+  const dz=rows.reduce((s,r)=>s+r.dz*r.weight,0)/wsum;
+  const nearest=Math.min(...rows.map(r=>r.distanceM));
+  const conf=Math.max(0.05,Math.min(0.96,rows.reduce((s,r)=>s+r.confidence*r.weight,0)/wsum));
+  const sigmaH=Math.sqrt(rows.reduce((s,r)=>s+(r.sigmaH*r.sigmaH)*r.weight,0)/wsum);
+  return {used:rows.length,dx,dy,dz,sigma:{horizontal:sigmaH},confidence:conf,nearestDistanceM:nearest,points:rows.sort((a,b)=>a.distanceM-b.distanceM).slice(0,8),mode:'weighted-control-field'};
+}
+function solvePositionFromRaw(rawWgsInput,rawLocalInput,opts={}){
+  const rawWgs=cloneWgs(rawWgsInput), rawLocal=cloneLocal(rawLocalInput);
+  const stat=solverStationary(rawWgs,rawLocal);
+  const previousStable=app.avatarStable;
+  if(!app.avatarStable){app.avatarStable={local:{...rawLocal},wgs:{...rawWgs},capturedAt:opts.capturedAt||new Date().toISOString()}}
+  let estimatedLocal,estimatedWgs,lockMode='raw-motion';
+  if(stat.stationary && previousStable?.local){
+    estimatedLocal=cloneLocal(previousStable.local);estimatedWgs=cloneWgs(previousStable.wgs);lockMode='stationary-avatar-lock';
+  }else{
+    estimatedLocal={...rawLocal};estimatedWgs={...rawWgs};
+    if(opts.updateStable!==false)app.avatarStable={local:{...rawLocal},wgs:{...rawWgs},capturedAt:opts.capturedAt||new Date().toISOString()};
+  }
+  const field=controlPointCorrectionField(estimatedLocal);
+  const correctedLocal=field.used?{x:estimatedLocal.x-field.dx,y:estimatedLocal.y-field.dy,z:(estimatedLocal.z||0)-field.dz}:{...estimatedLocal};
+  const correctedWgsRaw=localToWgs(correctedLocal.x,correctedLocal.y,correctedLocal.z);
+  const correctedWgs={...correctedWgsRaw,accuracy:rawWgs.accuracy??null,altitudeAccuracy:rawWgs.altitudeAccuracy??null};
+  const rawDrift={dx:rawLocal.x-estimatedLocal.x,dy:rawLocal.y-estimatedLocal.y,dz:(rawLocal.z||0)-(estimatedLocal.z||0)};
+  const correction={mode:field.used?'control-field-corrected':lockMode,controlField:field,rawMinusEstimated:rawDrift,appliedDx:field.dx,appliedDy:field.dy,appliedDz:field.dz,confidence:Math.max(field.confidence,stat.stationary?.55:0.25)};
+  const confidence=Math.max(0.05,Math.min(0.98,(field.used?field.confidence:0)+(stat.stationary?0.25:0)+(rawWgs.accuracy!=null?Math.max(0,0.25-Math.min(0.25,rawWgs.accuracy/80*.25)):0)));
+  return {rawWgs,rawLocal,estimatedWgs,estimatedLocal,correctedWgs,correctedLocal,stationary:stat.stationary,spreadM:stat.spreadM,inferredSpeedMps:stat.inferredSpeedMps,driftM:Math.hypot(rawDrift.dx,rawDrift.dy,rawDrift.dz*0.1),correction,confidence,solverVersion:'v58-weighted-control-field'};
+}
+function correctedFromRaw(wgs,local){
+  const sol=solvePositionFromRaw(wgs,local,{updateStable:false});
+  return {estimatedLocal:{...sol.estimatedLocal},estimatedWgs:{...sol.estimatedWgs},correctedLocal:{...sol.correctedLocal},correctedWgs:{...sol.correctedWgs},correction:sol.correction,solver:{version:sol.solverVersion,confidence:sol.confidence,stationary:sol.stationary}};
+}
+async function updateAvatarView(){
+  if(!app.live)return;
+  const latestLocal=cloneLocal(app.live.local||app.live.rawLocal);
+  const latestWgs=cloneWgs(app.live.wgs);
+  const sol=solvePositionFromRaw(latestWgs,latestLocal,{updateStable:true,capturedAt:app.live.capturedAt,forAvatar:true});
+  const source=app.usingFallbackAvatar?'avatar-view-fallback':'avatar-view-solver-v58';
+  if(!app.displayLive)app.displayLive={local:{...sol.correctedLocal},wgs:{...sol.correctedWgs}};
+  const trailOffset={x:sol.correctedLocal.x-latestLocal.x,y:sol.correctedLocal.y-latestLocal.y,z:(sol.correctedLocal.z||0)-(latestLocal.z||0)};
+  const trail=(app.avatarHistory||[]).slice(-20).map(x=>({local:{...x.local},displayLocal:{x:x.local.x+trailOffset.x,y:x.local.y+trailOffset.y,z:(x.local.z||0)+trailOffset.z},wgs:{...x.wgs},capturedAt:x.capturedAt,accuracyM:x.wgs.accuracy||null,solverOffset:{...trailOffset}}));
+  app.avatarView={
+    id:'avatar',source,rawWgs:sol.rawWgs,rawLocal:sol.rawLocal,estimatedWgs:sol.estimatedWgs,estimatedLocal:sol.estimatedLocal,correctedWgs:sol.correctedWgs,correctedLocal:sol.correctedLocal,
+    wgs:{...sol.correctedWgs,accuracy:latestWgs.accuracy??null,altitudeAccuracy:latestWgs.altitudeAccuracy??null},local:{...sol.correctedLocal},displayLocal:{...app.displayLive.local},
+    accuracyM:latestWgs.accuracy||25,altitudeAccuracyM:latestWgs.altitudeAccuracy??null,scaleRingM:app.settings.scaleRing,capturedAt:app.live.capturedAt,
+    stationary:sol.stationary,spreadM:sol.spreadM,inferredSpeedMps:sol.inferredSpeedMps,driftM:sol.driftM,confidence:sol.confidence,trail,
+    geoContext:geoContextFor(sol.correctedLocal,sol.correctedWgs),motion:{...app.motion},solver:{version:sol.solverVersion,correction:sol.correction,field:sol.correction.controlField}
+  };
+  app.avatarView.avatarMode=avatarModeFor(app.avatarView);
+  try{await put('avatarView',app.avatarView)}catch{}
+  if(sol.stationary && (sol.driftM>0.05 || sol.correction.controlField.used)){
+    const log={id:id('COR'),type:'position-solver-residual',solverVersion:sol.solverVersion,rawWgs:sol.rawWgs,rawLocal:sol.rawLocal,estimatedWgs:sol.estimatedWgs,estimatedLocal:sol.estimatedLocal,correctedWgs:sol.correctedWgs,correctedLocal:sol.correctedLocal,dx:sol.rawLocal.x-sol.estimatedLocal.x,dy:sol.rawLocal.y-sol.estimatedLocal.y,dz:(sol.rawLocal.z||0)-(sol.estimatedLocal.z||0),appliedControlDx:sol.correction.appliedDx,appliedControlDy:sol.correction.appliedDy,appliedControlDz:sol.correction.appliedDz,driftM:sol.driftM,accuracyM:latestWgs.accuracy??null,altitudeAccuracyM:latestWgs.altitudeAccuracy??null,confidence:sol.confidence,controlField:sol.correction.controlField,capturedAt:app.live.capturedAt,geoContext:geoContextFor(sol.correctedLocal,sol.correctedWgs)};
+    app.correctionLog.push(log);if(app.correctionLog.length>1200)app.correctionLog.shift();try{await put('correctionLog',log)}catch{}
+  }
+  try{await maybeAutoBuildControlPoint(app.avatarView)}catch(e){console.warn('auto control learning error',e)}
+}
+
 function v57AfterSetup(){
   if(ui.addNow)ui.addNow.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices(false);toggleViewChoices(false);toggleAddChoices();};
   if(ui.addThen)ui.addThen.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleAddChoices(false);toggleViewChoices(false);toggleDesignChoices();};
