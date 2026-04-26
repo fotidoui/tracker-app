@@ -139,6 +139,29 @@ dialog{width:min(94vw,840px);border:1px solid var(--line);border-radius:18px;bac
 #mapDock,#zoom{display:none!important;}.weekIcon small{font-size:10px!important;font-weight:900!important;bottom:2px!important;min-width:14px!important;text-align:center!important;}
 @media(max-width:760px){#bottomToolbar{width:98vw!important;bottom:calc(4px + env(safe-area-inset-bottom))!important;padding:4px!important;gap:4px!important;}#bottomToolbar .toolbarRow{gap:4px!important;}#bottomToolbar button,#bottomToolbar select{height:34px!important;font-size:11px!important;padding:4px 6px!important;min-width:42px!important;}#bottomToolbar #addNowBtn,#bottomToolbar #addThenBtn{min-width:68px!important;}#bottomToolbar #inspectBtn,#bottomToolbar #followBtn{min-width:58px!important;}#toolRail.secondaryRow button{min-width:35px!important;max-width:70px!important;font-size:10px!important;padding:4px 5px!important;}}
 
+
+
+/* ==== v57 toolbar/popover + visibility fixes ==== */
+#bottomToolbar{display:grid!important;grid-template-rows:auto auto!important;justify-items:center!important;align-items:center!important;width:min(96vw,620px)!important;max-width:96vw!important;overflow:visible!important;}
+#bottomToolbar .primaryRow,#bottomToolbar .secondaryRow{display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;justify-content:center!important;align-items:center!important;width:100%!important;overflow:visible!important;gap:6px!important;}
+#bottomToolbar .secondaryRow{gap:5px!important;}
+#liveDock,#designDock,#viewDock{display:inline-flex!important;visibility:visible!important;opacity:1!important;position:relative!important;overflow:visible!important;}
+#addNowBtn,#addThenBtn{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important;min-width:64px!important;max-width:78px!important;}
+#liveDock.liveOff #addNowBtn,#liveDock.liveOff #liveActionBar{display:inline-flex!important;visibility:visible!important;opacity:1!important;}
+#liveDock.liveOff #liveActionBar:not(.open){display:none!important;}
+#liveActionBar:not(.open),#designActionBar:not(.open),#viewChoiceBar:not(.open),.dropDock:not(.open)>.choiceBar{display:none!important;}
+.dropDock.open>.choiceBar,.choiceBar.open{display:flex!important;}
+.choiceBar{z-index:70!important;max-width:min(94vw,360px)!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;}
+@media(max-width:760px){
+  #bottomToolbar{bottom:calc(7px + env(safe-area-inset-bottom))!important;width:min(96vw,420px)!important;}
+  #bottomToolbar .primaryRow{gap:5px!important;}
+  #bottomToolbar .secondaryRow{gap:4px!important;}
+  #bottomToolbar button,#bottomToolbar select{height:34px!important;min-width:44px!important;max-width:74px!important;font-size:10.5px!important;padding:5px 7px!important;}
+  #addNowBtn,#addThenBtn{min-width:64px!important;max-width:74px!important;font-size:11px!important;}
+  .choiceBar{position:fixed!important;left:50%!important;right:auto!important;bottom:calc(92px + env(safe-area-inset-bottom))!important;top:auto!important;transform:translateX(-50%)!important;max-width:94vw!important;padding:6px!important;}
+  .choiceBar button,.choiceBar select{height:34px!important;min-width:78px!important;max-width:150px!important;font-size:11px!important;}
+}
+
 </style>
 </head>
 <body>
@@ -1219,10 +1242,161 @@ function setupLongPressHelp(){
 }
 
 function setup(){ui.book.onclick=()=>openOnly(ui.menuPanel);ui.compass.onclick=()=>openOnly(ui.toolsPanel);ui.hammer.onclick=()=>openOnly(ui.settingsPanel);ui.weekly.onclick=()=>{app.settings.selectedAt=new Date().toISOString();buildViewCaches().then(()=>{renderAll();openOnly(ui.weeklyPanel)})};['closeMenuBtn','closeToolsBtn','closeSettingsBtn','closeWeeklyBtn'].forEach(idv=>$(idv).onclick=closePanels);document.querySelectorAll('[data-menu-tab]').forEach(b=>b.onclick=()=>showMenuTab(b.dataset.menuTab));document.querySelectorAll('[data-view-main]').forEach(b=>b.onclick=()=>{app.mainView=b.dataset.viewMain;renderAll()});document.querySelectorAll('[data-view-geo]').forEach(b=>b.onclick=()=>{app.geoView=b.dataset.viewGeo;renderAll()});ui.toolEntity.onchange=actions;ui.toolMode.onchange=actions;ui.toolAction.onchange=renderAll;ui.applyTool.onclick=arm;ui.undoVertex.onclick=undo;ui.finishShape.onclick=finishShape;ui.zoomIn.onclick=()=>{app.camera.z*=1.25;draw()};ui.zoomOut.onclick=()=>{app.camera.z/=1.25;draw()};ui.fit.onclick=fit;ui.fitElement.onclick=fitSelected;ui.layersBtn.onclick=()=>$('layerPanel').classList.toggle('open');ui.liveMode.onclick=(e)=>{e.stopPropagation();toggleDesignChoices(false);toggleAddChoices(false);toggleViewChoices()};document.querySelectorAll('[data-view-choice]').forEach(b=>b.onclick=()=>chooseViewMode(b.dataset.viewChoice));ui.liveCommandBtn.onclick=async()=>{await runLiveCommand();toggleAddChoices(false)};ui.toggleToolbar.onclick=()=>toggleToolRail(!app.toolbarCollapsed);document.querySelectorAll('[data-layer]').forEach(cb=>{cb.onchange=()=>{app.layers[cb.dataset.layer]=cb.checked;draw()}});ui.pin.onclick=pin;ui.follow.onclick=()=>{setFollow(!app.follow);draw()};ui.addThen.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleAddChoices(false);toggleViewChoices(false);toggleDesignChoices()};document.querySelectorAll('[data-design-entity]').forEach(b=>b.onclick=()=>chooseDesignEntity(b.dataset.designEntity));ui.addNow.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices(false);toggleViewChoices(false);toggleAddChoices()};ui.inspect.onclick=toggleInspect;ui.refreshGps.onclick=refreshGps;ui.setOrigin.onclick=setOriginHere;ui.wake.onclick=async()=>{try{if(app.wake){await app.wake.release();app.wake=null;ui.wake.textContent='Keep awake'}else{app.wake=await navigator.wakeLock.request('screen');ui.wake.textContent='Awake on'}}catch(e){alert(e.message)}};ui.refreshAddr.onclick=refreshAddresses;ui.buildGeo.onclick=buildGeo;if(ui.controlGuide)ui.controlGuide.onclick=showControlPointGuide;ui.clearTempGnss.onclick=async()=>{if(confirm('Clear temp GNSS?')){await clearStore('tempGnss');app.tempGnss=[];renderAll()}};ui.backup.onclick=backup;ui.restore.onclick=()=>ui.restoreFile.click();ui.restoreFile.onchange=restore;ui.exportCsv.onclick=()=>download(exportCSV(),'psj.csv','text/csv');ui.exportGeojson.onclick=()=>download(exportGeoJSON(),'psj.geojson','application/geo+json');ui.exportDxf.onclick=()=>download(exportDXF(),'psj.dxf','application/dxf');ui.saveSettings.onclick=saveSettings;ui.selectedAt.onchange=saveSettings;ui.viewMode.onchange=()=>{saveSettings();updateLiveUI()};ui.gnssInterval.onchange=saveSettings;ui.routeInterval.onchange=saveSettings;ui.gnssCap.onchange=saveSettings;ui.scaleRing.onchange=saveSettings;ui.prevWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),-7));ui.thisWeek.onclick=()=>setWeeklyDate(new Date());ui.nextWeek.onclick=()=>setWeeklyDate(addDays(weekStart(app.settings.selectedAt),7));ui.ctx.onclick=e=>{const b=e.target.closest('[data-context]');if(b)handleContextAction(b.dataset.context)};let down=null,last=null,pan=false,longTimer=null;ui.canvas.addEventListener('pointerdown',e=>{ui.ctx.style.display='none';down={x:e.clientX,y:e.clientY};last={x:e.clientX,y:e.clientY};pan=false;longTimer=setTimeout(()=>{const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY);down=null},650);try{ui.canvas.setPointerCapture(e.pointerId)}catch{}});ui.canvas.addEventListener('pointermove',e=>{if(!down)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>8){pan=true;clearTimeout(longTimer)}if(pan){app.follow=false;ui.follow.textContent='Follow off';ui.follow.classList.remove('on');app.camera.x-=dx/app.camera.z;app.camera.y+=dy/app.camera.z;draw()}last={x:e.clientX,y:e.clientY}});ui.canvas.addEventListener('pointerup',e=>{clearTimeout(longTimer);if(!down)return;const mv=Math.hypot(e.clientX-down.x,e.clientY-down.y),r=ui.canvas.getBoundingClientRect();if(mv<8){const l=screenToLocal(e.clientX-r.left,e.clientY-r.top);handleCanvasTapLocal(l)}down=null;pan=false});ui.canvas.addEventListener('contextmenu',e=>{e.preventDefault();const r=ui.canvas.getBoundingClientRect();app.contextLocal=screenToLocal(e.clientX-r.left,e.clientY-r.top);openCtx(e.clientX,e.clientY)});window.addEventListener('resize',resize);window.addEventListener('pagehide',()=>{put('settings',{id:'settings',settings:app.settings,categories:app.categories,objectPresets:app.objectPresets,crs:app.crs,camera:app.camera}).catch(()=>{});saveRouteCalc().catch(()=>{})});document.addEventListener('pointerdown',ev=>{if(!ev.target.closest('.dropDock')){toggleDesignChoices(false);toggleAddChoices(false);toggleViewChoices(false)}});setupLongPressHelp()}
+
+
+/* ==== v57 behavior fixes: Add/Design, popovers, real-time heading, stable avatar lock ==== */
+function v57AngleDelta(a,b){return ((a-b+540)%360)-180;}
+function v57SmoothAngle(prev,next,alpha){
+  if(prev==null || !Number.isFinite(Number(prev))) return angleNormDeg(next);
+  return angleNormDeg(Number(prev)+v57AngleDelta(next,prev)*alpha);
+}
+function v57CloseChoices(except){
+  ['liveDock','designDock','viewDock'].forEach(id=>{if(id!==except){const el=$(id); if(el)el.classList.remove('open');}});
+  ['liveActionBar','designActionBar','viewChoiceBar'].forEach(id=>{const el=$(id); if(el && !(except && el.closest('#'+except)))el.classList.remove('open');});
+}
+function toggleDesignChoices(force){
+  const dock=$('designDock'), bar=$('designActionBar'); if(!dock||!bar)return;
+  const open=force==null?!dock.classList.contains('open'):!!force;
+  if(open)v57CloseChoices('designDock');
+  dock.classList.toggle('open',open); bar.classList.toggle('open',open);
+}
+function toggleAddChoices(force){
+  const dock=$('liveDock'), bar=$('liveActionBar'); if(!dock||!bar)return;
+  const open=force==null?!dock.classList.contains('open'):!!force;
+  if(open)v57CloseChoices('liveDock');
+  dock.classList.toggle('open',open); bar.classList.toggle('open',open);
+}
+function toggleViewChoices(force){
+  const dock=$('viewDock'), bar=$('viewChoiceBar'); if(!dock||!bar)return;
+  const open=force==null?!dock.classList.contains('open'):!!force;
+  if(open)v57CloseChoices('viewDock');
+  dock.classList.toggle('open',open); bar.classList.toggle('open',open);
+}
+function updateLiveUI(){
+  const mode=app.settings.viewMode||'live';
+  if(ui.liveMode){ui.liveMode.textContent=viewLabel(mode);ui.liveMode.classList.toggle('on',mode==='live');}
+  if(ui.addNow){ui.addNow.classList.remove('hidden');ui.addNow.style.display='inline-flex';ui.addNow.style.visibility='visible';}
+  const dock=$('liveDock'); if(dock)dock.classList.remove('liveOff');
+  updateLiveCommands();updateWeekBadge();
+}
+function v57ReliableSensorHeading(){
+  const c=app.compass||{};
+  if(c.sensorHeadingDeg==null || !c.lastAt)return null;
+  const age=Date.now()-new Date(c.lastAt).getTime();
+  if(age>1600)return null;
+  return Number(c.sensorHeadingDeg);
+}
+function updateComputedCompass(obs){
+  const last=app.avatarHistory.at(-1);
+  app.avatarHistory.push({local:{...obs.local},wgs:{...obs.wgs},capturedAt:obs.capturedAt});
+  if(app.avatarHistory.length>24) app.avatarHistory.shift();
+  const geoNorth=northAngle(obs.wgs);
+  let course=null;
+  if(last){
+    const d=Math.hypot(obs.local.x-last.local.x, obs.local.y-last.local.y);
+    const dt=Math.max(1,(new Date(obs.capturedAt)-new Date(last.capturedAt))/1000);
+    if(d>Math.max(1.2,(obs.wgs.accuracy||8)*0.18) && dt<90) course=localBearingDeg(last,{local:obs.local});
+  }
+  app.compass.geoNorthDeg=angleNormDeg(geoNorth);
+  if(course!=null) app.compass.courseHeadingDeg=course;
+  const sensor=v57ReliableSensorHeading();
+  if(sensor!=null){
+    app.compass.fusedHeadingDeg=v57SmoothAngle(app.compass.fusedHeadingDeg,sensor,0.22);
+    app.compass.source='device-orientation-live';
+  }else if(app.compass.courseHeadingDeg!=null){
+    app.compass.fusedHeadingDeg=v57SmoothAngle(app.compass.fusedHeadingDeg,app.compass.courseHeadingDeg,0.18);
+    app.compass.source='movement+crs';
+  }else{
+    app.compass.fusedHeadingDeg=v57SmoothAngle(app.compass.fusedHeadingDeg,geoNorth,0.08);
+    app.compass.source='crs';
+  }
+  app.northAngle=app.compass.geoNorthDeg;
+}
+function setupOrientation(){
+  try{
+    if(!('DeviceOrientationEvent' in window))return;
+    const listen=()=>window.addEventListener('deviceorientation',e=>{
+      let heading=null;
+      if(typeof e.webkitCompassHeading==='number') heading=e.webkitCompassHeading;
+      else if(typeof e.alpha==='number') heading=360-e.alpha;
+      if(heading!=null){
+        heading=angleNormDeg(heading);
+        const now=Date.now();
+        const lastAt=app.compass.lastSensorMs||0;
+        const prev=app.compass.sensorHeadingDeg;
+        const jump=prev==null?0:Math.abs(v57AngleDelta(heading,prev));
+        if(!(jump>120 && now-lastAt<250)){
+          app.compass.sensorHeadingDeg=v57SmoothAngle(prev,heading,0.35);
+          app.compass.fusedHeadingDeg=v57SmoothAngle(app.compass.fusedHeadingDeg,app.compass.sensorHeadingDeg,0.30);
+          app.compass.source='device-orientation-live';
+          app.compass.lastSensorMs=now;
+          app.compass.lastAt=new Date(now).toISOString();
+        }
+      }
+      app.compass.tiltBeta=typeof e.beta==='number'?e.beta:null;
+      app.compass.tiltGamma=typeof e.gamma==='number'?e.gamma:null;
+      renderCompass3d();
+      draw();
+    },true);
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      ui.compass?.addEventListener('click',()=>{DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')listen();}).catch(()=>{});},{once:true});
+    }else listen();
+  }catch{}
+}
+async function updateAvatarView(){
+  if(!app.live)return;
+  const source=app.usingFallbackAvatar?'avatar-view-fallback':'avatar-view';
+  const latestLocal={...app.live.local};
+  const latestWgs={...app.live.wgs};
+  const recent=app.avatarHistory.slice(-10).filter(x=>x?.local&&x?.wgs);
+  let stationary=false, spread=0, inferredSpeed=0;
+  if(recent.length>=4){
+    const cx=recent.reduce((sum,x)=>sum+x.local.x,0)/recent.length;
+    const cy=recent.reduce((sum,x)=>sum+x.local.y,0)/recent.length;
+    spread=Math.max(...recent.map(x=>Math.hypot(x.local.x-cx,x.local.y-cy)));
+    const first=recent[0], last=recent.at(-1);
+    const dt=Math.max(1,(new Date(last.capturedAt)-new Date(first.capturedAt))/1000);
+    inferredSpeed=distanceM(first.wgs,last.wgs)/dt;
+    const acc=Number(latestWgs.accuracy||25);
+    const gpsSpeed=Number.isFinite(Number(latestWgs.speed))?Number(latestWgs.speed):inferredSpeed;
+    const motionStill=app.motion.stationary===true;
+    const veryLowSpeed=gpsSpeed<0.75 && inferredSpeed<0.85;
+    const spreadOk=spread<=Math.max(25,acc*2.2);
+    stationary=(motionStill && spread<=Math.max(35,acc*2.8)) || (veryLowSpeed && spreadOk);
+  }
+  if(!app.avatarStable){app.avatarStable={local:{...latestLocal},wgs:{...latestWgs},capturedAt:app.live.capturedAt}}
+  let targetLocal,targetWgs,driftM=0;
+  if(stationary){
+    driftM=Math.hypot(latestLocal.x-app.avatarStable.local.x,latestLocal.y-app.avatarStable.local.y);
+    targetLocal={...app.avatarStable.local};targetWgs={...app.avatarStable.wgs};
+  }else{
+    app.avatarStable={local:{...latestLocal},wgs:{...latestWgs},capturedAt:app.live.capturedAt};
+    targetLocal={...latestLocal};targetWgs={...latestWgs};
+  }
+  if(!app.displayLive)app.displayLive={local:{...targetLocal},wgs:{...targetWgs}};
+  const trailOffset={x:targetLocal.x-latestLocal.x,y:targetLocal.y-latestLocal.y,z:(targetLocal.z||0)-(latestLocal.z||0)};
+  const trail=app.avatarHistory.slice(-20).map(x=>({local:{...x.local},displayLocal:{x:x.local.x+trailOffset.x,y:x.local.y+trailOffset.y,z:(x.local.z||0)+trailOffset.z},wgs:{...x.wgs},capturedAt:x.capturedAt,accuracyM:x.wgs.accuracy||null}));
+  app.avatarView={id:'avatar',source,rawWgs:latestWgs,rawLocal:latestLocal,estimatedWgs:{...targetWgs,accuracy:latestWgs.accuracy||25},estimatedLocal:{...targetLocal},correctedWgs:{...targetWgs,accuracy:latestWgs.accuracy||25},correctedLocal:{...targetLocal},wgs:{...targetWgs,accuracy:latestWgs.accuracy||25,altitudeAccuracy:latestWgs.altitudeAccuracy??null},local:{...targetLocal},displayLocal:{...app.displayLive.local},accuracyM:latestWgs.accuracy||25,scaleRingM:app.settings.scaleRing,capturedAt:app.live.capturedAt,stationary,spreadM:spread,inferredSpeedMps:inferredSpeed,driftM,confidence:stationary?Math.max(0.35,Math.min(0.95,1-(spread/Math.max(8,latestWgs.accuracy||25)))):0.35,trail,geoContext:geoContextFor(targetLocal,latestWgs),motion:{...app.motion}};
+  app.avatarView.avatarMode=avatarModeFor(app.avatarView);
+  try{await put('avatarView',app.avatarView)}catch{}
+  if(stationary&&driftM>0.05){const log={id:id('COR'),type:'stationary-drift',rawWgs:latestWgs,rawLocal:latestLocal,estimatedWgs:targetWgs,estimatedLocal:targetLocal,dx:latestLocal.x-targetLocal.x,dy:latestLocal.y-targetLocal.y,dz:(latestLocal.z||0)-(targetLocal.z||0),driftM,accuracyM:latestWgs.accuracy||null,altitudeAccuracyM:latestWgs.altitudeAccuracy??null,capturedAt:app.live.capturedAt,geoContext:geoContextFor(targetLocal,latestWgs)};app.correctionLog.push(log);if(app.correctionLog.length>1000)app.correctionLog.shift();try{await put('correctionLog',log)}catch{}}
+  try{await maybeAutoBuildControlPoint(app.avatarView)}catch(e){console.warn('auto control learning error',e)}
+}
+function v57AfterSetup(){
+  if(ui.addNow)ui.addNow.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices(false);toggleViewChoices(false);toggleAddChoices();};
+  if(ui.addThen)ui.addThen.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleAddChoices(false);toggleViewChoices(false);toggleDesignChoices();};
+  if(ui.liveMode)ui.liveMode.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();toggleDesignChoices(false);toggleAddChoices(false);toggleViewChoices();};
+  document.querySelectorAll('[data-design-entity]').forEach(b=>b.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();chooseDesignEntity(b.dataset.designEntity);});
+  document.querySelectorAll('[data-view-choice]').forEach(b=>b.onclick=e=>{e?.preventDefault?.();e?.stopPropagation?.();chooseViewMode(b.dataset.viewChoice);});
+  document.addEventListener('pointerdown',ev=>{if(!ev.target.closest('.dropDock'))v57CloseChoices();},{capture:true});
+  updateLiveUI();
+}
+
 async function boot(){
   await openDb();
   await load();
   setup();
+  v57AfterSetup();
   setFollow(app.follow);
   setupMotion();
   setupOrientation();
