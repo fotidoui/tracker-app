@@ -1,11 +1,6 @@
 {
-  "name": "personal-spatial-journal-prototype",
-  "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "description": "Personal Spatial Journal prototype with CAD-like command engine and spatial correction workflow",
   "scripts": {
-    "test": "node tests/run-tests.js",
-    "start": "python3 -m http.server 5173"
+    "test": "node tests/run-tests.js"
   }
 }
